@@ -60,7 +60,9 @@ struct ExportJob: Identifiable, Codable {
             try FileManager.default.createDirectory(at: scratchRoot, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: scratchRoot) }
             let mixURL = scratchRoot.appendingPathComponent("mix.caf")
+            let cleanURL = scratchRoot.appendingPathComponent("clean.mp4")
             var renderedMix = false
+            var renderedClean = false
             var background: URL?
             for variant in variants {
                 if !jobs.contains(where: { $0.variant == variant }) { jobs.append(ExportJob(variant: variant)) }
@@ -72,7 +74,9 @@ struct ExportJob: Identifiable, Codable {
                     // Lyrics need no media render; photo/video failures cannot block stems.
                     if variant != .lyrics {
                         let videoOutput = variant == .cleanVideo || variant == .subtitledVideo
-                        let estimate = Int64(duration * (48000 * 2 * 4 + (videoOutput ? 3_000_000 : 40_000))) + 64 * 1024 * 1024
+                        let estimateValue = duration * (48000 * 2 * 4 + (videoOutput ? 12_000_000 : 40_000)) + 64 * 1024 * 1024
+                        guard estimateValue.isFinite, estimateValue < Double(Int64.max) else { throw StudioError("导出空间需求超出设备可用范围，请缩短区间。") }
+                        let estimate = Int64(estimateValue)
                         guard try FileIntegrity.available(root) > estimate else { throw StudioError("剩余空间不足以安全生成此项。已完成项已保留；可减少输出、缩短区间或备份后释放其他工程空间。") }
                         if [.cleanVideo, .subtitledVideo, .mixAudio].contains(variant), !renderedMix {
                             stage = "正在离线混音"
@@ -105,16 +109,23 @@ struct ExportJob: Identifiable, Codable {
                         }.value
                         try await exportAudio(source: scratch, output: output, format: preset.audioFormat)
                     case .cleanVideo, .subtitledVideo:
-                        let (composition, video) = try await VideoComposer.composition(project: project, root: root, mix: mixURL, backgroundVideo: background)
-                        guard let video else { throw StudioError("没有可导出的视频画面，请先选择照片或补拍。") }
-                        if variant == .subtitledVideo { try VideoComposer.subtitles(project: project, video: video, duration: duration) }
-                        guard let session = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality), session.supportedFileTypes.contains(.mp4) else {
-                            throw StudioError("当前设备不支持 MP4/H.264 导出。源文件已保留。")
+                        if !renderedClean {
+                            stage = "正在合成无字幕画面"
+                            if FileManager.default.fileExists(atPath: cleanURL.path) { try FileManager.default.removeItem(at: cleanURL) }
+                            let (composition, video) = try await VideoComposer.composition(project: project, root: root, mix: mixURL, backgroundVideo: background)
+                            guard let video else { throw StudioError("没有可导出的视频画面，请先选择照片或补拍。") }
+                            try await exportVideo(asset: composition, video: video, to: cleanURL, duration: duration)
+                            renderedClean = true
                         }
-                        session.videoComposition = video; session.outputURL = output; session.outputFileType = .mp4
-                        session.timeRange = CMTimeRange(start: .zero, duration: CMTime(seconds: duration, preferredTimescale: 600_000))
-                        session.shouldOptimizeForNetworkUse = true
-                        try await complete(session)
+                        if variant == .cleanVideo { try FileManager.default.copyItem(at: cleanURL, to: output) }
+                        else {
+                            stage = "正在按时间轴烧录字幕"
+                            let base = AVURLAsset(url: cleanURL)
+                            guard let track = try await base.loadTracks(withMediaType: .video).first else { throw StudioError("基础画面轨道不可读。") }
+                            let size = try await track.load(.naturalSize)
+                            let subtitles = try SubtitleFrameRenderer(project: project, size: size, duration: duration)
+                            try await exportVideo(asset: base, video: subtitles.composition(asset: base), to: output, duration: duration)
+                        }
                     }
                     guard try FileIntegrity.size(output) > 0 else { throw StudioError("输出文件为空，未报告成功。") }
                     jobs[index].status = "完成"; jobs[index].path = "exports/" + output.lastPathComponent
@@ -155,6 +166,15 @@ struct ExportJob: Identifiable, Codable {
     private func complete(_ session: AVAssetExportSession) async throws {
         await withCheckedContinuation { continuation in session.exportAsynchronously { continuation.resume() } }
         guard session.status == .completed else { throw session.error ?? StudioError("导出未完成，原件和已完成项均已保留。") }
+    }
+    private func exportVideo(asset: AVAsset, video: AVVideoComposition, to output: URL, duration: Double) async throws {
+        guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality), session.supportedFileTypes.contains(.mp4) else {
+            throw StudioError("当前设备不支持 MP4/H.264 导出。源文件已保留。")
+        }
+        session.videoComposition = video; session.outputURL = output; session.outputFileType = .mp4
+        session.timeRange = CMTimeRange(start: .zero, duration: CMTime(seconds: duration, preferredTimescale: 600_000))
+        session.shouldOptimizeForNetworkUse = true
+        try await complete(session)
     }
     private func persist(root: URL) throws {
         try FileIntegrity.encoder().encode(jobs).write(to: root.appendingPathComponent("exports/queue.json"), options: .atomic)

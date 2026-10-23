@@ -11,6 +11,7 @@
   <key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
   <key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
   <key>LSRequiresIPhoneOS</key><true/>
+  <key>LSSupportsOpeningDocumentsInPlace</key><false/>
   <key>NSCameraUsageDescription</key><string>拍摄翻唱视频或为已录人声补拍画面。原始视频保存在本机工程内。</string>
   <key>NSMicrophoneUsageDescription</key><string>录制练习及正式翻唱的独立原始人声，默认仅在本机处理和保存。</string>
   <key>UIApplicationSupportsIndirectInputEvents</key><true/>

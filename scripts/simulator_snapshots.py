@@ -34,7 +34,7 @@ def media_smoke(device_id, output):
                         print("Synthetic media smoke passed; this does not validate camera capture or real-device audio.")
                         return
                 if launcher.poll() is not None:
-                    raise RuntimeError("Media smoke process exited before its final report; see media-smoke-console.log.")
+                    raise RuntimeError(f"Media smoke launcher exited ({launcher.returncode}) before its final report; see console and diagnostic logs.")
             except (FileNotFoundError, json.JSONDecodeError):
                 pass
             time.sleep(2)
@@ -47,6 +47,14 @@ def media_smoke(device_id, output):
             except subprocess.TimeoutExpired:
                 launcher.kill()
         console.close()
+        # Simulator crash reports may be written after the launch pipe closes.
+        # Collect a short synthetic-process log as well as delayed crash reports.
+        try:
+            diagnostic = command("xcrun", "simctl", "spawn", device_id, "log", "show", "--last", "3m", "--style", "compact",
+                                 "--predicate", 'process == "MyCoverStudio" OR eventMessage CONTAINS "studio.mycover.app"', capture=True, timeout=30)
+            (output / "media-smoke-diagnostics.log").write_text(diagnostic, encoding="utf-8")
+        except subprocess.SubprocessError as error:
+            (output / "media-smoke-diagnostics.log").write_text(str(error), encoding="utf-8")
         # Only generated test metadata, never user-library files or media bytes.
         if source.exists():
             result = json.loads(source.read_text(encoding="utf-8"))
@@ -55,16 +63,20 @@ def media_smoke(device_id, output):
                 queue = fixture / "fixture/exports/queue.json"
                 if queue.exists():
                     shutil.copy2(queue, output / "media-smoke-export-queue.json")
-        crash_root = Path.home() / "Library/Logs/DiagnosticReports"
-        for crash in crash_root.glob("MyCoverStudio*.ips"):
-            if crash.stat().st_mtime >= launched_at - 1:
-                shutil.copy2(crash, output / crash.name)
+        frame_root = container / "Documents/MediaSmokeFrames"
+        if frame_root.is_dir():
+            shutil.copytree(frame_root, output / "media-frames", dirs_exist_ok=True)
+        for crash_root in [Path.home() / "Library/Logs/DiagnosticReports", container.parents[3] / "Library/Logs/CrashReporter"]:
+            for crash in crash_root.glob("MyCoverStudio*.ips"):
+                if crash.stat().st_mtime >= launched_at - 1:
+                    shutil.copy2(crash, output / crash.name)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--app", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=Path("build/simulator-evidence"))
+    parser.add_argument("--media-only", action="store_true", help="Check offline export on one simulator without repeating layout captures.")
     args = parser.parse_args()
     if platform.system() != "Darwin":
         raise SystemExit("Requires macOS, Xcode and available iOS simulator runtimes.")
@@ -76,7 +88,7 @@ def main():
     report = {"scope": "Simulator empty-state launch plus synthetic 2-second media pipeline only; no capture, AirPods, real-device recovery or cloud verification.",
               "xcode": command("xcodebuild", "-version", capture=True), "captures": []}
     smoke_error = None
-    for family in ["iPhone", "iPad"]:
+    for family in (["iPhone"] if args.media_only else ["iPhone", "iPad"]):
         choices = [device for device in devices if device["name"].startswith(family)]
         if not choices:
             raise SystemExit(f"No available {family} simulator. Install an iOS runtime.")
@@ -92,7 +104,8 @@ def main():
                 command("xcrun", "simctl", "boot", device_id)
             command("xcrun", "simctl", "bootstatus", device_id, "-b", timeout=300)
             command("xcrun", "simctl", "install", device_id, str(args.app.resolve()))
-            for appearance, content_size in [("light", "large"), ("dark", "accessibility-extra-extra-extra-large")]:
+            captures = [] if args.media_only else [("light", "large"), ("dark", "accessibility-extra-extra-extra-extra-large")]
+            for appearance, content_size in captures:
                 command("xcrun", "simctl", "ui", device_id, "appearance", appearance)
                 command("xcrun", "simctl", "ui", device_id, "content_size", content_size)
                 command("xcrun", "simctl", "launch", "--terminate-running-process", device_id, "studio.mycover.app")

@@ -30,7 +30,9 @@
 
 决策：编辑图保存音量、EQ、高通、混响、固定偏移、首尾裁剪、镜像、构图、字幕和切点。Take 固定绑定录制时的 Arrangement 与整数半音。播放和离线混音均使用 TimePitch pitch=半音×100、rate=1；不把它用于自动修音。
 
-AVAudioEngine offline 渲染混音；AVMutableComposition/VideoComposition 组合画面，CoreAnimation 字幕仅在带字幕项合成。选中的照片通过真实视频帧生成静态背景。补拍只捕获相机，不读取麦克风，参考成品或伴奏，保存为独立 visual asset；不替换正式人声。
+AVAudioEngine offline 渲染混音；AVMutableComposition/VideoComposition 组合画面。字幕使用 CoreText 栅格与 Core Image 按帧时间戳叠加，仅缓存当前一句的小图。先合成可复用的无字幕基础画面，带字幕版本再烧录；无字幕成品直接复制基础文件，不重复编码。选中的照片通过真实视频帧生成静态背景。补拍只捕获相机，不读取麦克风，参考成品或伴奏，保存为独立 visual asset；不替换正式人声。
+
+运行依据：`795f2f2` 的模拟器报告已越过离线混音和照片生成，在带字幕视频阶段进程退出，未拿到有效崩溃栈，不能断言具体系统根因。原 Core Animation 路径改为可逐帧检查的 Core Image 路径，并增加阶段、进程/系统诊断和中英文输出帧验证。Apple 提供[按帧 Core Image composition](https://developer.apple.com/documentation/avfoundation/avmutablevideocomposition/videocomposition(with:applyingcifilterswithhandler:completionhandler:))；[CIContext 文档](https://developer.apple.com/documentation/coreimage/cicontext)说明可跨线程共享 context/image。代价是字幕版增加一次基础文件读取/编码，空间预算涵盖临时画面；不改变双版本、原件和手工时间轴需求。
 
 基础降噪明确采用高通减少低频杂音，不冒称全频 AI 降噪。默认视频 1080p/30；方形为 1080×1080，不放大到所谓 4K。混音和干声/伴奏输出可选 M4A 或 48kHz float PCM WAV。顺序队列逐项保存状态，失败不删除源文件或完成项，只有可重建的操作临时文件自动清理。歌词缺少可信逐句时间点时不开放字幕成品；字幕范围和补拍画面偏移独立保存。保留有限的本会话编辑撤销栈，原始音轨不受影响。
 
@@ -60,6 +62,6 @@ AISeparationProvider、LyricsAlignmentProvider、PitchCorrectionProvider 提供�
 
 ## ADR 007：集中验证成本
 
-GitHub Actions 仅 workflow_dispatch 或 PR opened/ready_for_review 里程碑运行，不在普通 push/synchronize 上运行。macOS 单一构建任务执行纯逻辑测试及无签名通用模拟器构建；首次 PR 可同时采集 iPhone/iPad 空状态的浅色/深色与大字号截图。没有大型 E2E 矩阵，不生成未签名假 IPA。
+GitHub Actions 仅 workflow_dispatch 或 PR opened/ready_for_review 里程碑运行，不在普通 push/synchronize 上运行。macOS 单一构建任务执行纯逻辑测试及无签名通用模拟器构建；首次 PR 可同时采集 iPhone/iPad 空状态的浅色/深色与大字号截图。媒体路径修复可选 media_smoke_only，只冷启动一个模拟器而不重复截图。没有大型 E2E 矩阵，不生成未签名假 IPA。
 
 Apple 签名材料未提供；没有真实设备时所有媒体/文件提供者/恢复的实机 gate 保持未验证。已运行证据单列 DELIVERY_STATUS.md。

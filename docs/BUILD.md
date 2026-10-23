@@ -31,7 +31,7 @@ xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration
 
 `.github/workflows/ios-milestone.yml` 使用官方 `macos-26` runner 标签，`select_xcode.py` 显式选择镜像已安装的最新稳定 Xcode 26，并记录实际 Xcode/Swift 与可用 Simulator runtime/设备清单。仅 Actions 手动 **Run workflow** 或 PR 的 `opened` / `ready_for_review` 里程碑触发（草稿首次打开也构建）；普通 push 与 PR synchronize 不触发。工作流不打包 IPA、不使用签名 Secrets、不自动发布。
 
-PR `opened` 与 `ready_for_review` 两个明确里程碑默认截图及轻量合成媒体检查；手动运行可勾选 `simulator_snapshots`。同一次构建后各启动一个可用 iPhone/iPad Simulator（iPad 优先宽屏 Pro），保存浅色正常字号与深色辅助功能大字号截图。可本地执行：
+PR `opened` 与 `ready_for_review` 两个明确里程碑默认截图及轻量合成媒体检查；手动运行可勾选 `simulator_snapshots`。同一次构建后各启动一个可用 iPhone/iPad Simulator（iPad 优先宽屏 Pro），保存浅色正常字号与深色辅助功能大字号截图。修复媒体路径可改选 `media_smoke_only`，只启动一个 iPhone，不重复已采集的布局证据；对应脚本参数 `--media-only`。可本地执行：
 
 ```sh
 python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app

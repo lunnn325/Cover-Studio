@@ -91,7 +91,7 @@ final class CapturePipeline: NSObject, AVCaptureAudioDataOutputSampleBufferDeleg
     func begin(directory: URL, songStart: Double, host: UInt64, route: String, inputLatency: Double, outputLatency: Double, sequenceStart: Int = 0) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             queue.async {
-                guard self.session.isRunning, !self.recording else { continuation.resume(throwing: StudioError("录制会话尚未就绪。")); return }
+                guard self.session.isRunning, !self.session.isInterrupted, !self.recording else { continuation.resume(throwing: StudioError("摄像头或麦克风会话尚未恢复，请重新检查设备后重试。")); return }
                 self.directory = directory; self.songStart = songStart; self.playbackHost = host
                 self.anchor = CMTime(seconds: AVAudioTime.seconds(forHostTime: host), preferredTimescale: 1_000_000_000)
                 self.route = route; self.inputLatency = inputLatency; self.outputLatency = outputLatency

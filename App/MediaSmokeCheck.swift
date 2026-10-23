@@ -15,6 +15,7 @@ import Combine
         var audioTracks: Int
         var videoTracks: Int
         var peak: Float?
+        var estimatedHz: Double?
     }
     private struct Report: Codable {
         var passed = false
@@ -27,6 +28,7 @@ import Combine
         var temporaryRoot: String
         var outputs: [Output] = []
         var archiveRestored = false
+        var subtitleChangedPixels: [Int] = []
     }
 
     static func runIfRequested() async {
@@ -60,10 +62,11 @@ import Combine
             let backing = try asset(backingURL, role: .backing), vocal = try asset(vocalURL, role: .vocal)
             let visual = try asset(imageURL, role: .image)
             var arrangement = Arrangement(sourceAssetID: backing.id, isBacking: true)
+            arrangement.semitones = 3
             arrangement.lyrics.lines = [.init(text: "Synthetic first line", time: 0), .init(text: "合成第二句", time: 1)]
             var project = StudioProject(song: .init(title: "Offline media smoke"), arrangement: arrangement,
                                         assets: [backing, vocal, visual], sourceDeviceID: "synthetic-offline-smoke")
-            var take = Take(name: "Generated Audio Take", kind: .audio, arrangementID: arrangement.id, semitones: 0)
+            var take = Take(name: "Generated Audio Take", kind: .audio, arrangementID: arrangement.id, semitones: 3)
             take.segments = [.init(vocalAssetID: vocal.id, videoAssetID: nil, songStart: .init(seconds: 0),
                 hostStart: .init(seconds: 0), duration: .init(seconds: 2), audioFirstPTS: .init(seconds: 0),
                 videoFirstPTS: nil, playbackHostTime: 0, inputLatency: 0, outputLatency: 0, route: "synthetic offline; no capture")]
@@ -90,6 +93,25 @@ import Combine
                     report.outputs.append(output)
                 } catch { report.errors.append(variant.rawValue + ": " + error.localizedDescription) }
             }
+            do {
+                report.stage = "inspect subtitle frames"; try write(report, to: reportURL)
+                guard let clean = exports.jobs.first(where: { $0.variant == .cleanVideo && $0.status == "完成" })?.path,
+                      let subtitled = exports.jobs.first(where: { $0.variant == .subtitledVideo && $0.status == "完成" })?.path else {
+                    throw StudioError("Both video variants are required for subtitle frame inspection")
+                }
+                let frames = documents.appendingPathComponent("MediaSmokeFrames", isDirectory: true)
+                try files.createDirectory(at: frames, withIntermediateDirectories: true)
+                let baseline = try await snapshot(root.appendingPathComponent(clean), seconds: 0.25, to: frames.appendingPathComponent("clean.png"))
+                for (index, seconds) in [0.25, 1.25].enumerated() {
+                    let pixels = try await snapshot(root.appendingPathComponent(subtitled), seconds: seconds, to: frames.appendingPathComponent("subtitle-\(index + 1).png"))
+                    var changed = 0
+                    for pixel in stride(from: 0, to: baseline.count, by: 4) {
+                        if (0..<3).contains(where: { abs(Int(pixels[pixel + $0]) - Int(baseline[pixel + $0])) > 48 }) { changed += 1 }
+                    }
+                    report.subtitleChangedPixels.append(changed)
+                    guard changed > 40 else { throw StudioError("Subtitle frame lacks visible overlay pixels at \(seconds)s") }
+                }
+            } catch { report.errors.append("Subtitle frames: " + error.localizedDescription) }
             // The source-only full archive is restored into a new, isolated repository, never the user's library.
             do {
                 report.stage = "archive roundtrip"; try write(report, to: reportURL)
@@ -151,20 +173,52 @@ import Combine
         guard bytes > 0, duration.isFinite, abs(duration - 2) <= 0.2, !audio.isEmpty,
               needsVideo ? !video.isEmpty : video.isEmpty else { throw StudioError("Output size/duration/tracks failed validation") }
         var peak: Float?
+        var estimatedHz: Double?
         if url.pathExtension.lowercased() == "wav" {
             let reader = try AVAudioFile(forReading: url)
             guard let buffer = AVAudioPCMBuffer(pcmFormat: reader.processingFormat, frameCapacity: 4096) else { throw StudioError("Output PCM buffer unavailable") }
-            var maximum: Float = 0
+            var maximum: Float = 0, previous: Float = 0
+            var absoluteFrame: Int64 = 0, measuredFrames: Int64 = 0, crossings = 0
+            let rate = reader.processingFormat.sampleRate
             while reader.framePosition < reader.length {
                 try reader.read(into: buffer)
                 guard let samples = buffer.floatChannelData else { throw StudioError("Output cannot be decoded as float PCM") }
-                for frame in 0..<Int(buffer.frameLength) { maximum = max(maximum, abs(samples[0][frame])) }
+                for frame in 0..<Int(buffer.frameLength) {
+                    let sample = samples[0][frame]
+                    maximum = max(maximum, abs(sample))
+                    let seconds = Double(absoluteFrame) / rate
+                    if seconds >= 0.4 && seconds < 1.6 {
+                        if previous <= 0 && sample > 0 { crossings += 1 }
+                        measuredFrames += 1
+                    }
+                    previous = sample; absoluteFrame += 1
+                }
             }
             guard maximum.isFinite, maximum > 0.0001 else { throw StudioError("Synthetic WAV output is silent") }
             peak = maximum
+            if variant == .backing || variant == .dryVocal {
+                let measured = Double(crossings) * rate / Double(max(1, measuredFrames))
+                let expected = variant == .backing ? 220 * pow(2, 3.0 / 12) : 440
+                guard abs(measured - expected) < 3 else { throw StudioError("Pitch-preserving-speed check failed: measured \(measured)Hz, expected \(expected)Hz") }
+                estimatedHz = measured
+            }
         }
         return Output(variant: variant.rawValue, file: url.path, bytes: bytes, duration: duration,
-                      audioTracks: audio.count, videoTracks: video.count, peak: peak)
+                      audioTracks: audio.count, videoTracks: video.count, peak: peak, estimatedHz: estimatedHz)
+    }
+    private static func snapshot(_ url: URL, seconds: Double, to output: URL) async throws -> [UInt8] {
+        let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url)); generator.appliesPreferredTrackTransform = true
+        generator.maximumSize = CGSize(width: 640, height: 360)
+        let frame = try await generator.image(at: CMTime(seconds: seconds, preferredTimescale: 600)).image
+        var pixels = [UInt8](repeating: 0, count: 640 * 360 * 4)
+        try pixels.withUnsafeMutableBytes { bytes in
+            guard let bitmap = CGContext(data: bytes.baseAddress, width: 640, height: 360, bitsPerComponent: 8, bytesPerRow: 640 * 4,
+                    space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { throw StudioError("Frame inspection buffer unavailable") }
+            bitmap.draw(frame, in: CGRect(x: 0, y: 0, width: 640, height: 360))
+            guard let image = bitmap.makeImage(), let png = UIImage(cgImage: image).pngData() else { throw StudioError("Frame evidence unavailable") }
+            try png.write(to: output)
+        }
+        return pixels
     }
 }
 #endif

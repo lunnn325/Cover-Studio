@@ -190,6 +190,7 @@ public enum RecordingState: String, Codable, Sendable {
     public func canTransition(to next: Self) -> Bool {
         switch (self, next) {
         case (.idle, .preflight), (.saved, .preflight), (.recoverableError, .preflight),
+             (.ready, .preflight), (.interrupted, .preflight), (.ready, .idle), (.interrupted, .idle),
              (.preflight, .ready), (.ready, .countdown), (.countdown, .recording),
              (.recording, .interrupted), (.interrupted, .countdown),
              (.recording, .finalizing), (.interrupted, .finalizing),

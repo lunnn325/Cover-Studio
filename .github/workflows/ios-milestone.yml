@@ -7,6 +7,10 @@ on:
         description: Simulator screenshots and synthetic 2-second media smoke
         type: boolean
         default: false
+      media_smoke_only:
+        description: Offline media check on one simulator, without repeating screenshots
+        type: boolean
+        default: false
   pull_request:
     types: [opened, ready_for_review]
 
@@ -43,9 +47,14 @@ jobs:
           set -o pipefail
           xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build/xcodebuild.log
       - name: Simulator launch evidence and synthetic media smoke
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.simulator_snapshots)
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && (inputs.simulator_snapshots || inputs.media_smoke_only))
         timeout-minutes: 15
-        run: python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app
+        env:
+          MEDIA_ONLY: ${{ inputs.media_smoke_only && !inputs.simulator_snapshots }}
+        run: |
+          args=()
+          if [ "$MEDIA_ONLY" = "true" ]; then args+=(--media-only); fi
+          python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app "${args[@]}"
       - name: Report scope
         if: always()
         run: |

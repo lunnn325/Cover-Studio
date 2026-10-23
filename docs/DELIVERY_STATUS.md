@@ -7,8 +7,10 @@
 ## 构建证据
 
 - Windows：确定性 Xcode 工程、权限、隐私、图标和源文件收录检查通过。
-- 首次 macOS [run 40035445456](https://github.com/lunnn325/Cover-Studio/actions/runs/40035445456)，commit `eba4cc3`：19 项 CoverCore 测试通过，无签名 iOS Simulator application build 通过。模拟器启动证据和最终整合构建结果待更新。
-- 首次构建后的补丁包括有线耳返、跨工程操作保护、WAV、字幕范围、补拍偏移、撤销和轻量离线媒体 smoke；不得把首次结果套用为这些补丁已通过。
+- [run 40035445456](https://github.com/lunnn325/Cover-Studio/actions/runs/40035445456)，`eba4cc3`：19 项核心测试及无签名 iOS 编译通过。iPad 浅/深和 iPhone 深色空状态可见；首次 iPhone 浅色截屏过早为空白，不计通过。
+- [run 40036337745](https://github.com/lunnn325/Cover-Studio/actions/runs/40036337745)，`6597013`：20 项核心测试及编译通过；离线媒体 smoke 未在 120 秒内完成，**失败**，不能声称导出已通过运行验证。
+- `feefa40` 的检查暴露新增存储页 SwiftUI 类型检查超时，已拆分表达式修正。`795f2f2` 已通过 21 项核心测试与无签名编译，媒体检查失败，进程在带字幕视频阶段退出。新字幕帧渲染补丁需重新集成验证。
+- 后续补丁和每次实际结果见 DEVELOPMENT_LOG.md；具体 commit 的通过结果不能自动推广到未测试改动。
 
 ## P0 核心
 

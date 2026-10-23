@@ -283,6 +283,8 @@ final class CoverCoreTests: XCTestCase {
         XCTAssertTrue(RecordingState.recording.canTransition(to: .interrupted))
         XCTAssertTrue(RecordingState.interrupted.canTransition(to: .finalizing))
         XCTAssertTrue(RecordingState.countdown.canTransition(to: .ready))
+        XCTAssertTrue(RecordingState.interrupted.canTransition(to: .preflight))
+        XCTAssertTrue(RecordingState.ready.canTransition(to: .idle))
         XCTAssertFalse(RecordingState.idle.canTransition(to: .recording))
         XCTAssertFalse(RecordingState.saved.canTransition(to: .recording))
         let audio = DiskBudget(bytesPerSecond: 200_000), video = DiskBudget(bytesPerSecond: 2_000_000)
@@ -315,5 +317,19 @@ final class CoverCoreTests: XCTestCase {
         let old = try JSONDecoder().decode(RecordingSegment.self, from: JSONSerialization.data(withJSONObject: legacy))
         XCTAssertNil(old.sequence)
         XCTAssertEqual(Timeline.orderedSegments([old, resumed]).map(\.id), [first.id, resumed.id])
+    }
+    func testSubtitleIntervalsRespectTrimOffsetAndExplicitDisplayRange() throws {
+        var lyrics = Lyrics()
+        lyrics.lines = [.init(text: "Before", time: 0), .init(text: "Current", time: 4), .init(text: "Future", time: 8)]
+        lyrics.offset = 1
+        var edit = EditGraph(); edit.trimStart = 3; edit.subtitleStart = 4; edit.subtitleEnd = 10
+        let cues = try Timeline.subtitleCues(lyrics: lyrics, edit: edit, duration: 8)
+        XCTAssertEqual(cues.map(\.text), ["Before", "Current", "Future"])
+        XCTAssertEqual(cues.map(\.start), [1, 2, 6])
+        XCTAssertEqual(cues.map(\.end), [2, 6, 7])
+        XCTAssertFalse(cues.contains { $0.start <= 0.5 && 0.5 < $0.end })
+        XCTAssertEqual(cues.filter { $0.start <= 2 && 2 < $0.end }.map(\.text), ["Current"])
+        XCTAssertFalse(cues.contains { $0.start <= 7 && 7 < $0.end })
+        XCTAssertThrowsError(try Timeline.subtitleCues(lyrics: Lyrics(), edit: edit, duration: 8))
     }
 }

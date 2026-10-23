@@ -6,7 +6,25 @@ public struct TimelineRegion: Equatable, Sendable {
     public var start: Double
     public var duration: Double
 }
+public struct SubtitleCue: Equatable, Sendable {
+    public var text: String
+    public var start: Double
+    public var end: Double
+}
 public enum Timeline {
+    /// Output-relative, half-open intervals. A future line is never shown early.
+    public static func subtitleCues(lyrics: Lyrics, edit: EditGraph, duration: Double) throws -> [SubtitleCue] {
+        guard lyrics.isTimed, [lyrics.offset, edit.trimStart, edit.subtitleStart, edit.subtitleEnd ?? duration, duration].allSatisfy(\.isFinite), duration > 0 else {
+            throw StudioError("缺少有效的歌词时间轴或字幕区间。")
+        }
+        return lyrics.lines.enumerated().compactMap { index, line in
+            let start = line.time! + lyrics.offset - edit.trimStart
+            let end = index + 1 < lyrics.lines.count ? lyrics.lines[index + 1].time! + lyrics.offset - edit.trimStart : duration
+            let begin = max(0, start, edit.subtitleStart - edit.trimStart)
+            let finish = min(duration, end, (edit.subtitleEnd ?? (duration + edit.trimStart)) - edit.trimStart)
+            return finish > begin ? SubtitleCue(text: line.text, start: begin, end: finish) : nil
+        }
+    }
     public static func orderedSegments(_ segments: [RecordingSegment]) -> [RecordingSegment] {
         segments.enumerated().sorted {
             let left = $0.element.sequence ?? $0.offset, right = $1.element.sequence ?? $1.offset

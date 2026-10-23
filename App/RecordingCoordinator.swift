@@ -200,6 +200,18 @@ import CoverCore
             readRoute(); routeConfirmed = false
         } catch { store?.report(error) }
     }
+    func recheckInterruptedSession() async {
+        guard state == .interrupted, !stopping else { return }
+        await preflight(practice: practice, recovering: takeID)
+    }
+    func leavePreparedSession() async {
+        guard (state == .ready || state == .interrupted), !stopping else { return }
+        stopping = true; disableMonitoring(); monitoringAvailable = false
+        playback.suspendEngine(); monitor?.invalidate()
+        await pipeline.shutDown()
+        state = .idle; level = nil; routeConfirmed = false; stopping = false
+        store?.refreshPendingRecordings()
+    }
     func readRoute() {
         let session = AVAudioSession.sharedInstance()
         route = "输入：" + session.currentRoute.inputs.map(\.portName).joined(separator: "、")

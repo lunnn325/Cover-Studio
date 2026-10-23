@@ -70,6 +70,8 @@ struct PracticePanel: View {
                         Text(recording.monitoringExplanation).font(.footnote).foregroundStyle(.secondary)
                         Toggle("已确认收音和伴奏输出", isOn: $recording.routeConfirmed)
                         Button("倒数 3 秒后录音") { recording.start() }.disabled(!recording.routeConfirmed)
+                        if recording.state == .interrupted { Button("重新检查录音会话") { Task { await recording.recheckInterruptedSession() } } }
+                        Button("取消准备 / 稍后继续") { Task { await recording.leavePreparedSession() } }
                     }
                     if let countdown = recording.countdown { Text("\(countdown)").font(.largeTitle).monospacedDigit() }
                     if recording.state == .recording { Text("正在录制练习人声…").foregroundStyle(.red) }

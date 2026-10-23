@@ -1,6 +1,8 @@
 import AVFoundation
 import UIKit
 import CoverCore
+import CoreImage
+import CoreText
 
 enum MixRenderer {
     static func render(project: StudioProject, root: URL, to output: URL, dryOnly: Bool = false, backingOnly: Bool = false) throws {
@@ -180,38 +182,70 @@ enum VideoComposer {
         return (composition, video)
     }
 
-    static func subtitles(project: StudioProject, video: AVMutableVideoComposition, duration: Double) throws {
-        guard let take = project.selectedTake, let lyrics = project.arrangement(for: take)?.lyrics, lyrics.isTimed else {
-            throw StudioError("缺少已标记的歌词时间轴。")
+}
+
+/// A clean video is composed first so crop, mirror and resumed segments are fixed.
+/// Subtitles use frame timestamps instead of a process-wide Core Animation tree.
+/// Only the current line's small raster is cached, even for long lyric files.
+final class SubtitleFrameRenderer: @unchecked Sendable {
+    private let cues: [SubtitleCue]
+    private let style: SubtitleStyle
+    private let size: CGSize
+    private let lock = NSLock()
+    private var cachedIndex: Int?
+    private var cachedImage: CIImage?
+    private let context = CIContext(options: [.cacheIntermediates: false])
+
+    init(project: StudioProject, size: CGSize, duration: Double) throws {
+        guard let take = project.selectedTake, let lyrics = project.arrangement(for: take)?.lyrics else { throw StudioError("缺少歌词时间轴。") }
+        self.cues = try Timeline.subtitleCues(lyrics: lyrics, edit: project.edit, duration: duration)
+        self.style = project.edit.subtitleStyle; self.size = size
+    }
+    func composition(asset: AVAsset) -> AVVideoComposition {
+        AVVideoComposition(asset: asset, applyingCIFiltersWithHandler: { [self] request in
+            do {
+                let source = request.sourceImage
+                let overlay = try image(at: request.compositionTime.seconds)
+                request.finish(with: overlay?.composited(over: source).cropped(to: source.extent) ?? source, context: context)
+            } catch { request.finish(with: error) }
+        })
+    }
+    private func image(at seconds: Double) throws -> CIImage? {
+        lock.lock(); defer { lock.unlock() }
+        // Binary search avoids a per-frame scan through a whole song's lyrics.
+        var lo = 0, hi = cues.count
+        while lo < hi {
+            let middle = (lo + hi) / 2
+            if cues[middle].start <= seconds { lo = middle + 1 } else { hi = middle }
         }
-        guard duration > 0 else { throw StudioError("字幕时间区间为空。") }
-        let size = video.renderSize, style = project.edit.subtitleStyle
-        let parent = CALayer(); parent.frame = CGRect(origin: .zero, size: size)
-        let picture = CALayer(); picture.frame = parent.bounds; parent.addSublayer(picture)
-        for (index, line) in lyrics.lines.enumerated() {
-            let start = line.time! + lyrics.offset - project.edit.trimStart
-            let end = (index + 1 < lyrics.lines.count ? lyrics.lines[index + 1].time! + lyrics.offset - project.edit.trimStart : duration)
-            guard end > 0, start < duration, end > start else { continue }
-            let text = CATextLayer(); text.string = line.text; text.alignmentMode = .center; text.isWrapped = true
-            text.font = CTFontCreateWithName(style.fontName as CFString, style.size, nil)
-            text.fontSize = style.size; text.contentsScale = 2
-            text.foregroundColor = (style.whiteText ? UIColor.white : UIColor.yellow).cgColor
-            text.frame = CGRect(x: size.width * 0.06, y: size.height * style.verticalPosition, width: size.width * 0.88, height: style.size * 3)
-            if style.shadow { text.shadowColor = UIColor.black.cgColor; text.shadowOpacity = 1; text.shadowRadius = 3; text.shadowOffset = CGSize(width: 0, height: -2) }
-            text.opacity = 0
-            let animation = CAKeyframeAnimation(keyPath: "opacity")
-            let begin = max(0, start, project.edit.subtitleStart - project.edit.trimStart)
-            let finish = min(duration, end, (project.edit.subtitleEnd ?? (duration + project.edit.trimStart)) - project.edit.trimStart)
-            guard finish > begin else { continue }
-            // Keep the model opacity at zero before this line starts. Backwards
-            // filling would incorrectly show every future lyric at time zero.
-            animation.values = [1, 0]; animation.keyTimes = [0, 1]
-            animation.calculationMode = .discrete
-            animation.duration = finish - begin; animation.beginTime = AVCoreAnimationBeginTimeAtZero + begin
-            animation.isRemovedOnCompletion = false; animation.fillMode = .forwards
-            text.add(animation, forKey: "lyrics"); parent.addSublayer(text)
+        guard lo > 0, seconds < cues[lo - 1].end else { return nil }
+        let index = lo - 1
+        if cachedIndex == index { return cachedImage }
+        let width = Int(ceil(size.width * 0.88)), height = Int(ceil(style.size * 3 + 12))
+        guard let bitmap = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                                    space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            throw StudioError("字幕缓冲区不可用，未导出假字幕。")
         }
-        video.animationTool = AVVideoCompositionCoreAnimationTool(postProcessingAsVideoLayer: picture, in: parent)
+        var alignment = CTTextAlignment.center
+        let paragraph = withUnsafePointer(to: &alignment) { pointer in
+            let setting = CTParagraphStyleSetting(spec: .alignment, valueSize: MemoryLayout<CTTextAlignment>.size, value: pointer)
+            return CTParagraphStyleCreate([setting], 1)
+        }
+        let color = style.whiteText ? CGColor(gray: 1, alpha: 1) : CGColor(red: 1, green: 1, blue: 0, alpha: 1)
+        let attributes: [NSAttributedString.Key: Any] = [
+            NSAttributedString.Key(kCTFontAttributeName as String): CTFontCreateWithName(style.fontName as CFString, style.size, nil),
+            NSAttributedString.Key(kCTForegroundColorAttributeName as String): color,
+            NSAttributedString.Key(kCTParagraphStyleAttributeName as String): paragraph
+        ]
+        let text = NSAttributedString(string: cues[index].text, attributes: attributes)
+        let setter = CTFramesetterCreateWithAttributedString(text)
+        let path = CGPath(rect: CGRect(x: 6, y: 6, width: CGFloat(width - 12), height: CGFloat(height - 12)), transform: nil)
+        if style.shadow { bitmap.setShadow(offset: CGSize(width: 0, height: -2), blur: 3, color: CGColor(gray: 0, alpha: 1)) }
+        CTFrameDraw(CTFramesetterCreateFrame(setter, CFRange(location: 0, length: text.length), path, nil), bitmap)
+        guard let raster = bitmap.makeImage() else { throw StudioError("字幕图像生成失败。") }
+        cachedIndex = index
+        cachedImage = CIImage(cgImage: raster).transformed(by: CGAffineTransform(translationX: size.width * 0.06, y: size.height * style.verticalPosition))
+        return cachedImage
     }
 }
 

@@ -71,9 +71,11 @@ struct RecordPanel: View {
                     if recording.state == .interrupted {
                         Text("恢复将生成新片段，保留旧片段。默认回退 3 秒，可在后期调整接唱切点。").font(.footnote).foregroundStyle(.secondary)
                         HStack { Text("接唱秒数"); TextField("秒", value: $recording.resumePosition, format: .number).keyboardType(.decimalPad) }
+                        Button("重新检查摄像头与音频会话") { Task { await recording.recheckInterruptedSession() } }
                     }
                     Button("倒数 3 秒后开始") { recording.start() }.buttonStyle(.borderedProminent).controlSize(.large).disabled(!recording.routeConfirmed)
                     Button("结束并保留已有片段") { Task { await recording.finish() } }
+                    Button(recording.state == .ready ? "取消本次准备" : "稍后继续（保留待恢复）") { Task { await recording.leavePreparedSession() } }
                 } else {
                     config
                     Button { Task { await recording.preflight() } } label: { Label("检查设备与路由", systemImage: "checkmark.shield") }
