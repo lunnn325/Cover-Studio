@@ -1,0 +1,67 @@
+name: iOS milestone build
+
+on:
+  workflow_dispatch:
+    inputs:
+      simulator_snapshots:
+        description: Capture iPhone and iPad empty states (light, dark with large text)
+        type: boolean
+        default: false
+  pull_request:
+    types: [opened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-milestone-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select installed stable Xcode 26
+        run: python3 scripts/select_xcode.py >> "$GITHUB_ENV"
+      - name: Record toolchain and validate generated configuration
+        run: |
+          mkdir -p build
+          xcodebuild -version | tee build/toolchain.txt
+          swift --version | tee -a build/toolchain.txt
+          xcrun simctl list runtimes | tee build/simulator-runtimes.txt
+          xcrun simctl list devices available | tee build/simulator-devices.txt
+          python3 scripts/validate_configuration.py
+          plutil -lint App/Info.plist App/PrivacyInfo.xcprivacy MyCoverStudio.xcodeproj/project.pbxproj
+      - name: Pure logic tests
+        run: |
+          set -o pipefail
+          swift test --parallel 2>&1 | tee build/swift-tests.log
+      - name: Build universal iOS simulator app without signing
+        run: |
+          set -o pipefail
+          xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build/xcodebuild.log
+      - name: Optional simulator launch evidence
+        if: (github.event_name == 'pull_request' && github.event.action == 'opened') || (github.event_name == 'workflow_dispatch' && inputs.simulator_snapshots)
+        run: python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app
+      - name: Report scope
+        if: always()
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'REPORT'
+          This milestone checks Swift pure logic tests and an unsigned iOS Simulator build.
+          Optional screenshots show simulator empty-state layout only.
+          No signed IPA, AirPods/audio route, camera/microphone, audio/video synchronization,
+          cloud transfer or real-device recovery result is implied. See docs/QUALITY_GATES.md.
+          REPORT
+      - name: Keep short-lived validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-milestone-evidence
+          path: |
+            build/*.log
+            build/*.txt
+            build/simulator-evidence/
+          retention-days: 7
+          if-no-files-found: warn

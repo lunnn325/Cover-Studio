@@ -1,0 +1,24 @@
+My Cover Studio V1
+
+The application has no third-party runtime packages, analytics SDKs, AI models,
+network services or bundled copyrighted music. It uses Apple system frameworks
+(SwiftUI, UIKit, AVFoundation/AVFAudio, CoreMedia, PhotosUI, UniformTypeIdentifiers,
+Foundation and CryptoKit). Apple frameworks are supplied by the user's operating
+system and Xcode SDK under Apple's applicable terms.
+
+CoverCore is an in-repository Swift package, not an external dependency.
+
+Development tools only:
+- Python 3 standard library is used for deterministic project configuration and
+  optional simulator launch screenshots; it is not bundled in the iOS app.
+- Pillow (HPND/PIL license) is used only to render the original geometric app icon.
+  Pillow software is not bundled in the app; the generated icon contains no
+  third-party image, font or artwork. https://github.com/python-pillow/Pillow/blob/main/LICENSE
+- GitHub Actions actions/checkout and actions/upload-artifact are used in CI under
+  their respective MIT licenses. No action code is bundled in the application.
+  https://github.com/actions/checkout/blob/main/LICENSE
+  https://github.com/actions/upload-artifact/blob/main/LICENSE
+
+No AI separation, alignment or pitch correction model is included. A future
+provider/model must have its license, device compatibility, privacy and cost
+reviewed before integration. User-imported songs and media remain user content.

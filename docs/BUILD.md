@@ -1,0 +1,57 @@
+# 构建与安装
+
+这是原生 SwiftUI iPhone/iPad application，`MyCoverStudio.xcodeproj` 内有共享 scheme `MyCoverStudio`。领域模型和纯逻辑位于本地 Swift Package `CoverCore`；没有第三方运行依赖。最低 iOS/iPadOS 17.0，Swift 5 语言模式；使用 Xcode 26 或更新 SDK 编译有条件的 iOS 26 能力，旧系统仍需运行时检测/降级。
+
+## Windows 配置检查
+
+需要 Python 3.10+，不需要安装 Ruby、XcodeGen 或联网下载构建工具。新增/移除 `App/**/*.swift` 后运行：
+
+```powershell
+python scripts/generate_project.py
+python scripts/validate_configuration.py
+```
+
+生成器按文件路径产生稳定 ID，把所有 App Swift 文件编入原生 application target。生成的 pbxproj 和共享 scheme 一同提交；可用 `python scripts/generate_project.py --check` 检查是否过期。不要手工修改生成文件，修改生成脚本后重新生成。
+
+配置检查验证引用完整、隐私/权限 plist、工程文档类型和源文件收录；**这不能证明 Swift 编译、布局或任何媒体功能已通过**。Windows 的 `python` 若指向 Microsoft Store 占位程序，改用已安装 Python 的完整路径。
+
+## macOS 无签名集中构建
+
+安装 Xcode 26+、iOS Simulator runtime，选择该 Xcode 的 Command Line Tools。在仓库根目录：
+
+```sh
+python3 scripts/validate_configuration.py
+swift test --parallel
+xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build
+```
+
+`swift test` 在 macOS 测试纯逻辑；CryptoKit 使用 Apple 系统实现。Simulator `.app` 位于 `build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app`，不能安装至真实 iPhone/iPad。
+
+## GitHub Actions
+
+`.github/workflows/ios-milestone.yml` 使用官方 `macos-26` runner 标签，`select_xcode.py` 显式选择镜像已安装的最新稳定 Xcode 26，并记录实际 Xcode/Swift 与可用 Simulator runtime/设备清单。仅 Actions 手动 **Run workflow** 或 PR 的 `opened` / `ready_for_review` 里程碑触发（草稿首次打开也构建）；普通 push 与 PR synchronize 不触发。工作流不打包 IPA、不使用签名 Secrets、不自动发布。
+
+首次 PR `opened` 默认截图；手动运行可勾选 `simulator_snapshots`。同一次构建后各启动一个可用 iPhone/iPad Simulator（iPad 优先宽屏 Pro），保存浅色正常字号与深色辅助功能大字号截图。可本地执行：
+
+```sh
+python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app
+```
+
+截图和 `scope.json` 是空状态启动/外观证据，需人工查看；不代表录制页、横屏、整条交互、真实相机、AirPods、声音、同步或备份恢复通过。截图失败会使已选择的步骤明确失败。CI 日志和截图保留 7 天。当前是否真正运行成功应以该次 Actions 记录和交付报告为准，不能由这些脚本存在推定。
+
+## 真机签名与安装
+
+1. 在 macOS 用 Xcode 打开 `MyCoverStudio.xcodeproj`，选择 `MyCoverStudio` target。
+2. 在 Signing & Capabilities 中选择本人真实 Apple 开发 Team；技术 bundle ID 默认 `studio.mycover.app`，如被占用，可在生成器内改为该 Team 可用的唯一 ID 并重新生成。工程文件类型 ID `studio.mycover.project` 应保持稳定。
+3. 用可信任的真实 iPhone/iPad 选择 Run。免费个人 Team 的设备安装存在 Apple 限制；TestFlight/Ad Hoc/App Store 需相应有效开发资格、证书、描述文件及设备注册条件。
+4. 分发时 Product → Archive，按该 Team 的合法渠道签名导出。将证书保存在 Keychain/受控 CI Secrets；不得提交 `.p12`、私钥、密码或 provisioning profile。
+
+此仓库不含签名材料，目前没有可以宣称已成功安装的 IPA。发布前还需完成设备/权限配置复核及 `QUALITY_GATES.md` 真实设备冒烟。无签名构建不能替代这些结果。
+
+应用包含不透明 1024×1024 靛蓝/白色音波图标，系统负责外部圆角。`scripts/generate_app_icon.py` 可用 Python + Pillow 重新生成；Pillow 仅开发时需要，正常检查、构建及应用运行不依赖它。
+
+## 能力、隐私与设备边界
+
+相机/麦克风权限只解释拍摄和录音本地用途。相册选择使用系统 PhotosPicker，备份使用系统 Files；没有账号、网络 entitlement、外部模型或后台持续录制声明。`PrivacyInfo.xcprivacy` 申报本机设置、磁盘容量保护、应用私有文件时间和单调时钟使用原因；有新 API 时需重新核对。
+
+参考：[Apple 必须说明用途的 API](https://developer.apple.com/documentation/bundleresources/describing-use-of-required-reason-api)、[GitHub runner-images 官方列表](https://github.com/actions/runner-images)。文档/API 存在只证明配置依据，不能解除真实设备技术风险。

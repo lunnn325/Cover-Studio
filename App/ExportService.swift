@@ -1,0 +1,151 @@
+import AVFoundation
+import Combine
+import CoverCore
+
+struct ExportJob: Identifiable, Codable {
+    var id = UUID()
+    var variant: ExportVariant
+    var status = "待处理"
+    var path: String?
+    var error: String?
+}
+
+@MainActor final class ExportService: ObservableObject {
+    @Published var jobs: [ExportJob] = []
+    @Published var working = false
+    @Published var stage = ""
+    @Published var shareURLs: [URL] = []
+    private var projectID: UUID?
+    func load(root: URL, projectID: UUID, exportedAssets: [MediaAsset] = []) {
+        guard !working, self.projectID != projectID else { return }
+        self.projectID = projectID
+        if let data = try? Data(contentsOf: root.appendingPathComponent("exports/queue.json")),
+           let saved = try? JSONDecoder().decode([ExportJob].self, from: data) {
+            jobs = saved.map { var job = $0; if job.status == "运行中" { job.status = "中断"; job.error = "上次导出中断，可单独重试。" }; return job }
+            shareURLs = jobs.filter { $0.status == "完成" }.compactMap { job in
+                guard let path = job.path, path.hasPrefix("exports/"), !path.contains("..") else { return nil }
+                let url = root.appendingPathComponent(path)
+                return FileManager.default.fileExists(atPath: url.path) ? url : nil
+            }
+        } else {
+            jobs = Self.restoredJobs(assets: exportedAssets)
+            shareURLs = jobs.compactMap { $0.path.map { root.appendingPathComponent($0) } }.filter { FileManager.default.fileExists(atPath: $0.path) }
+        }
+    }
+    static func restoredJobs(assets: [MediaAsset]) -> [ExportJob] {
+        assets.filter { $0.role == .export }.compactMap { asset in
+            guard let variant = ExportVariant.allCases.first(where: { asset.path.contains("-" + $0.rawValue + ".") }) else { return nil }
+            return ExportJob(variant: variant, status: "完成", path: asset.path)
+        }
+    }
+    func run(project: StudioProject, root: URL, retry: ExportVariant? = nil) async {
+        guard !working else { return }
+        working = true; defer { working = false; stage = "" }
+        projectID = project.id
+        let target = root.appendingPathComponent("exports", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+            guard let take = project.selectedTake else { throw StudioError("请先选择已保存的 Take。") }
+            let hasVideo = project.edit.visualAssetID != nil || take.segments.contains { $0.videoAssetID != nil }
+            var preset = project.exportPreset
+            if let retry { preset.variants = [retry] }
+            try preset.validate(lyrics: project.arrangement(for: take)?.lyrics ?? Lyrics(), hasVideo: hasVideo)
+            let range = try Timeline.range(take: take, edit: project.edit), duration = range.upperBound - range.lowerBound
+            let variants = ExportVariant.allCases.filter { preset.variants.contains($0) }
+            if retry == nil { jobs = variants.map { ExportJob(variant: $0) }; shareURLs = [] }
+            // Only generated intermediates live here; originals and completed outputs
+            // are never part of this cleanup. A crash may leave a rebuildable cache.
+            let scratchRoot = root.appendingPathComponent("cache/export-" + UUID().uuidString, isDirectory: true)
+            try FileManager.default.createDirectory(at: scratchRoot, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: scratchRoot) }
+            let mixURL = scratchRoot.appendingPathComponent("mix.caf")
+            var renderedMix = false
+            var background: URL?
+            for variant in variants {
+                if !jobs.contains(where: { $0.variant == variant }) { jobs.append(ExportJob(variant: variant)) }
+                guard let index = jobs.firstIndex(where: { $0.variant == variant }) else { continue }
+                jobs[index].status = "运行中"; jobs[index].error = nil; stage = variant.label
+                try persist(root: root)
+                do {
+                    // Recheck before every item: completed videos remain on disk.
+                    // Lyrics need no media render; photo/video failures cannot block stems.
+                    if variant != .lyrics {
+                        let videoOutput = variant == .cleanVideo || variant == .subtitledVideo
+                        let estimate = Int64(duration * (48000 * 2 * 4 + (videoOutput ? 3_000_000 : 40_000))) + 64 * 1024 * 1024
+                        guard try FileIntegrity.available(root) > estimate else { throw StudioError("剩余空间不足以安全生成此项。已完成项已保留；可减少输出、缩短区间或备份后释放其他工程空间。") }
+                        if [.cleanVideo, .subtitledVideo, .mixAudio].contains(variant), !renderedMix {
+                            stage = "正在离线混音"
+                            // A prior failed attempt may have left a partial cache.
+                            if FileManager.default.fileExists(atPath: mixURL.path) { try FileManager.default.removeItem(at: mixURL) }
+                            try await Task.detached(priority: .userInitiated) { try MixRenderer.render(project: project, root: root, to: mixURL) }.value
+                            renderedMix = true
+                        }
+                        if videoOutput, background == nil,
+                           let id = project.edit.visualAssetID, let visual = project.asset(id), visual.role == .image {
+                            stage = "正在生成照片画面"
+                            let url = scratchRoot.appendingPathComponent(UUID().uuidString + "-photo.mov")
+                            try await StillVideoRenderer.make(imageURL: root.appendingPathComponent(visual.path), duration: duration,
+                                                              landscape: project.edit.aspect >= 1, to: url)
+                            background = url
+                        }
+                    }
+                    stage = variant.label
+                    let suffix = variant == .lyrics ? "lrc" : (variant == .cleanVideo || variant == .subtitledVideo ? "mp4" : "m4a")
+                    let output = target.appendingPathComponent("\(UUID().uuidString)-\(variant.rawValue).\(suffix)")
+                    switch variant {
+                    case .lyrics:
+                        let lyrics = project.arrangement(for: take)?.lyrics ?? Lyrics()
+                        try lyrics.lrc().write(to: output, atomically: true, encoding: .utf8)
+                    case .mixAudio: try await exportAudio(source: mixURL, output: output)
+                    case .dryVocal, .backing:
+                        let scratch = scratchRoot.appendingPathComponent("\(UUID().uuidString).caf")
+                        try await Task.detached(priority: .userInitiated) {
+                            try MixRenderer.render(project: project, root: root, to: scratch, dryOnly: variant == .dryVocal, backingOnly: variant == .backing)
+                        }.value
+                        try await exportAudio(source: scratch, output: output)
+                    case .cleanVideo, .subtitledVideo:
+                        let (composition, video) = try await VideoComposer.composition(project: project, root: root, mix: mixURL, backgroundVideo: background)
+                        guard let video else { throw StudioError("没有可导出的视频画面，请先选择照片或补拍。") }
+                        if variant == .subtitledVideo { try VideoComposer.subtitles(project: project, video: video, duration: duration) }
+                        guard let session = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality), session.supportedFileTypes.contains(.mp4) else {
+                            throw StudioError("当前设备不支持 MP4/H.264 导出。源文件已保留。")
+                        }
+                        session.videoComposition = video; session.outputURL = output; session.outputFileType = .mp4
+                        session.timeRange = CMTimeRange(start: .zero, duration: CMTime(seconds: duration, preferredTimescale: 600_000))
+                        session.shouldOptimizeForNetworkUse = true
+                        try await complete(session)
+                    }
+                    guard try FileIntegrity.size(output) > 0 else { throw StudioError("输出文件为空，未报告成功。") }
+                    jobs[index].status = "完成"; jobs[index].path = "exports/" + output.lastPathComponent
+                    shareURLs.append(output)
+                } catch { jobs[index].status = "失败"; jobs[index].error = error.localizedDescription }
+                try persist(root: root)
+            }
+        } catch {
+            if jobs.isEmpty { jobs = [ExportJob(variant: retry ?? .cleanVideo, status: "失败", error: error.localizedDescription)] }
+            else { for i in jobs.indices where jobs[i].status != "完成" { jobs[i].status = "失败"; jobs[i].error = error.localizedDescription } }
+            try? persist(root: root)
+        }
+    }
+    func previewMix(project: StudioProject, root: URL) async throws -> URL {
+        guard !working else { throw StudioError("请等待当前导出完成。") }
+        working = true; stage = "正在生成后期试听"; defer { working = false; stage = "" }
+        let directory = root.appendingPathComponent("cache", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appendingPathComponent(UUID().uuidString + ".caf")
+        try await Task.detached(priority: .userInitiated) { try MixRenderer.render(project: project, root: root, to: url) }.value
+        return url
+    }
+    private func exportAudio(source: URL, output: URL) async throws {
+        guard let session = AVAssetExportSession(asset: AVURLAsset(url: source), presetName: AVAssetExportPresetAppleM4A),
+              session.supportedFileTypes.contains(.m4a) else { throw StudioError("设备不支持 M4A 音频编码，源文件已保留。") }
+        session.outputFileType = .m4a; session.outputURL = output; try await complete(session)
+    }
+    private func complete(_ session: AVAssetExportSession) async throws {
+        await withCheckedContinuation { continuation in session.exportAsynchronously { continuation.resume() } }
+        guard session.status == .completed else { throw session.error ?? StudioError("导出未完成，原件和已完成项均已保留。") }
+    }
+    private func persist(root: URL) throws {
+        try FileIntegrity.encoder().encode(jobs).write(to: root.appendingPathComponent("exports/queue.json"), options: .atomic)
+    }
+}

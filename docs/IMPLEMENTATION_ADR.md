@@ -1,0 +1,63 @@
+# My Cover Studio V1 实施决策
+
+产品要求以 DECISIONS.md 为准。以下是技术实现决策，不代表媒体能力通过实机验收。
+
+## ADR 001：原生应用与可复现项目
+
+问题：主要开发环境是 Windows，缺少 Xcode，需要可复查且依赖少的原生项目。
+
+候选：XcodeGen/Tuist、手写持续维护 pbxproj、确定性生成器。
+
+决策：SwiftUI application + 本地 CoverCore Swift Package；Python 标准库生成并提交 Xcode 工程和共享 scheme。iOS/iPadOS 17 起运行，Swift 5 语言模式，Xcode 26 SDK 编译。只使用 Apple 系统框架。生成器扫描 App 目录，避免新增源文件漏进 target。
+
+兼容性：保持原生 iPhone/iPad、相同领域模型、离线核心能力。无服务端、账号、分析或收费依赖。iPad 编辑页按可用窗口宽度分栏，紧凑窗口保留同一编辑控件。
+
+验证：跨平台配置检查；macOS 集中 swift test 和无签名 Simulator build。真实签名/实机仍独立验收。
+
+## ADR 002：单一路径采集与可恢复片段
+
+问题：相机和独立音频引擎同时采麦克风容易争抢资源，独立 start 调用也不能证明同步。
+
+决策：AVCaptureSession 是唯一麦克风输入；AVCaptureAudioDataOutput 写独立干声 M4A（48 kHz / 单声道 / AAC 256 kbps，未加效果），AVCaptureVideoDataOutput 写无音轨的 H.264 MOV。AVAudioEngine 只播放伴奏，不读取 inputNode。各流 firstPTS 归零写容器，同时保存共同 host anchor、原始首采样 PTS、歌曲位置、播放 hostTime、实际路由和输入/输出延迟。渲染按 firstPTS−anchor 补前导差，不假设两个文件从零就同步。
+
+每约 8 秒轮换片段，视频 MOV 另启用初始 1 秒/后续 2 秒 movie fragments。片段封装后才计算大小/哈希并提交工程。索引失败会传播到录制结束状态，保留 journal，不报告成功。容器正在写入的最后片段可能不可恢复；不保证崩溃零损失。正常停止后直接合成已封装的干声/画面做原始预览，不等待字幕/混音渲染。
+
+兼容性：所有 Take 与源素材独立保存，不覆盖旧录制。恢复接唱生成新片段，重叠按后录片段替代，原件保留，切点可手动调整。默认无耳返。实际声学延迟和蓝牙输出安全性必须实机检查。
+
+## ADR 003：非破坏编辑与顺序导出
+
+决策：编辑图保存音量、EQ、高通、混响、固定偏移、首尾裁剪、镜像、构图、字幕和切点。Take 固定绑定录制时的 Arrangement 与整数半音。播放和离线混音均使用 TimePitch pitch=半音×100、rate=1；不把它用于自动修音。
+
+AVAudioEngine offline 渲染混音；AVMutableComposition/VideoComposition 组合画面，CoreAnimation 字幕仅在带字幕项合成。选中的照片通过真实视频帧生成静态背景。补拍只捕获相机，不读取麦克风，参考成品或伴奏，保存为独立 visual asset；不替换正式人声。
+
+基础降噪明确采用高通减少低频杂音，不冒称全频 AI 降噪。默认视频 1080p/30；方形为 1080×1080，不放大到所谓 4K。混音和干声/伴奏输出为 M4A。顺序队列逐项保存状态，失败不删除源文件或完成项，只有可重建的操作临时文件自动清理。歌词缺少可信逐句时间点时不开放字幕成品。
+
+## ADR 004：COVERP01 流式工程包
+
+问题：大型音视频不适合 FileDocument 一次装入内存；ZIP 还会增加解压路径与压缩炸弹风险。
+
+决策：.coverproject 是开放的未压缩流式容器，不使用 ZIP 或第三方归档库。结构为 8 字节 magic `COVERP01`、8 字节大端 JSON 长度、32 字节清单 SHA-256、JSON manifest、按清单顺序排列的原始素材字节。清单内包含完整工程模型、schema/minReader/appVersion、功能标志、工程/归档/设备身份、revision、每素材相对路径/大小/哈希、采样属性和有理数时间。
+
+限制：清单 16 MiB、素材 20,000 个、总字节最多 512 GiB，同时受实际磁盘空间限制。拒绝路径遍历、控制字符、符号链接、目录/文件冲突和大小写/Unicode 同名覆盖。只允许媒体路径，不能覆盖工程索引。输入无解压步骤，不接受 ZIP 伪装。
+
+完整包默认排除可重新生成成品，可明确勾选；精简/自定义保留编辑依赖闭包。包生成后重新流式读取校验才发布。恢复先暂存并校验全部长度/哈希/引用/版本，再提交目录。同 ID 默认保留安全副本；替换实现使用同卷重命名保留 `.safety-*` 原目录与恢复事务日志，失败/重启可回滚。复制工程不覆盖历史索引。
+
+迁移：当前仅 schema 1；未来版本/未知功能明确拒绝，不能丢字段后继续导入。格式细节见 USER_GUIDE.md。
+
+## ADR 005：备份证据与删除边界
+
+决策：准备包、Files 接收、外部包恢复验证各自记录，不称云端上传成功。备份记录不推进工程内容 revision；只有内容修改才推进。释放空间要求当前 revision 已交给 Files 或验证恢复。UI 展示包类型和排除的 Take，用户两次确认后才移除本工程源素材。精简包排除的旧 Take 在释放后无法从该包恢复，必须在确认中明确告知。
+
+所有素材为工程私有路径；不同工程复制时复制素材，避免跨工程删除共享文件。Take 删除检查其他 Take、编辑、伴奏和照片引用，共享片段保留。操作不自动删除原始素材。安全副本/失败恢复暂存不自动清理。
+
+## ADR 006：P1 能力诚实关闭
+
+AISeparationProvider、LyricsAlignmentProvider、PitchCorrectionProvider 提供可替换协议，目前 UnavailableAI 明确不可用。无模型下载、云 API 或上传。逐字与智能切点没有伪造实现；P0 手工歌词与切点替代。4K 未通过完整捕获/编辑/输出验证而关闭。
+
+高质量蓝牙仅在 SDK/iOS 26 条件下请求，并读取系统 Bluetooth microphone extension 的 supported/enabled；不根据 AirPods 名称硬编码能力。支持 API 存在不等于真实音质已通过测试。
+
+## ADR 007：集中验证成本
+
+GitHub Actions 仅 workflow_dispatch 或 PR opened/ready_for_review 里程碑运行，不在普通 push/synchronize 上运行。macOS 单一构建任务执行纯逻辑测试及无签名通用模拟器构建；首次 PR 可同时采集 iPhone/iPad 空状态的浅色/深色与大字号截图。没有大型 E2E 矩阵，不生成未签名假 IPA。
+
+Apple 签名材料未提供；没有真实设备时所有媒体/文件提供者/恢复的实机 gate 保持未验证。已运行证据单列 DELIVERY_STATUS.md。
