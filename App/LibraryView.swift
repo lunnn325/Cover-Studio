@@ -73,6 +73,8 @@ struct LibraryView: View {
     @ViewBuilder func cover(_ project: StudioProject) -> some View {
         if let id = project.song.coverAssetID, let asset = project.asset(id), let image = UIImage(contentsOfFile: store.repository.directory(project.id).appendingPathComponent(asset.path).path) {
             Image(uiImage: image).resizable().scaledToFill().frame(width: 48, height: 48).clipShape(RoundedRectangle(cornerRadius: 8))
+        } else if let image = UIImage(contentsOfFile: store.repository.directory(project.id).appendingPathComponent("thumbnail.jpg").path) {
+            Image(uiImage: image).resizable().scaledToFill().frame(width: 48, height: 48).clipShape(RoundedRectangle(cornerRadius: 8))
         } else {
             Image(systemName: project.archived ? "archivebox" : "music.note").font(.title2).foregroundStyle(.secondary).frame(width: 48, height: 48).background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
         }

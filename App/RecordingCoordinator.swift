@@ -18,6 +18,9 @@ import CoverCore
     @Published var inputs: [AVAudioSessionPortDescription] = []
     @Published var selectedInputUID = ""
     @Published private(set) var level: Float?
+    @Published private(set) var monitoringEnabled = false
+    @Published private(set) var monitoringAvailable = false
+    @Published private(set) var monitoringExplanation = "耳返默认关闭；检查设备后可评估有线耳机路径。"
     let pipeline = CapturePipeline()
     weak var store: StudioStore?
     private let playback: PlaybackEngine
@@ -31,6 +34,8 @@ import CoverCore
     private var countdownTask: Task<Void, Never>?
     private var routeFingerprint = ""
     private var persistenceError: Error?
+    private var monitoringFormat: AVAudioFormat?
+    private var monitoringConfigured = false
     var isBusy: Bool { [.preflight, .ready, .countdown, .recording, .interrupted, .finalizing].contains(state) }
     var isCapturing: Bool { state == .recording || state == .countdown }
     init(playback: PlaybackEngine, repository: ProjectRepository) {
@@ -54,10 +59,33 @@ import CoverCore
                 self.level = value
             }
         }
-        let center = NotificationCenter.default
-        observers.append(center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] _ in
+        let monitor = playback.liveMonitor
+        pipeline.onMonitorSample = { sample in monitor.consume(sample) }
+        pipeline.onMonitorFormat = { [weak self] format in
             Task { @MainActor in
                 guard let self else { return }
+                self.monitoringFormat = format
+                self.disableMonitoring()
+                self.monitoringConfigured = false
+                if !self.playback.engine.isRunning {
+                    do { try self.playback.configureMonitoring(format: format); self.monitoringConfigured = true }
+                    catch { self.monitoringExplanation = error.localizedDescription }
+                }
+                self.refreshMonitoringAvailability()
+            }
+        }
+        monitor.onFailure = { [weak self] message in
+            Task { @MainActor in
+                guard let self else { return }
+                self.disableMonitoring(); self.monitoringAvailable = false; self.monitoringExplanation = message
+            }
+        }
+        let center = NotificationCenter.default
+        observers.append(center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            monitor.setEnabled(false)
+            Task { @MainActor in
+                guard let self else { return }
+                self.disableMonitoring()
                 let fingerprint = self.currentFingerprint()
                 guard fingerprint != self.routeFingerprint else { return }
                 self.routeConfirmed = false
@@ -69,22 +97,31 @@ import CoverCore
         })
         observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] notification in
             let type = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
-            if type == AVAudioSession.InterruptionType.began.rawValue { Task { @MainActor in await self?.interrupt("系统音频中断，已保护完成片段。") } }
+            if type == AVAudioSession.InterruptionType.began.rawValue {
+                monitor.setEnabled(false)
+                Task { @MainActor in await self?.interrupt("系统音频中断，已保护完成片段。") }
+            }
         })
         observers.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
+            monitor.setEnabled(false)
             Task { @MainActor in if self?.isBusy == true { await self?.interrupt("应用进入后台，录制已暂停。返回后请确认路由。") } }
         })
         observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main) { [weak self] _ in
+            monitor.setEnabled(false)
             Task { @MainActor in await self?.interrupt("系统媒体服务已重置，请结束并重新检查录制。") }
         })
         observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: playback.engine, queue: .main) { [weak self] _ in
+            monitor.setEnabled(false)
             Task { @MainActor in
-                guard let self, self.isCapturing else { return }
+                guard let self else { return }
+                self.disableMonitoring()
+                guard self.isCapturing else { return }
                 await self.interrupt("音频引擎配置发生变化，请检查实际路由后继续。")
             }
         })
         for name in [AVCaptureSession.runtimeErrorNotification, AVCaptureSession.wasInterruptedNotification] {
             observers.append(center.addObserver(forName: name, object: pipeline.session, queue: .main) { [weak self] _ in
+                monitor.setEnabled(false)
                 Task { @MainActor in
                     guard let self, self.isCapturing else { return }
                     await self.interrupt("采集会话被系统中断，已完成片段正在保存。请结束并重新检查设备。")
@@ -101,6 +138,7 @@ import CoverCore
         guard !isCapturing, state != .finalizing, let store, let project = store.selected, !project.archived else { return }
         do {
             try transition(.preflight); self.practice = practice
+            disableMonitoring(); monitoringConfigured = false; monitoringFormat = nil
             savedTakeID = nil; reason = nil; warning = nil; level = nil; persistenceError = nil; takeID = nil; projectID = project.id
             playback.suspendEngine(); playback.loop = nil
             guard await AVCaptureDevice.requestAccess(for: .audio) else { throw StudioError("麦克风权限被拒绝。请在系统设置允许麦克风。") }
@@ -129,16 +167,23 @@ import CoverCore
             guard !budget.shouldStop(available: availableBytes) else { throw StudioError("空间已到危险阈值，无法开始录制。请先备份或处理空间。") }
             guard ProcessInfo.processInfo.thermalState != .critical else { throw StudioError("设备温度过高，请冷却后录制。") }
             try store.preparePlayback()
+            if let monitoringFormat {
+                do { try playback.configureMonitoring(format: monitoringFormat); monitoringConfigured = true }
+                catch { monitoringConfigured = false; monitoringExplanation = error.localizedDescription }
+            }
             resumePosition = playback.position
             try transition(.ready)
+            refreshMonitoringAvailability()
             UIDevice.current.isBatteryMonitoringEnabled = true
         } catch {
+            disableMonitoring(); monitoringAvailable = false
             await pipeline.shutDown()
             state = .recoverableError; reason = error.localizedDescription; store.report(error)
         }
     }
     func changeInput() async {
         guard state == .ready || state == .interrupted else { return }
+        disableMonitoring()
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setPreferredInput(inputs.first { $0.uid == selectedInputUID })
@@ -156,6 +201,32 @@ import CoverCore
             highQuality = capability.isSupported && capability.isEnabled ? "系统报告高质量蓝牙已启用，音质仍待实机确认。" : "当前蓝牙路径未启用高质量录音，可用普通模式或设备麦克风。"
         }
         #endif
+        refreshMonitoringAvailability()
+    }
+    private func refreshMonitoringAvailability() {
+        let session = AVAudioSession.sharedInstance(), route = session.currentRoute
+        let bluetooth = (route.inputs + route.outputs).contains { [.bluetoothHFP, .bluetoothA2DP, .bluetoothLE].contains($0.portType) }
+        let headphones = !route.outputs.isEmpty && route.outputs.allSatisfy { $0.portType == .headphones }
+        let latency = session.inputLatency + session.outputLatency + 2 * session.ioBufferDuration
+        monitoringAvailable = !bluetooth && headphones && latency.isFinite && latency > 0 && latency < 0.08
+            && monitoringConfigured && [.ready, .countdown, .recording].contains(state)
+        if bluetooth { monitoringExplanation = "蓝牙路径（含高质量 AirPods）可能产生明显耳返延迟，本版关闭实时耳返；伴奏正常播放。" }
+        else if !headphones { monitoringExplanation = "仅在系统明确报告有线耳机输出时开放耳返。USB 不能确认终端为耳机，本版关闭耳返，避免扬声器反馈。" }
+        else if latency >= 0.08 || !latency.isFinite || latency <= 0 { monitoringExplanation = "系统报告的音频延迟较高或未知，实时耳返已关闭。" }
+        else if !monitoringConfigured { monitoringExplanation = "尚无可用 PCM 耳返格式，请重新检查设备。" }
+        else { monitoringExplanation = "可手动开启有线耳返；默认关闭。系统延迟门槛不等于实际听感验证，出现拖音请关闭。" }
+        if !monitoringAvailable { disableMonitoring() }
+    }
+    func setMonitoringEnabled(_ enabled: Bool) {
+        if !enabled { disableMonitoring(); return }
+        refreshMonitoringAvailability()
+        guard monitoringAvailable else { return }
+        do { try playback.setMonitoring(true); monitoringEnabled = true }
+        catch { disableMonitoring(); monitoringExplanation = error.localizedDescription; monitoringAvailable = false }
+    }
+    private func disableMonitoring() {
+        try? playback.setMonitoring(false)
+        monitoringEnabled = false
     }
     private func currentFingerprint() -> String {
         let session = AVAudioSession.sharedInstance(), route = session.currentRoute
@@ -192,7 +263,7 @@ import CoverCore
                 try await pipeline.begin(directory: repository.directory(project.id), songStart: resumePosition, host: host,
                        route: route, inputLatency: session.inputLatency, outputLatency: session.outputLatency)
                 try playback.play(from: resumePosition, hostTime: host)
-                try transition(.recording); UIApplication.shared.isIdleTimerDisabled = true
+                try transition(.recording); refreshMonitoringAvailability(); UIApplication.shared.isIdleTimerDisabled = true
                 startMonitor()
             } catch is CancellationError { countdown = nil }
             catch { countdown = nil; await interrupt(error.localizedDescription); store?.report(error) }
@@ -205,6 +276,7 @@ import CoverCore
     func interrupt(_ message: String) async {
         guard isBusy, state != .finalizing, !stopping else { return }
         stopping = true; countdownTask?.cancel(); countdown = nil
+        disableMonitoring(); monitoringAvailable = false
         resumePosition = max(0, playback.position - 3); playback.suspendEngine()
         monitor?.invalidate(); routeConfirmed = false; reason = message
         do { try await pipeline.end() } catch { store?.report(error) }
@@ -213,6 +285,7 @@ import CoverCore
     func finish() async {
         guard isBusy, !stopping else { return }
         stopping = true; countdownTask?.cancel(); countdown = nil
+        disableMonitoring(); monitoringAvailable = false
         playback.suspendEngine(); monitor?.invalidate(); state = .finalizing
         do {
             try await pipeline.end()
@@ -260,6 +333,7 @@ import CoverCore
             Task { @MainActor in
                 guard let self, let projectID = self.projectID, self.state == .recording else { return }
                 do {
+                    self.refreshMonitoringAvailability()
                     self.availableBytes = try FileIntegrity.available(self.repository.directory(projectID))
                     let budget = DiskBudget(bytesPerSecond: self.video && !self.practice ? 1_500_000 : 40_000)
                     if budget.shouldStop(available: self.availableBytes) || ProcessInfo.processInfo.thermalState == .critical {

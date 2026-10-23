@@ -66,6 +66,8 @@ struct PracticePanel: View {
                 if recording.isBusy {
                     Text(recording.route).font(.footnote)
                     if recording.state == .ready || recording.state == .interrupted {
+                        Toggle("实时人声耳返", isOn: Binding(get: { recording.monitoringEnabled }, set: { recording.setMonitoringEnabled($0) })).disabled(!recording.monitoringAvailable)
+                        Text(recording.monitoringExplanation).font(.footnote).foregroundStyle(.secondary)
                         Toggle("已确认收音和伴奏输出", isOn: $recording.routeConfirmed)
                         Button("倒数 3 秒后录音") { recording.start() }.disabled(!recording.routeConfirmed)
                     }
@@ -91,6 +93,7 @@ struct PracticePanel: View {
         }
         .onChange(of: project?.arrangement?.semitones) { _, value in playback.semitones = value ?? 0 }
         .onChange(of: store.selectedID) { _, _ in looping = false; playback.loop = nil }
+        .onChange(of: project?.arrangementID) { _, _ in looping = false; playback.loop = nil }
         .sheet(isPresented: $lyrics) { NavigationStack { LyricsEditor(forTake: false) } }
         .sheet(isPresented: $showPreview) { if let preview { PlayerSheet(title: "练习原始人声", player: preview) } }
     }
@@ -99,7 +102,7 @@ struct PracticePanel: View {
         playback.loop = project.loopStart...project.loopEnd
     }
     func listen(_ take: Take) async {
-        guard var project else { return }; project.edit.selectedTakeID = take.id
+        guard var project else { return }; project.edit = EditGraph(); project.edit.selectedTakeID = take.id
         playback.stop(keepPosition: true)
         do {
             let (composition, _) = try await VideoComposer.composition(project: project, root: store.repository.directory(project.id), mix: nil, raw: true)

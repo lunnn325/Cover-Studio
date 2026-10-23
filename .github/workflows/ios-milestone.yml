@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       simulator_snapshots:
-        description: Capture iPhone and iPad empty states (light, dark with large text)
+        description: Simulator screenshots and synthetic 2-second media smoke
         type: boolean
         default: false
   pull_request:
@@ -42,8 +42,9 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build/xcodebuild.log
-      - name: Optional simulator launch evidence
-        if: (github.event_name == 'pull_request' && github.event.action == 'opened') || (github.event_name == 'workflow_dispatch' && inputs.simulator_snapshots)
+      - name: Simulator launch evidence and synthetic media smoke
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.simulator_snapshots)
+        timeout-minutes: 15
         run: python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app
       - name: Report scope
         if: always()
@@ -51,6 +52,8 @@ jobs:
           cat >> "$GITHUB_STEP_SUMMARY" <<'REPORT'
           This milestone checks Swift pure logic tests and an unsigned iOS Simulator build.
           Optional screenshots show simulator empty-state layout only.
+          The synthetic 2-second media smoke, when selected, separately checks offline
+          export/archive code and writes MediaSmokeReport.json; it does not record hardware.
           No signed IPA, AirPods/audio route, camera/microphone, audio/video synchronization,
           cloud transfer or real-device recovery result is implied. See docs/QUALITY_GATES.md.
           REPORT

@@ -15,6 +15,7 @@ struct ExportJob: Identifiable, Codable {
     @Published var working = false
     @Published var stage = ""
     @Published var shareURLs: [URL] = []
+    @Published var failure: String?
     private var projectID: UUID?
     func load(root: URL, projectID: UUID, exportedAssets: [MediaAsset] = []) {
         guard !working, self.projectID != projectID else { return }
@@ -40,7 +41,7 @@ struct ExportJob: Identifiable, Codable {
     }
     func run(project: StudioProject, root: URL, retry: ExportVariant? = nil) async {
         guard !working else { return }
-        working = true; defer { working = false; stage = "" }
+        working = true; failure = nil; defer { working = false; stage = "" }
         projectID = project.id
         let target = root.appendingPathComponent("exports", isDirectory: true)
         do {
@@ -90,19 +91,19 @@ struct ExportJob: Identifiable, Codable {
                         }
                     }
                     stage = variant.label
-                    let suffix = variant == .lyrics ? "lrc" : (variant == .cleanVideo || variant == .subtitledVideo ? "mp4" : "m4a")
+                    let suffix = variant == .lyrics ? ((project.arrangement(for: take)?.lyrics.isTimed == true) ? "lrc" : "txt") : (variant == .cleanVideo || variant == .subtitledVideo ? "mp4" : preset.audioFormat.rawValue)
                     let output = target.appendingPathComponent("\(UUID().uuidString)-\(variant.rawValue).\(suffix)")
                     switch variant {
                     case .lyrics:
                         let lyrics = project.arrangement(for: take)?.lyrics ?? Lyrics()
                         try lyrics.lrc().write(to: output, atomically: true, encoding: .utf8)
-                    case .mixAudio: try await exportAudio(source: mixURL, output: output)
+                    case .mixAudio: try await exportAudio(source: mixURL, output: output, format: preset.audioFormat)
                     case .dryVocal, .backing:
                         let scratch = scratchRoot.appendingPathComponent("\(UUID().uuidString).caf")
                         try await Task.detached(priority: .userInitiated) {
                             try MixRenderer.render(project: project, root: root, to: scratch, dryOnly: variant == .dryVocal, backingOnly: variant == .backing)
                         }.value
-                        try await exportAudio(source: scratch, output: output)
+                        try await exportAudio(source: scratch, output: output, format: preset.audioFormat)
                     case .cleanVideo, .subtitledVideo:
                         let (composition, video) = try await VideoComposer.composition(project: project, root: root, mix: mixURL, backgroundVideo: background)
                         guard let video else { throw StudioError("没有可导出的视频画面，请先选择照片或补拍。") }
@@ -122,6 +123,7 @@ struct ExportJob: Identifiable, Codable {
                 try persist(root: root)
             }
         } catch {
+            failure = error.localizedDescription
             if jobs.isEmpty { jobs = [ExportJob(variant: retry ?? .cleanVideo, status: "失败", error: error.localizedDescription)] }
             else { for i in jobs.indices where jobs[i].status != "完成" { jobs[i].status = "失败"; jobs[i].error = error.localizedDescription } }
             try? persist(root: root)
@@ -136,7 +138,16 @@ struct ExportJob: Identifiable, Codable {
         try await Task.detached(priority: .userInitiated) { try MixRenderer.render(project: project, root: root, to: url) }.value
         return url
     }
-    private func exportAudio(source: URL, output: URL) async throws {
+    private func exportAudio(source: URL, output: URL, format: AudioExportFormat) async throws {
+        if format == .wav {
+            try await Task.detached(priority: .userInitiated) {
+                let reader = try AVAudioFile(forReading: source)
+                let writer = try AVAudioFile(forWriting: output, settings: reader.processingFormat.settings)
+                guard let buffer = AVAudioPCMBuffer(pcmFormat: reader.processingFormat, frameCapacity: 4096) else { throw StudioError("WAV 转换缓冲区不可用。") }
+                while reader.framePosition < reader.length { try reader.read(into: buffer); try writer.write(from: buffer) }
+            }.value
+            return
+        }
         guard let session = AVAssetExportSession(asset: AVURLAsset(url: source), presetName: AVAssetExportPresetAppleM4A),
               session.supportedFileTypes.contains(.m4a) else { throw StudioError("设备不支持 M4A 音频编码，源文件已保留。") }
         session.outputFileType = .m4a; session.outputURL = output; try await complete(session)

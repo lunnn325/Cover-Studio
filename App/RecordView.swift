@@ -83,6 +83,7 @@ struct RecordPanel: View {
             }.padding().frame(maxWidth: 760).frame(maxWidth: .infinity)
         }
         .onChange(of: recording.savedTakeID) { _, id in if id != nil { preview = true } }
+        .onChange(of: recording.video) { _, value in if project?.recordVideo != value { store.update { $0.recordVideo = value } } }
         .onChange(of: recording.state) { _, state in if state == .saved || state == .recoverableError { locked = false } }
         .sheet(isPresented: $preview) { NavigationStack { TakePreviewView(takeID: recording.savedTakeID) } }
     }
@@ -90,7 +91,9 @@ struct RecordPanel: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(recording.route).font(.subheadline)
             Text(recording.highQuality).font(.footnote).foregroundStyle(.secondary)
-            Text("人声耳返关闭，伴奏继续播放。蓝牙路径音质与同步需实机检查。").font(.footnote).foregroundStyle(.secondary)
+            Text("人声耳返默认关闭，伴奏继续播放。蓝牙路径音质与同步需实机检查。").font(.footnote).foregroundStyle(.secondary)
+            Toggle("实时人声耳返", isOn: Binding(get: { recording.monitoringEnabled }, set: { recording.setMonitoringEnabled($0) })).disabled(!recording.monitoringAvailable)
+            Text(recording.monitoringExplanation).font(.footnote).foregroundStyle(.secondary)
             Picker("麦克风", selection: $recording.selectedInputUID) {
                 Text("系统选择").tag("")
                 ForEach(recording.inputs, id: \.uid) { input in Text(input.portName).tag(input.uid) }

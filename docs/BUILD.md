@@ -31,13 +31,15 @@ xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration
 
 `.github/workflows/ios-milestone.yml` 使用官方 `macos-26` runner 标签，`select_xcode.py` 显式选择镜像已安装的最新稳定 Xcode 26，并记录实际 Xcode/Swift 与可用 Simulator runtime/设备清单。仅 Actions 手动 **Run workflow** 或 PR 的 `opened` / `ready_for_review` 里程碑触发（草稿首次打开也构建）；普通 push 与 PR synchronize 不触发。工作流不打包 IPA、不使用签名 Secrets、不自动发布。
 
-首次 PR `opened` 默认截图；手动运行可勾选 `simulator_snapshots`。同一次构建后各启动一个可用 iPhone/iPad Simulator（iPad 优先宽屏 Pro），保存浅色正常字号与深色辅助功能大字号截图。可本地执行：
+PR `opened` 与 `ready_for_review` 两个明确里程碑默认截图及轻量合成媒体检查；手动运行可勾选 `simulator_snapshots`。同一次构建后各启动一个可用 iPhone/iPad Simulator（iPad 优先宽屏 Pro），保存浅色正常字号与深色辅助功能大字号截图。可本地执行：
 
 ```sh
 python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app
 ```
 
 截图和 `scope.json` 是空状态启动/外观证据，需人工查看；不代表录制页、横屏、整条交互、真实相机、AirPods、声音、同步或备份恢复通过。截图失败会使已选择的步骤明确失败。CI 日志和截图保留 7 天。当前是否真正运行成功应以该次 Actions 记录和交付报告为准，不能由这些脚本存在推定。
+
+同一步骤还会在手机 Simulator 使用 DEBUG 启动参数 `--media-smoke` 执行一次两秒合成自有素材检查，经真实离线混音、照片、字幕双 MP4、WAV 和工程包代码路径产生 `Documents/MediaSmokeReport.json`。正常启动不运行此检查。脚本最多等报告 120 秒，只复制 JSON 进入 evidence，不上传合成媒体大文件；`passed` 不为 `true` 或超时都会明确失败，同时继续收集 iPad 空状态截图。这项轻量集成检查不能证明真实录制、AirPods、真人音质、设备同步或外部云端恢复通过。
 
 ## 真机签名与安装
 

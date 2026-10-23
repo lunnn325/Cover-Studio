@@ -2,10 +2,75 @@ import AVFoundation
 import Combine
 import CoverCore
 
+/// Receives the existing capture stream; it never owns a microphone/input node.
+/// The lock protects scheduling against immediate route-change cancellation.
+final class LiveInputMonitor: @unchecked Sendable {
+    let node = AVAudioPlayerNode()
+    var onFailure: ((String) -> Void)?
+    private let lock = NSLock()
+    private let completionQueue = DispatchQueue(label: "studio.monitor.completions")
+    private var sourceFormat: AVAudioFormat?
+    private var targetFormat: AVAudioFormat?
+    private var converter: AVAudioConverter?
+    private var enabled = false
+    private var queuedSeconds: Double = 0
+    private var generation = UUID()
+
+    func configure(_ source: AVAudioFormat, target: AVAudioFormat) -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        enabled = false; node.stop(); generation = UUID(); queuedSeconds = 0
+        sourceFormat = source; targetFormat = target
+        converter = AVAudioConverter(from: source, to: target)
+        return converter != nil
+    }
+    func setEnabled(_ value: Bool) {
+        lock.lock(); defer { lock.unlock() }
+        enabled = value; generation = UUID(); queuedSeconds = 0
+        node.stop()
+        if value { node.volume = 0.5; node.play() }
+    }
+    func consume(_ sample: CMSampleBuffer) {
+        lock.lock()
+        guard enabled, let sourceFormat, let targetFormat, let converter else { lock.unlock(); return }
+        var failure: String?
+        let frames = CMSampleBufferGetNumSamples(sample)
+        if frames <= 0 || frames > 8192 {
+            failure = "耳返音频包过大或为空，已关闭耳返。"
+        } else if let description = CMSampleBufferGetFormatDescription(sample),
+                  sourceFormat.isEqual(AVAudioFormat(cmAudioFormatDescription: description)),
+                  let input = AVAudioPCMBuffer(pcmFormat: sourceFormat, frameCapacity: AVAudioFrameCount(frames)),
+                  let output = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: AVAudioFrameCount(frames)) {
+            input.frameLength = AVAudioFrameCount(frames)
+            let status = CMSampleBufferCopyPCMDataIntoAudioBufferList(sample, at: 0, frameCount: Int32(frames), into: input.mutableAudioBufferList)
+            do {
+                guard status == noErr else { throw StudioError("无法复制耳返PCM数据。") }
+                try converter.convert(to: output, from: input)
+                let seconds = Double(output.frameLength) / targetFormat.sampleRate
+                guard seconds > 0, queuedSeconds + seconds <= 0.10 else { throw StudioError("耳返缓存积压，已关闭耳返以避免明显延迟。") }
+                queuedSeconds += seconds
+                let token = generation
+                node.scheduleBuffer(output, completionCallbackType: .dataPlayedBack) { [weak self] _ in
+                    guard let self else { return }
+                    // stop() may invoke completion synchronously. Never acquire
+                    // the scheduling lock until that callback has returned.
+                    self.completionQueue.async {
+                        self.lock.lock(); defer { self.lock.unlock() }
+                        if self.generation == token { self.queuedSeconds = max(0, self.queuedSeconds - seconds) }
+                    }
+                }
+            } catch { failure = error.localizedDescription }
+        } else { failure = "采集格式已变化或不支持耳返，已关闭耳返。" }
+        if failure != nil { enabled = false; generation = UUID(); queuedSeconds = 0; node.stop() }
+        lock.unlock()
+        if let failure { onFailure?(failure) }
+    }
+}
+
 @MainActor final class PlaybackEngine: ObservableObject {
     let engine = AVAudioEngine()
     let player = AVAudioPlayerNode()
     let pitch = AVAudioUnitTimePitch()
+    let liveMonitor = LiveInputMonitor()
     @Published var position: Double = 0
     @Published var duration: Double = 0
     @Published var playing = false
@@ -18,7 +83,7 @@ import CoverCore
     private var generation = UUID()
 
     init() {
-        engine.attach(player); engine.attach(pitch)
+        engine.attach(player); engine.attach(pitch); engine.attach(liveMonitor.node)
         engine.connect(player, to: pitch, format: nil)
         engine.connect(pitch, to: engine.mainMixerNode, format: nil)
         player.volume = Float(gain)
@@ -43,6 +108,17 @@ import CoverCore
         guard file != nil else { throw StudioError("请先导入可用伴奏。") }
         engine.prepare()
         if !engine.isRunning { try engine.start() }
+    }
+    func configureMonitoring(format: AVAudioFormat) throws {
+        guard !engine.isRunning, format.sampleRate > 0, format.channelCount > 0, format.channelCount <= 2,
+              let target = AVAudioFormat(standardFormatWithSampleRate: format.sampleRate, channels: format.channelCount),
+              liveMonitor.configure(format, target: target) else { throw StudioError("当前PCM格式暂不支持安全耳返。") }
+        engine.disconnectNodeOutput(liveMonitor.node)
+        engine.connect(liveMonitor.node, to: engine.mainMixerNode, fromBus: 0, toBus: 1, format: target)
+    }
+    func setMonitoring(_ enabled: Bool) throws {
+        if enabled { try prepare() }
+        liveMonitor.setEnabled(enabled)
     }
     func activatePlaybackSession() throws {
         let session = AVAudioSession.sharedInstance()
@@ -86,7 +162,7 @@ import CoverCore
         stop(keepPosition: true); position = min(max(0, seconds), duration)
         if wasPlaying { try play(from: position) }
     }
-    func suspendEngine() { stop(keepPosition: true); engine.stop() }
+    func suspendEngine() { liveMonitor.setEnabled(false); stop(keepPosition: true); engine.stop() }
     private func tickPosition() {
         guard playing, let render = player.lastRenderTime, let time = player.playerTime(forNodeTime: render), time.sampleRate > 0 else { return }
         position = min(duration, base + max(0, Double(time.sampleTime) / time.sampleRate))

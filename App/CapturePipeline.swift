@@ -25,6 +25,9 @@ final class CapturePipeline: NSObject, AVCaptureAudioDataOutputSampleBufferDeleg
     var onError: ((Error) -> Void)?
     /// Linear RMS, 0...1; nil means this PCM layout cannot be interpreted safely.
     var onLevel: ((Float?) -> Void)?
+    var onMonitorFormat: ((AVAudioFormat) -> Void)?
+    var onMonitorSample: ((CMSampleBuffer) -> Void)?
+    private var monitorFormat: AVAudioFormat?
     private var lastLevelHost: UInt64 = 0
     private var videoEnabled = false
     private var recording = false
@@ -73,6 +76,7 @@ final class CapturePipeline: NSObject, AVCaptureAudioDataOutputSampleBufferDeleg
                         }
                     }
                     self.videoEnabled = video
+                    self.monitorFormat = nil
                     self.session.commitConfiguration(); self.session.startRunning()
                     continuation.resume()
                 } catch {
@@ -116,6 +120,12 @@ final class CapturePipeline: NSObject, AVCaptureAudioDataOutputSampleBufferDeleg
         guard CMSampleBufferDataIsReady(sampleBuffer) else { return }
         let isAudio = output is AVCaptureAudioDataOutput
         if isAudio {
+            if let description = CMSampleBufferGetFormatDescription(sampleBuffer),
+               let stream = CMAudioFormatDescriptionGetStreamBasicDescription(description), stream.pointee.mFormatID == kAudioFormatLinearPCM {
+                let format = AVAudioFormat(cmAudioFormatDescription: description)
+                if monitorFormat?.isEqual(format) != true { monitorFormat = format; onMonitorFormat?(format) }
+                onMonitorSample?(sampleBuffer)
+            }
             let now = mach_absolute_time()
             if now - lastLevelHost >= AVAudioTime.hostTime(forSeconds: 0.1) {
                 lastLevelHost = now; onLevel?(Self.rms(sampleBuffer))

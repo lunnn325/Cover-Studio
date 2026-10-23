@@ -18,6 +18,8 @@ struct ArchiveView: View {
     @State private var releaseFirst = false
     @State private var releaseFinal = false
     @State private var releaseRevision: Int?
+    @State private var pendingRestoreURL: URL?
+    @State private var restoreChoice = false
     var project: StudioProject? { store.selected }
     var body: some View {
         Form {
@@ -57,8 +59,8 @@ struct ArchiveView: View {
                 }
             }
             Section("恢复与验证") {
-                Button("从外部工程包恢复安全副本") { importing = true }.disabled(preparing)
-                Text("校验全部哈希、长度和依赖后才恢复。同 ID 工程默认保留两份，现有修改不会覆盖。云文件不可用或空间不足会明确失败。").font(.footnote).foregroundStyle(.secondary)
+                Button("选择外部工程包恢复 / 验证") { importing = true }.disabled(preparing)
+                Text("校验全部哈希、长度和依赖后才恢复。同 ID 可保留两份或先留安全副本再替换。云文件不可用或空间不足会明确失败。").font(.footnote).foregroundStyle(.secondary)
             }
         }.navigationTitle("工程备份与恢复").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.disabled(preparing) } }
@@ -74,11 +76,13 @@ struct ArchiveView: View {
                 } }
             }
             .fileImporter(isPresented: $importing, allowedContentTypes: [.coverProject, .data]) { result in
-                Task {
-                    preparing = true; defer { preparing = false }
-                    do { try await store.restore(try result.get(), keepBoth: true) } catch { store.report(error) }
-                }
+                do { pendingRestoreURL = try result.get(); restoreChoice = true } catch { store.report(error) }
             }
+            .confirmationDialog("恢复方式", isPresented: $restoreChoice, titleVisibility: .visible) {
+                Button("取消", role: .cancel) { pendingRestoreURL = nil }
+                Button("保留两份（默认安全副本）") { restore(keepBoth: true) }
+                Button("同 ID 时保留旧工程安全副本再替换") { restore(keepBoth: false) }
+            } message: { Text("包会先完整验证。替换时旧工程保留在安全目录，失败会回滚；没有同 ID 工程时直接导入。") }
             .confirmationDialog("释放本地源素材？", isPresented: $releaseFirst, titleVisibility: .visible) {
                 Button("取消", role: .cancel) {}
                 Button("继续查看最终确认", role: .destructive) { releaseFinal = true }
@@ -98,6 +102,13 @@ struct ArchiveView: View {
     var canRelease: Bool {
         guard let project else { return false }
         return project.backups.contains { $0.revision == project.revision && ($0.level == .exportedToProvider || $0.level == .restoreVerified) }
+    }
+    func restore(keepBoth: Bool) {
+        guard let url = pendingRestoreURL else { return }
+        Task {
+            preparing = true; defer { preparing = false; pendingRestoreURL = nil }
+            do { try await store.restore(url, keepBoth: keepBoth) } catch { store.report(error) }
+        }
     }
     func prepare() async {
         guard var project else { return }

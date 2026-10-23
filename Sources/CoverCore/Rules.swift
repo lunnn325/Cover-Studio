@@ -109,11 +109,12 @@ public enum ProjectRules {
             throw StudioError("编辑引用的 Take 缺失。")
         }
         let edit = project.edit
-        guard [edit.vocalGain, edit.backingGain, edit.bassDB, edit.presenceDB, edit.reverb, edit.highPassHz,
+        guard [edit.subtitleStart, edit.visualSongStart, edit.visualOffset, edit.vocalGain, edit.backingGain, edit.bassDB, edit.presenceDB, edit.reverb, edit.highPassHz,
                edit.syncOffset, edit.trimStart, edit.aspect, edit.subtitleStyle.size, edit.subtitleStyle.verticalPosition].allSatisfy(\.isFinite),
               (0...2).contains(edit.vocalGain), (0...2).contains(edit.backingGain),
               (0...100).contains(edit.reverb), (20...1000).contains(edit.highPassHz),
-              edit.aspect >= 0.4, edit.aspect <= 2.5, edit.trimStart >= 0,
+              edit.aspect >= 0.4, edit.aspect <= 2.5, edit.trimStart >= 0, edit.subtitleStart >= 0,
+              edit.subtitleEnd == nil || (edit.subtitleEnd!.isFinite && edit.subtitleEnd! > edit.subtitleStart),
               edit.trimEnd == nil || (edit.trimEnd!.isFinite && edit.trimEnd! > edit.trimStart),
               edit.segmentStartOverrides.values.allSatisfy({ $0.isFinite && $0 >= 0 }) else {
             throw StudioError("编辑参数或时间轴超出安全范围。")

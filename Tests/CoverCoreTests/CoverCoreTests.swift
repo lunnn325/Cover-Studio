@@ -293,4 +293,13 @@ final class CoverCoreTests: XCTestCase {
         XCTAssertEqual(DiskBudget(bytesPerSecond: .nan).stopBytes, .max)
         XCTAssertEqual(DiskBudget(bytesPerSecond: 2_000_000, finalizationBytes: .max).stopBytes, .max)
     }
+    func testUnrepresentableMediaTimeAndAudioPresetRoundTrip() throws {
+        XCTAssertEqual(MediaTime(seconds: .nan).timescale, 0)
+        XCTAssertEqual(MediaTime(seconds: .infinity).timescale, 0)
+        XCTAssertEqual(MediaTime(seconds: 1e100).timescale, 0)
+        XCTAssertEqual(MediaTime(seconds: 1.25).seconds, 1.25)
+        var preset = ExportPreset(); preset.audioFormat = .wav; preset.variants = [.mixAudio, .dryVocal]
+        let data = try FileIntegrity.encoder().encode(preset)
+        XCTAssertEqual(try JSONDecoder().decode(ExportPreset.self, from: data), preset)
+    }
 }

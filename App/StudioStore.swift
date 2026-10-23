@@ -17,6 +17,8 @@ import CoverCore
     let exports = ExportService()
     private var loadedArrangement: UUID?
     private var saveTask: Task<Void, Never>?
+    private var undoEdits: [UUID: [EditGraph]] = [:]
+    var canUndoEdit: Bool { selectedID.flatMap { undoEdits[$0]?.isEmpty == false } ?? false }
     var selected: StudioProject? { projects.first { $0.id == selectedID } }
     var deviceID: String {
         if let value = UserDefaults.standard.string(forKey: "deviceID") { return value }
@@ -35,6 +37,7 @@ import CoverCore
             projects = try await repository.loadAll()
             let last = UserDefaults.standard.string(forKey: "lastProject").flatMap(UUID.init(uuidString:))
             selectedID = projects.first(where: { $0.id == last })?.id ?? projects.first?.id
+            recording.video = selected?.recordVideo ?? true
             let recovered = projects.filter {
                 FileManager.default.fileExists(atPath: repository.directory($0.id).appendingPathComponent("recording.json").path)
             }
@@ -44,7 +47,16 @@ import CoverCore
     func report(_ error: Error) { self.error = error.localizedDescription }
     func update(_ mutate: (inout StudioProject) -> Void) {
         guard let id = selectedID, let index = projects.firstIndex(where: { $0.id == id }), !projects[index].archived else { return }
-        mutate(&projects[index]); projects[index].touch()
+        let previous = projects[index]
+        mutate(&projects[index])
+        if previous.edit != projects[index].edit {
+            undoEdits[id, default: []].append(previous.edit)
+            if undoEdits[id]!.count > 40 { undoEdits[id]!.removeFirst() }
+        }
+        if previous.exportPreset != projects[index].exportPreset, let data = try? FileIntegrity.encoder().encode(projects[index].exportPreset) {
+            UserDefaults.standard.set(data, forKey: "defaultExportPreset")
+        }
+        projects[index].touch()
         let project = projects[index]
         saveTask?.cancel()
         saveTask = Task {
@@ -54,13 +66,19 @@ import CoverCore
             } catch is CancellationError {} catch { report(error) }
         }
     }
+    func undoEdit() {
+        guard !recording.isBusy, !auxiliaryRecording, let id = selectedID,
+              let index = projects.firstIndex(where: { $0.id == id }), let previous = undoEdits[id]?.popLast() else { return }
+        projects[index].edit = previous; projects[index].touch()
+        Task { do { try await flush() } catch { report(error) } }
+    }
     func flush() async throws {
         saveTask?.cancel()
         if let selected { try await repository.save(selected) }
     }
     func select(_ id: UUID) async {
         guard !recording.isBusy, !busy, !auxiliaryRecording else { error = "请等待当前录制、补拍或文件操作结束再切换工程。"; return }
-        do { try await flush(); playback.suspendEngine(); playback.loop = nil; loadedArrangement = nil; selectedID = id }
+        do { try await flush(); playback.suspendEngine(); playback.loop = nil; loadedArrangement = nil; selectedID = id; recording.video = selected?.recordVideo ?? true }
         catch { report(error) }
     }
     func preparePlayback(for take: Take? = nil) throws {
@@ -70,6 +88,7 @@ import CoverCore
             throw StudioError("这是待分离原曲。当前未启用 AI；请导入已有伴奏版本后录制。")
         }
         if loadedArrangement != arrangement.id {
+            playback.loop = nil
             try playback.load(repository.directory(project.id).appendingPathComponent(asset.path), semitones: take?.semitones ?? arrangement.semitones)
             loadedArrangement = arrangement.id
         } else { playback.semitones = take?.semitones ?? arrangement.semitones }
@@ -98,6 +117,7 @@ import CoverCore
             project = StudioProject(song: Song(title: title.isEmpty ? url.deletingPathExtension().lastPathComponent : title, artist: artist),
                          arrangement: arrangement, assets: [asset], sourceDeviceID: deviceID)
             project.id = projectID
+            if let data = UserDefaults.standard.data(forKey: "defaultExportPreset"), let preset = try? JSONDecoder().decode(ExportPreset.self, from: data) { project.exportPreset = preset }
         }
         try await repository.save(project)
         if let index = projects.firstIndex(where: { $0.id == project.id }) { projects[index] = project }
@@ -118,7 +138,11 @@ import CoverCore
         }
         let asset = try await repository.importAsset(source: url, projectID: project.id, role: image ? .image : .video, duration: .init(seconds: duration))
         guard selectedID == project.id else { throw StudioError("目标工程已切换，导入文件留在原工程目录，未写入其他工程。") }
-        update { $0.assets.append(asset); $0.edit.visualAssetID = asset.id }
+        if image { try writeThumbnail(from: url, projectID: project.id) }
+        update {
+            $0.assets.append(asset); $0.edit.visualAssetID = asset.id; $0.edit.visualSongStart = $0.edit.trimStart; $0.edit.visualOffset = 0
+            if image && $0.song.coverAssetID == nil { $0.song.coverAssetID = asset.id }
+        }
         try await flush()
     }
     func promote(_ takeID: UUID) async throws {
@@ -150,6 +174,8 @@ import CoverCore
         projects.insert(copy, at: 0); selectedID = copy.id; loadedArrangement = nil
     }
     func recordBackup(_ record: BackupRecord, projectID: UUID) async throws {
+        saveTask?.cancel()
+        if projectID != selectedID { try await flush() }
         guard let index = projects.firstIndex(where: { $0.id == projectID }) else { throw StudioError("备份对应工程不在本地作品库。") }
         if let existing = projects[index].backups.firstIndex(where: { $0.archiveID == record.archiveID }) { projects[index].backups[existing] = record }
         else { projects[index].backups.append(record) }
@@ -159,8 +185,23 @@ import CoverCore
     func releaseSelected() async throws {
         guard let project = selected else { return }
         saveTask?.cancel()
+        if let coverID = project.song.coverAssetID, let cover = project.asset(coverID) {
+            try writeThumbnail(from: repository.directory(project.id).appendingPathComponent(cover.path), projectID: project.id)
+        }
         let archived = try await repository.releaseLocal(project, confirmedRevision: project.revision)
         if let index = projects.firstIndex(where: { $0.id == project.id }) { projects[index] = archived }
         playback.suspendEngine(); loadedArrangement = nil
+    }
+    private func writeThumbnail(from source: URL, projectID: UUID) throws {
+        guard let image = UIImage(contentsOfFile: source.path) else { return }
+        let format = UIGraphicsImageRendererFormat(); format.scale = 1; format.opaque = true
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 256, height: 256), format: format)
+        let thumbnail = renderer.image { context in
+            UIColor.systemBackground.setFill(); context.fill(CGRect(x: 0, y: 0, width: 256, height: 256))
+            let scale = max(256 / image.size.width, 256 / image.size.height)
+            image.draw(in: CGRect(x: (256 - image.size.width * scale) / 2, y: (256 - image.size.height * scale) / 2,
+                                  width: image.size.width * scale, height: image.size.height * scale))
+        }
+        if let jpeg = thumbnail.jpegData(compressionQuality: 0.8) { try jpeg.write(to: repository.directory(projectID).appendingPathComponent("thumbnail.jpg"), options: .atomic) }
     }
 }

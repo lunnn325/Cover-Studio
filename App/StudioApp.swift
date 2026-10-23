@@ -9,7 +9,12 @@ import CoverCore
     var body: some Scene {
         WindowGroup {
             StudioRoot().environmentObject(store)
-                .task { UIDevice.current.isBatteryMonitoringEnabled = true; await store.load() }
+                .task {
+                    UIDevice.current.isBatteryMonitoringEnabled = true; await store.load()
+                    #if DEBUG
+                    await MediaSmokeCheck.runIfRequested()
+                    #endif
+                }
                 .onOpenURL { url in
                     Task {
                         do { try await store.restore(url, keepBoth: true) }

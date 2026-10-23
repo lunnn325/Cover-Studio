@@ -127,8 +127,10 @@ enum VideoComposer {
             try await addVideo(url: backgroundVideo, sourceStart: 0, at: 0, duration: duration)
         } else if let visual, visual.role == .video {
             let sourceDuration = visual.duration.seconds
-            guard sourceDuration >= duration else { throw StudioError("选中的补拍视频比 Take 短。请缩短裁剪终点或选择更长视频。") }
-            try await addVideo(url: root.appendingPathComponent(visual.path), sourceStart: 0, at: 0, duration: duration)
+            let visualStart = project.edit.visualSongStart + project.edit.visualOffset
+            let lo = max(range.lowerBound, visualStart), hi = min(range.upperBound, visualStart + sourceDuration)
+            guard hi > lo else { throw StudioError("补拍画面和当前裁剪区间没有重叠，请修正画面偏移。") }
+            try await addVideo(url: root.appendingPathComponent(visual.path), sourceStart: lo - visualStart, at: lo - range.lowerBound, duration: hi - lo)
         } else {
             for region in Timeline.regions(take: take, edit: project.edit) {
                 guard let cropped = Timeline.crop(region, range: range), let segment = take.segments.first(where: { $0.id == region.segmentID }) else { continue }
@@ -197,7 +199,9 @@ enum VideoComposer {
             if style.shadow { text.shadowColor = UIColor.black.cgColor; text.shadowOpacity = 1; text.shadowRadius = 3; text.shadowOffset = CGSize(width: 0, height: -2) }
             text.opacity = 0
             let animation = CAKeyframeAnimation(keyPath: "opacity")
-            let begin = max(0, start), finish = min(duration, end)
+            let begin = max(0, start, project.edit.subtitleStart - project.edit.trimStart)
+            let finish = min(duration, end, (project.edit.subtitleEnd ?? (duration + project.edit.trimStart)) - project.edit.trimStart)
+            guard finish > begin else { continue }
             // Keep the model opacity at zero before this line starts. Backwards
             // filling would incorrectly show every future lyric at time zero.
             animation.values = [1, 0]; animation.keyTimes = [0, 1]

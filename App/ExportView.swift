@@ -16,11 +16,16 @@ struct ExportView: View {
                         store.update { if enabled { $0.exportPreset.variants.insert(variant) } else { $0.exportPreset.variants.remove(variant) } }
                     }))
                 }
+                Picker("音频文件格式", selection: store.binding(\.exportPreset.audioFormat, fallback: .m4a)) {
+                    Text("M4A / AAC").tag(AudioExportFormat.m4a)
+                    Text("WAV / 48kHz PCM").tag(AudioExportFormat.wav)
+                }
                 Text("首次默认双版本视频，之后记住你的选择。1080p / 30fps，MP4 + AAC。歌词未同步时需先标记，或取消带字幕版本。").font(.footnote).foregroundStyle(.secondary)
             }.disabled(service.working)
             Section {
                 Button("开始顺序导出") { run() }.disabled(service.working || store.recording.isBusy)
                 if service.working { ProgressView(service.stage) }
+                if let failure = service.failure { Text(failure).foregroundStyle(.orange) }
                 ForEach(service.jobs) { job in
                     VStack(alignment: .leading, spacing: 10) {
                         LabeledContent(job.variant.label, value: job.status)

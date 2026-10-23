@@ -13,7 +13,11 @@ public struct MediaTime: Codable, Equatable, Sendable {
         self.value = value; self.timescale = timescale
     }
     public init(seconds: Double) {
-        self.value = Int64((seconds * 600_000).rounded()); self.timescale = 600_000
+        let scaled = (seconds * 600_000).rounded()
+        guard scaled.isFinite, scaled > Double(Int64.min), scaled < Double(Int64.max) else {
+            self.value = 0; self.timescale = 0; return
+        }
+        self.value = Int64(scaled); self.timescale = 600_000
     }
     public var seconds: Double { Double(value) / Double(max(1, timescale)) }
 }
@@ -163,7 +167,11 @@ public struct EditGraph: Codable, Equatable, Sendable {
     public var aspect: Double = 9.0 / 16.0
     public var mirrorExport = false
     public var visualAssetID: UUID?
+    public var visualSongStart: Double = 0
+    public var visualOffset: Double = 0
     public var subtitleStyle = SubtitleStyle()
+    public var subtitleStart: Double = 0
+    public var subtitleEnd: Double?
     public var referencedTakeIDs: Set<UUID> = []
     /// Explicit song-time replacement cuts; later segments replace overlapping earlier ones.
     public var segmentStartOverrides: [UUID: Double] = [:]
@@ -183,8 +191,10 @@ public enum ExportVariant: String, Codable, CaseIterable, Sendable {
         }
     }
 }
+public enum AudioExportFormat: String, Codable, CaseIterable, Sendable { case m4a, wav }
 public struct ExportPreset: Codable, Equatable, Sendable {
     public var variants: Set<ExportVariant> = [.subtitledVideo, .cleanVideo]
+    public var audioFormat: AudioExportFormat = .m4a
     public init() {}
     public func validate(lyrics: Lyrics, hasVideo: Bool) throws {
         guard !variants.isEmpty else { throw StudioError("请至少选择一个输出文件。") }
@@ -243,6 +253,7 @@ public struct StudioProject: Identifiable, Codable, Equatable, Sendable {
     public var frontCamera = true
     public var showLyrics = true
     public var landscapeRecording = false
+    public var recordVideo = true
     public init(song: Song, arrangement: Arrangement, assets: [MediaAsset], sourceDeviceID: String) {
         self.song = song; self.arrangementID = arrangement.id; self.arrangements = [arrangement]
         self.assets = assets; self.sourceDeviceID = sourceDeviceID

@@ -94,6 +94,9 @@ struct EditorPanel: View {
         }
     }
     @ViewBuilder var controls: some View {
+        Section {
+            Button("撤销上次后期修改") { store.undoEdit() }.disabled(!store.canUndoEdit || exports.working)
+        }
         Section("Take") {
             ForEach(project?.takes.filter { !$0.isPractice } ?? []) { take in
                 Button {
@@ -154,6 +157,7 @@ struct EditorPanel: View {
                 PhotosPicker(selection: $selectedMovie, matching: .videos) { Label("从相册选择补拍视频", systemImage: "video") }
                 Button("从文件导入照片 / 补拍视频") { mediaPicker = true }
                 Button("拍摄对口型画面") { dubbing = true }
+                if project?.edit.visualAssetID != nil { numberField("补拍画面偏移（秒，正值延后）", store.binding(\.edit.visualOffset, fallback: 0)) }
                 if project?.edit.visualAssetID != nil { Button("恢复 Take 原始画面") { store.update { $0.edit.visualAssetID = nil } } }
                 Text("补拍和照片只替换输出画面，不覆盖原始人声。默认输出 1080p；4K 管线未验证，暂不开放。").font(.footnote).foregroundStyle(.secondary)
             }
@@ -166,6 +170,11 @@ struct EditorPanel: View {
                 gainSlider("距底部比例", value: store.binding(\.edit.subtitleStyle.verticalPosition, fallback: 0.14), range: 0.05...0.8)
                 Toggle("白色文字（关闭为黄色）", isOn: store.binding(\.edit.subtitleStyle.whiteText, fallback: true))
                 Toggle("阴影", isOn: store.binding(\.edit.subtitleStyle.shadow, fallback: true))
+                numberField("字幕开始显示（歌曲秒数）", store.binding(\.edit.subtitleStart, fallback: 0))
+                HStack {
+                    Text("字幕结束显示（留空至结尾）")
+                    TextField("秒", value: store.binding(\.edit.subtitleEnd, fallback: nil), format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+                }
                 Text("录制歌词不会写入原始视频。字幕仅在选择带字幕导出时合成。").font(.footnote).foregroundStyle(.secondary)
             }
         }

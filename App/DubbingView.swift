@@ -146,7 +146,7 @@ struct DubbingView: View {
                         let asset = try await store.repository.registerFile(url, projectID: project.id, role: .video,
                                      duration: .init(value: duration.value, timescale: duration.timescale))
                         guard store.selectedID == project.id else { throw StudioError("补拍目标工程已切换，素材留在原工程，未修改其他工程。") }
-                        store.update { $0.assets.append(asset); $0.edit.visualAssetID = asset.id }; try await store.flush(); committed = true
+                        store.update { $0.assets.append(asset); $0.edit.visualAssetID = asset.id; $0.edit.visualSongStart = $0.edit.trimStart; $0.edit.visualOffset = 0 }; try await store.flush(); committed = true
                     } catch { store.report(error) }
                 }
             }
