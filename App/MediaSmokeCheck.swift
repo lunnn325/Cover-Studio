@@ -16,6 +16,7 @@ import Combine
         var videoTracks: Int
         var peak: Float?
         var estimatedHz: Double?
+        var zeroCrossingHz: Double?
     }
     private struct Report: Codable {
         var passed = false
@@ -88,6 +89,13 @@ import Combine
                 do {
                     guard let job = exports.jobs.first(where: { $0.variant == variant }), job.status == "完成", let path = job.path else {
                         throw StudioError(exports.jobs.first(where: { $0.variant == variant })?.error ?? "No completed output")
+                    }
+                    if variant == .backing {
+                        let diagnostic = documents.appendingPathComponent("MediaSmokeAudio", isDirectory: true)
+                        try files.createDirectory(at: diagnostic, withIntermediateDirectories: true)
+                        let copy = diagnostic.appendingPathComponent("backing.wav")
+                        if files.fileExists(atPath: copy.path) { try files.removeItem(at: copy) }
+                        try files.copyItem(at: root.appendingPathComponent(path), to: copy)
                     }
                     let output = try await inspect(root.appendingPathComponent(path), variant: variant)
                     report.outputs.append(output)
@@ -174,11 +182,13 @@ import Combine
               needsVideo ? !video.isEmpty : video.isEmpty else { throw StudioError("Output size/duration/tracks failed validation") }
         var peak: Float?
         var estimatedHz: Double?
+        var zeroCrossingHz: Double?
         if url.pathExtension.lowercased() == "wav" {
             let reader = try AVAudioFile(forReading: url)
             guard let buffer = AVAudioPCMBuffer(pcmFormat: reader.processingFormat, frameCapacity: 4096) else { throw StudioError("Output PCM buffer unavailable") }
             var maximum: Float = 0, previous: Float = 0
             var absoluteFrame: Int64 = 0, measuredFrames: Int64 = 0, crossings = 0
+            var window: [Double] = []
             let rate = reader.processingFormat.sampleRate
             while reader.framePosition < reader.length {
                 try reader.read(into: buffer)
@@ -190,6 +200,7 @@ import Combine
                     if seconds >= 0.4 && seconds < 1.6 {
                         if previous <= 0 && sample > 0 { crossings += 1 }
                         measuredFrames += 1
+                        if absoluteFrame % 4 == 0 { window.append(Double(sample)) }
                     }
                     previous = sample; absoluteFrame += 1
                 }
@@ -197,14 +208,38 @@ import Combine
             guard maximum.isFinite, maximum > 0.0001 else { throw StudioError("Synthetic WAV output is silent") }
             peak = maximum
             if variant == .backing || variant == .dryVocal {
-                let measured = Double(crossings) * rate / Double(max(1, measuredFrames))
+                zeroCrossingHz = Double(crossings) * rate / Double(max(1, measuredFrames))
+                // A phase-vocoder can add low-level sidebands or DC bias; raw
+                // sign crossings need not equal its dominant audible frequency.
+                // Measure the Hann-windowed spectrum independently and retain
+                // both readings plus the generated WAV for inspection.
+                let measured = dominantFrequency(window, sampleRate: rate / 4)
                 let expected = variant == .backing ? 220 * pow(2, 3.0 / 12) : 440
                 guard abs(measured - expected) < 3 else { throw StudioError("Pitch-preserving-speed check failed: measured \(measured)Hz, expected \(expected)Hz") }
                 estimatedHz = measured
             }
         }
         return Output(variant: variant.rawValue, file: url.path, bytes: bytes, duration: duration,
-                      audioTracks: audio.count, videoTracks: video.count, peak: peak, estimatedHz: estimatedHz)
+                      audioTracks: audio.count, videoTracks: video.count, peak: peak, estimatedHz: estimatedHz, zeroCrossingHz: zeroCrossingHz)
+    }
+    private static func dominantFrequency(_ values: [Double], sampleRate: Double) -> Double {
+        guard values.count > 1 else { return 0 }
+        let weighted = values.enumerated().map { index, value in
+            value * (0.5 - 0.5 * cos(2 * .pi * Double(index) / Double(values.count - 1)))
+        }
+        var strongest: Double = 0, peakFrequency: Double = 0
+        for step in 200...1100 {
+            let frequency = Double(step) / 2
+            let coefficient = 2 * cos(2 * .pi * frequency / sampleRate)
+            var previous: Double = 0, earlier: Double = 0
+            for value in weighted {
+                let current = value + coefficient * previous - earlier
+                earlier = previous; previous = current
+            }
+            let power = previous * previous + earlier * earlier - coefficient * previous * earlier
+            if power > strongest { strongest = power; peakFrequency = frequency }
+        }
+        return peakFrequency
     }
     private static func snapshot(_ url: URL, seconds: Double, to output: URL) async throws -> [UInt8] {
         let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url)); generator.appliesPreferredTrackTransform = true

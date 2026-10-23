@@ -66,6 +66,9 @@ def media_smoke(device_id, output):
         frame_root = container / "Documents/MediaSmokeFrames"
         if frame_root.is_dir():
             shutil.copytree(frame_root, output / "media-frames", dirs_exist_ok=True)
+        audio_root = container / "Documents/MediaSmokeAudio"
+        if audio_root.is_dir():
+            shutil.copytree(audio_root, output / "media-audio", dirs_exist_ok=True)
         for crash_root in [Path.home() / "Library/Logs/DiagnosticReports", container.parents[3] / "Library/Logs/CrashReporter"]:
             for crash in crash_root.glob("MyCoverStudio*.ips"):
                 if crash.stat().st_mtime >= launched_at - 1:

@@ -160,6 +160,9 @@ public actor ProjectRepository {
             throw StudioError("当前修改尚未打包，不能释放素材。请重新创建并导出工程包。")
         }
         let dir = directory(project.id)
+        guard !files.fileExists(atPath: dir.appendingPathComponent("recording.json").path) else {
+            throw StudioError("此工程还有待恢复录制。请先在作品库恢复并结束 Take，再重新备份和释放素材。")
+        }
         // Preflight every path before any destructive work or archived-state commit.
         try ProjectRules.validate(project)
         let targets = try project.assets.map { try ProjectRules.mediaURL($0.path, root: dir) }

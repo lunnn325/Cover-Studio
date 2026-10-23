@@ -332,4 +332,24 @@ final class CoverCoreTests: XCTestCase {
         XCTAssertFalse(cues.contains { $0.start <= 7 && 7 < $0.end })
         XCTAssertThrowsError(try Timeline.subtitleCues(lyrics: Lyrics(), edit: edit, duration: 8))
     }
+    func testPendingRecordingPreventsReleaseEvenWithVerifiedBackup() async throws {
+        let scratch = try temporaryDirectory(), source = scratch.appendingPathComponent("source")
+        let project = try makeProject(root: source), archive = scratch.appendingPathComponent("saved.coverproject")
+        try ProjectArchive.create(project: project, root: source, destination: archive, mode: .full)
+        let repository = try ProjectRepository(root: scratch.appendingPathComponent("library"))
+        let restored = try await repository.restore(archive: archive)
+        let journal = repository.directory(restored.id).appendingPathComponent("recording.json")
+        try Data("{}".utf8).write(to: journal)
+        do {
+            _ = try await repository.releaseLocal(restored, confirmedRevision: restored.revision)
+            XCTFail("A pending or unreadable recording journal must block source release")
+        } catch { XCTAssertTrue(error is StudioError) }
+        for asset in restored.assets {
+            XCTAssertEqual(try FileIntegrity.sha256(repository.directory(restored.id).appendingPathComponent(asset.path)), asset.sha256)
+        }
+        let loaded = try await repository.loadAll(); XCTAssertFalse(try XCTUnwrap(loaded.first).archived)
+        try FileManager.default.removeItem(at: journal)
+        let archived = try await repository.releaseLocal(restored, confirmedRevision: restored.revision)
+        XCTAssertTrue(archived.archived)
+    }
 }

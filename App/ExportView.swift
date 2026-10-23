@@ -1,5 +1,6 @@
 import SwiftUI
 import CoverCore
+import AVKit
 
 struct ExportView: View {
     @EnvironmentObject var store: StudioStore
@@ -8,6 +9,8 @@ struct ExportView: View {
     @State private var share = false
     @State private var files = false
     @State private var archive = false
+    @State private var preview = false
+    @State private var player: AVPlayer?
     var body: some View {
         List {
             Section("输出预设") {
@@ -29,6 +32,9 @@ struct ExportView: View {
                 ForEach(service.jobs) { job in
                     VStack(alignment: .leading, spacing: 10) {
                         LabeledContent(job.variant.label, value: job.status)
+                        if job.status == "完成", job.variant != .lyrics {
+                            Button("预览此输出") { previewOutput(job) }.disabled(service.working)
+                        }
                         if let error = job.error { Text(error).font(.footnote).foregroundStyle(.orange) }
                         if job.status == "失败" || job.status == "中断" { Button("单独重试") { run(retry: job.variant) }.disabled(service.working) }
                     }
@@ -46,7 +52,14 @@ struct ExportView: View {
         .sheet(isPresented: $share) { ShareSheet(urls: service.shareURLs) }
         .sheet(isPresented: $files) { DocumentExportPicker(urls: service.shareURLs) { success in files = false; if success { store.notice = "已交给文件提供者；不代表云端上传完成。" } } }
         .sheet(isPresented: $archive) { NavigationStack { ArchiveView() } }
+        .sheet(isPresented: $preview) { if let player { PlayerSheet(title: "导出版本预览", player: player) } }
         .interactiveDismissDisabled(service.working)
+    }
+    func previewOutput(_ job: ExportJob) {
+        guard let project = store.selected, let path = job.path, ProjectRules.safePath(path), path.hasPrefix("exports/") else { return }
+        let url = store.repository.directory(project.id).appendingPathComponent(path)
+        guard FileManager.default.fileExists(atPath: url.path) else { store.error = "此成品文件已不在本机，请重新导出。"; return }
+        store.playback.suspendEngine(); player = AVPlayer(url: url); preview = true
     }
     func run(retry: ExportVariant? = nil) {
         guard let project = store.selected else { return }

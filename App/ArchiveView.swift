@@ -128,7 +128,8 @@ struct ArchiveView: View {
                             return try MediaAsset(path: path, role: .export, bytes: FileIntegrity.size(url), sha256: FileIntegrity.sha256(url))
                         }
                     }.value
-                    project.assets.append(contentsOf: outputAssets)
+                    let existingPaths = Set(project.assets.map(\.path))
+                    project.assets.append(contentsOf: outputAssets.filter { !existingPaths.contains($0.path) })
                 }
             }
             let output = directory.appendingPathComponent(UUID().uuidString + ".coverproject")
