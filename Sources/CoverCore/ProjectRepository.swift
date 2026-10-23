@@ -6,7 +6,7 @@ private struct RestoreTransaction: Codable {
 }
 
 public actor ProjectRepository {
-    public let root: URL
+    public nonisolated let root: URL
     private let files = FileManager.default
     public init(root: URL) throws {
         self.root = root

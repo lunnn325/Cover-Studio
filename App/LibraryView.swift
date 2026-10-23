@@ -103,6 +103,13 @@ struct StorageSummary {
     var free: Int64 = 0
 }
 
+struct RetainedSnapshot: Identifiable {
+    var id: String
+    var title: String
+    var bytes: Int64
+    var hasIndex: Bool
+}
+
 struct StorageView: View {
     @EnvironmentObject var store: StudioStore
     @Environment(\.dismiss) var dismiss
@@ -115,6 +122,13 @@ struct StorageView: View {
     @State private var pendingOutput: ExportJob?
     @State private var outputFirst = false
     @State private var outputFinal = false
+    @State private var snapshots: [RetainedSnapshot] = []
+    @State private var pendingSnapshot: RetainedSnapshot?
+    @State private var snapshotFirst = false
+    @State private var snapshotFinal = false
+    @State private var snapshotPackage: URL?
+    @State private var exportingSnapshot = false
+    @State private var snapshotPicker = false
     var project: StudioProject? { store.selected }
     var body: some View {
         List {
@@ -124,7 +138,20 @@ struct StorageView: View {
                 LabeledContent("可重建缓存", value: bytes(summary.cache))
                 LabeledContent("安全副本 / 恢复暂存", value: bytes(summary.retained))
                 LabeledContent("系统可用", value: bytes(summary.free))
-                Text("不会自动删除原始素材。安全副本与失败恢复暂存保留在 App 文件目录；确认数据安全后可通过 Files 人工处理。").font(.footnote).foregroundStyle(.secondary)
+                Text("不会自动删除原始素材。保留的安全副本可在下方导出工程包；只有明确两次确认才会移除所选副本。").font(.footnote).foregroundStyle(.secondary)
+            }
+            if !snapshots.isEmpty {
+                Section("保留的安全 / 恢复副本") {
+                    ForEach(snapshots) { snapshot in
+                        VStack(alignment: .leading, spacing: 10) {
+                            LabeledContent(snapshot.title, value: bytes(snapshot.bytes))
+                            Text(snapshot.id.hasPrefix(".safety-") ? "替换前的旧工程，可能含独有录制。" : "失败恢复的暂存内容，尚不能视为完整工程。").font(.footnote).foregroundStyle(.secondary)
+                            if snapshot.hasIndex { Button("校验并导出此副本为工程包") { Task { await exportSnapshot(snapshot) } }.disabled(exportingSnapshot) }
+                            Button("移除此副本…", role: .destructive) { pendingSnapshot = snapshot; snapshotFirst = true }.disabled(exportingSnapshot)
+                        }
+                    }
+                    if exportingSnapshot { ProgressView("正在校验并生成副本工程包…") }
+                }
             }
             if let project, !project.archived {
                 Section("当前工程的 Take") {
@@ -151,6 +178,18 @@ struct StorageView: View {
         }.navigationTitle("存储管理").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
             .task { await refresh() }
+            .interactiveDismissDisabled(exportingSnapshot)
+            .sheet(isPresented: $snapshotPicker) {
+                if let snapshotPackage { DocumentExportPicker(urls: [snapshotPackage]) { success in snapshotPicker = false; if success { store.notice = "安全副本已交给 Files，云上传仍未验证。可从作品库选择此包恢复。" } } }
+            }
+            .confirmationDialog("移除所选安全 / 恢复副本？", isPresented: $snapshotFirst, titleVisibility: .visible) {
+                Button("取消", role: .cancel) {}
+                Button("继续查看最终确认", role: .destructive) { snapshotFinal = true }
+            } message: { Text("所选副本可能是旧版本录制的唯一来源。建议先校验并导出工程包，不能因新版本可打开就认为旧素材都已备份。") }
+            .alert("最终确认：永久移除副本", isPresented: $snapshotFinal) {
+                Button("取消", role: .cancel) {}
+                Button("确认移除所选副本", role: .destructive) { Task { await removeSnapshot() } }
+            } message: { Text("\(pendingSnapshot?.title ?? "") · \(bytes(pendingSnapshot?.bytes ?? 0))。此操作不可撤销，不会修改当前活动工程；所选副本的独有素材将永久移除。") }
             .confirmationDialog("删除 \(pendingTake?.name ?? "Take")？", isPresented: $firstConfirm, titleVisibility: .visible) {
                 Button("取消", role: .cancel) {}
                 Button("继续查看影响", role: .destructive) { finalConfirm = true }
@@ -188,10 +227,55 @@ struct StorageView: View {
             }
             return result
         }.value
+        snapshots = await Task.detached {
+            let files = FileManager.default
+            return ((try? files.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey])) ?? []).compactMap { url -> RetainedSnapshot? in
+                let name = url.lastPathComponent
+                guard Self.validSnapshotName(name), let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey]), values.isDirectory == true, values.isSymbolicLink != true else { return nil }
+                let data = try? Data(contentsOf: url.appendingPathComponent("project.json"))
+                let project = data.flatMap { try? JSONDecoder().decode(StudioProject.self, from: $0) }
+                var size: Int64 = 0
+                let contents = files.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey])
+                while let child = contents?.nextObject() as? URL { size += (try? FileIntegrity.size(child)) ?? 0 }
+                return RetainedSnapshot(id: name, title: project?.song.title ?? "未提交的恢复暂存", bytes: size, hasIndex: project != nil)
+            }.sorted { $0.title < $1.title }
+        }.value
         if let project {
             if let data = try? Data(contentsOf: store.repository.directory(project.id).appendingPathComponent("exports/queue.json")), let jobs = try? JSONDecoder().decode([ExportJob].self, from: data) { outputJobs = jobs }
             else { outputJobs = ExportService.restoredJobs(assets: project.assets) }
         }
+    }
+    nonisolated static func validSnapshotName(_ name: String) -> Bool {
+        for prefix in [".safety-", ".restore-", ".replaced-"] where name.hasPrefix(prefix) {
+            return UUID(uuidString: String(name.dropFirst(prefix.count))) != nil
+        }
+        return false
+    }
+    func snapshotDirectory(_ name: String) throws -> URL {
+        let root = store.repository.root.resolvingSymlinksInPath()
+        let direct = root.appendingPathComponent(name), resolved = direct.resolvingSymlinksInPath()
+        guard Self.validSnapshotName(name), direct.path == resolved.path, resolved.path.hasPrefix(root.path + "/") else { throw StudioError("副本目录不在受控范围，已停止操作。") }
+        guard !FileManager.default.fileExists(atPath: root.appendingPathComponent(".restore-transaction.json").path) else { throw StudioError("存在待恢复的替换事务，请重启 App 完成恢复后再处理副本。") }
+        return resolved
+    }
+    func exportSnapshot(_ snapshot: RetainedSnapshot) async {
+        guard !store.busy, !store.recording.isBusy else { return }
+        exportingSnapshot = true; store.busy = true; defer { exportingSnapshot = false; store.busy = false }
+        do {
+            let directory = try snapshotDirectory(snapshot.id)
+            let project = try JSONDecoder().decode(StudioProject.self, from: Data(contentsOf: directory.appendingPathComponent("project.json")))
+            let output = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".coverproject")
+            try await Task.detached(priority: .userInitiated) { try ProjectArchive.create(project: project, root: directory, destination: output, mode: .full, includeExports: true) }.value
+            snapshotPackage = output; snapshotPicker = true
+        } catch { store.report(error) }
+    }
+    func removeSnapshot() async {
+        guard let snapshot = pendingSnapshot, !store.busy, !store.recording.isBusy else { return }
+        do {
+            let directory = try snapshotDirectory(snapshot.id)
+            try FileManager.default.removeItem(at: directory)
+            pendingSnapshot = nil; await refresh()
+        } catch { store.report(error) }
     }
     func deleteTake() async {
         guard let take = pendingTake, let project, !store.recording.isBusy else { return }

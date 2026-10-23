@@ -85,7 +85,8 @@ enum VideoComposer {
         let renderSize = project.edit.aspect >= 1 ? CGSize(width: 1920, height: 1080) : CGSize(width: 1080, height: 1920)
         let width = project.edit.aspect >= 1 ? renderSize.width : renderSize.height * project.edit.aspect
         let height = project.edit.aspect >= 1 ? renderSize.width / project.edit.aspect : renderSize.height
-        let size = CGSize(width: floor(width / 2) * 2, height: floor(height / 2) * 2)
+        let size = abs(project.edit.aspect - 1) < 0.0001 ? CGSize(width: 1080, height: 1080)
+            : CGSize(width: floor(width / 2) * 2, height: floor(height / 2) * 2)
         func cm(_ seconds: Double) -> CMTime { CMTime(seconds: seconds, preferredTimescale: 600_000) }
         func addVideo(url: URL, sourceStart: Double, at: Double, duration: Double) async throws {
             let asset = AVURLAsset(url: url)

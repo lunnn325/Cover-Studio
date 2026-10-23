@@ -73,7 +73,9 @@ def main():
                 command("xcrun", "simctl", "ui", device_id, "appearance", appearance)
                 command("xcrun", "simctl", "ui", device_id, "content_size", content_size)
                 command("xcrun", "simctl", "launch", "--terminate-running-process", device_id, "studio.mycover.app")
-                time.sleep(3)
+                # The first cold launch can still display the launch surface after
+                # simctl returns (observed on the milestone runner). Allow it to render.
+                time.sleep(20 if appearance == "light" else 5)
                 image = args.output / f"{family}-{appearance}-{content_size}.png"
                 command("xcrun", "simctl", "io", device_id, "screenshot", str(image))
                 report["captures"].append({"device": device["name"], "udid": device_id, "appearance": appearance,

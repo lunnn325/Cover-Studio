@@ -34,6 +34,7 @@ import CoverCore
     private var countdownTask: Task<Void, Never>?
     private var routeFingerprint = ""
     private var persistenceError: Error?
+    private var observedBytesPerSecond: Double = 1_500_000
     private var monitoringFormat: AVAudioFormat?
     private var monitoringConfigured = false
     var isBusy: Bool { [.preflight, .ready, .countdown, .recording, .interrupted, .finalizing].contains(state) }
@@ -138,6 +139,7 @@ import CoverCore
         guard !isCapturing, state != .finalizing, let store, let project = store.selected, !project.archived else { return }
         do {
             try transition(.preflight); self.practice = practice
+            observedBytesPerSecond = video && !practice ? 1_500_000 : 40_000
             disableMonitoring(); monitoringConfigured = false; monitoringFormat = nil
             savedTakeID = nil; reason = nil; warning = nil; level = nil; persistenceError = nil; takeID = nil; projectID = project.id
             playback.suspendEngine(); playback.loop = nil
@@ -163,7 +165,7 @@ import CoverCore
             try await pipeline.configure(video: video && !practice, front: project.frontCamera, landscape: project.landscapeRecording)
             readRoute(); routeConfirmed = false
             availableBytes = try FileIntegrity.available(repository.directory(project.id))
-            let budget = DiskBudget(bytesPerSecond: video && !practice ? 1_500_000 : 40_000)
+            let budget = DiskBudget(bytesPerSecond: observedBytesPerSecond)
             guard !budget.shouldStop(available: availableBytes) else { throw StudioError("空间已到危险阈值，无法开始录制。请先备份或处理空间。") }
             guard ProcessInfo.processInfo.thermalState != .critical else { throw StudioError("设备温度过高，请冷却后录制。") }
             try store.preparePlayback()
@@ -326,6 +328,11 @@ import CoverCore
             }
         }
         try await store.flush()
+        let seconds = CMTimeGetSeconds(chunk.duration)
+        if seconds.isFinite && seconds > 0 {
+            let observed = (Double(vocal.bytes) + Double(video?.bytes ?? 0)) / seconds * 1.5
+            if observed.isFinite { observedBytesPerSecond = max(observedBytesPerSecond, observed) }
+        }
     }
     private func startMonitor() {
         monitor?.invalidate()
@@ -335,7 +342,7 @@ import CoverCore
                 do {
                     self.refreshMonitoringAvailability()
                     self.availableBytes = try FileIntegrity.available(self.repository.directory(projectID))
-                    let budget = DiskBudget(bytesPerSecond: self.video && !self.practice ? 1_500_000 : 40_000)
+                    let budget = DiskBudget(bytesPerSecond: self.observedBytesPerSecond)
                     if budget.shouldStop(available: self.availableBytes) || ProcessInfo.processInfo.thermalState == .critical {
                         self.reason = "空间或温度达到危险阈值，录制已保护性结束，未删除源素材。"; await self.finish()
                     } else if self.availableBytes < budget.warningBytes { self.warning = "剩余空间较低，请尽快结束并备份。" }
