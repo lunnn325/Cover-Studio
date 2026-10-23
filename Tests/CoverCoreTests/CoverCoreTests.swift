@@ -302,4 +302,18 @@ final class CoverCoreTests: XCTestCase {
         let data = try FileIntegrity.encoder().encode(preset)
         XCTAssertEqual(try JSONDecoder().decode(ExportPreset.self, from: data), preset)
     }
+    func testCaptureOrderSurvivesHostClockResetAndOldPackages() throws {
+        let root = try temporaryDirectory(), vocal = try asset("recording.wav", root: root)
+        var first = segment(vocal, start: 0, duration: 10); first.sequence = 0; first.hostStart = .init(seconds: 5000)
+        var resumed = segment(vocal, start: 7, duration: 5); resumed.sequence = 1; resumed.hostStart = .init(seconds: 20)
+        XCTAssertEqual(Timeline.orderedSegments([resumed, first]).map(\.id), [first.id, resumed.id])
+        var take = Take(name: "recovered", kind: .audio, arrangementID: UUID(), semitones: -2)
+        take.segments = [resumed, first]
+        XCTAssertEqual(Timeline.regions(take: take, edit: EditGraph()).map(\.duration), [7, 5])
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: FileIntegrity.encoder().encode(first)) as? [String: Any])
+        legacy.removeValue(forKey: "sequence")
+        let old = try JSONDecoder().decode(RecordingSegment.self, from: JSONSerialization.data(withJSONObject: legacy))
+        XCTAssertNil(old.sequence)
+        XCTAssertEqual(Timeline.orderedSegments([old, resumed]).map(\.id), [first.id, resumed.id])
+    }
 }

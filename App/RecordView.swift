@@ -47,7 +47,7 @@ struct RecordPanel: View {
                 } else {
                     Image(systemName: recording.video ? "video" : "mic").font(.largeTitle).foregroundStyle(.secondary).frame(height: 100)
                 }
-                if project?.showLyrics == true { LyricsDisplay(lyrics: project?.arrangement?.lyrics ?? Lyrics(), position: playback.position).padding(.horizontal) }
+                if project?.showLyrics == true { LyricsDisplay(lyrics: recording.currentLyrics, position: playback.position).padding(.horizontal) }
                 if let countdown = recording.countdown { Text("\(countdown)").font(.largeTitle.bold()).monospacedDigit().accessibilityLabel("倒计时 \(countdown)") }
                 if let reason = recording.reason { Text(reason).font(.callout).foregroundStyle(.orange) }
                 if let warning = recording.warning { Label(warning, systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
@@ -135,7 +135,15 @@ struct TakePreviewView: View {
                 Button(take.favorite ? "取消满意标记" : "标记满意") {
                     store.update { if let index = $0.takes.firstIndex(where: { $0.id == takeID }) { $0.takes[index].favorite.toggle() } }
                 }
-                Button("选作后期 Take") { store.update { $0.edit.selectedTakeID = take.id }; dismiss() }.buttonStyle(.borderedProminent)
+                Button(take.isPractice ? "转为正式 Audio Take" : "选作后期 Take") {
+                    Task {
+                        do {
+                            if take.isPractice { try await store.promote(take.id) }
+                            else { store.update { $0.edit.selectedTakeID = take.id }; try await store.flush() }
+                            dismiss()
+                        } catch { store.report(error) }
+                    }
+                }.buttonStyle(.borderedProminent)
             }
             Spacer()
         }.navigationTitle("Take 预览").navigationBarTitleDisplayMode(.inline)

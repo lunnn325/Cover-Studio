@@ -39,6 +39,11 @@ import CoverCore
     private var monitoringConfigured = false
     var isBusy: Bool { [.preflight, .ready, .countdown, .recording, .interrupted, .finalizing].contains(state) }
     var isCapturing: Bool { state == .recording || state == .countdown }
+    var currentLyrics: Lyrics {
+        guard let project = store?.selected else { return Lyrics() }
+        if let takeID, let take = project.takes.first(where: { $0.id == takeID }) { return project.arrangement(for: take)?.lyrics ?? Lyrics() }
+        return project.arrangement?.lyrics ?? Lyrics()
+    }
     init(playback: PlaybackEngine, repository: ProjectRepository) {
         self.playback = playback; self.repository = repository
         pipeline.onChunk = { [weak self] chunk, done in
@@ -135,16 +140,19 @@ import CoverCore
         guard state.canTransition(to: next) else { throw StudioError("当前录制状态不允许执行此操作。") }
         state = next
     }
-    func preflight(practice: Bool = false) async {
+    func preflight(practice: Bool = false, recovering: UUID? = nil) async {
         guard !isCapturing, state != .finalizing, let store, let project = store.selected, !project.archived else { return }
         do {
-            try transition(.preflight); self.practice = practice
-            observedBytesPerSecond = video && !practice ? 1_500_000 : 40_000
+            let previous = recovering.flatMap { id in project.takes.first { $0.id == id } }
+            if recovering != nil && previous == nil { throw StudioError("待恢复 Take 不在当前工程，原素材未修改。") }
+            try transition(.preflight); self.practice = previous?.isPractice ?? practice
+            if let previous { video = previous.kind == .video }
+            observedBytesPerSecond = video && !self.practice ? 1_500_000 : 40_000
             disableMonitoring(); monitoringConfigured = false; monitoringFormat = nil
-            savedTakeID = nil; reason = nil; warning = nil; level = nil; persistenceError = nil; takeID = nil; projectID = project.id
+            savedTakeID = nil; reason = nil; warning = nil; level = nil; persistenceError = nil; takeID = previous?.id; projectID = project.id
             playback.suspendEngine(); playback.loop = nil
             guard await AVCaptureDevice.requestAccess(for: .audio) else { throw StudioError("麦克风权限被拒绝。请在系统设置允许麦克风。") }
-            if video && !practice {
+            if video && !self.practice {
                 guard await AVCaptureDevice.requestAccess(for: .video) else {
                     video = false; throw StudioError("摄像头权限未允许。已切换纯音频，请重新检查后继续，或前往系统设置。")
                 }
@@ -162,18 +170,18 @@ import CoverCore
             if let preferred = inputs.first(where: { $0.uid == selectedInputUID }) ?? inputs.first(where: { $0.portType == .bluetoothHFP }) {
                 try audioSession.setPreferredInput(preferred)
             }
-            try await pipeline.configure(video: video && !practice, front: project.frontCamera, landscape: project.landscapeRecording)
+            try await pipeline.configure(video: video && !self.practice, front: project.frontCamera, landscape: project.landscapeRecording)
             readRoute(); routeConfirmed = false
             availableBytes = try FileIntegrity.available(repository.directory(project.id))
             let budget = DiskBudget(bytesPerSecond: observedBytesPerSecond)
             guard !budget.shouldStop(available: availableBytes) else { throw StudioError("空间已到危险阈值，无法开始录制。请先备份或处理空间。") }
             guard ProcessInfo.processInfo.thermalState != .critical else { throw StudioError("设备温度过高，请冷却后录制。") }
-            try store.preparePlayback()
+            try store.preparePlayback(for: previous)
             if let monitoringFormat {
                 do { try playback.configureMonitoring(format: monitoringFormat); monitoringConfigured = true }
                 catch { monitoringConfigured = false; monitoringExplanation = error.localizedDescription }
             }
-            resumePosition = playback.position
+            resumePosition = previous.map { max(0, $0.end - 3) } ?? playback.position
             try transition(.ready)
             refreshMonitoringAvailability()
             UIDevice.current.isBatteryMonitoringEnabled = true
@@ -262,8 +270,10 @@ import CoverCore
                 try playback.prepare()
                 let host = mach_absolute_time() + AVAudioTime.hostTime(forSeconds: 0.25)
                 let session = AVAudioSession.sharedInstance()
+                let savedSegments = store.selected?.takes.first(where: { $0.id == takeID })?.segments ?? []
+                let sequenceStart = (savedSegments.enumerated().map { $0.element.sequence ?? $0.offset }.max() ?? -1) + 1
                 try await pipeline.begin(directory: repository.directory(project.id), songStart: resumePosition, host: host,
-                       route: route, inputLatency: session.inputLatency, outputLatency: session.outputLatency)
+                       route: route, inputLatency: session.inputLatency, outputLatency: session.outputLatency, sequenceStart: sequenceStart)
                 try playback.play(from: resumePosition, hostTime: host)
                 try transition(.recording); refreshMonitoringAvailability(); UIApplication.shared.isIdleTimerDisabled = true
                 startMonitor()
@@ -315,16 +325,17 @@ import CoverCore
                        duration: .init(value: chunk.duration.value, timescale: chunk.duration.timescale))
         }
         func time(_ value: CMTime?) -> MediaTime? { value.map { .init(value: $0.value, timescale: $0.timescale) } }
-        let segment = RecordingSegment(vocalAssetID: vocal.id, videoAssetID: video?.id, songStart: .init(seconds: chunk.songStart),
+        var segment = RecordingSegment(vocalAssetID: vocal.id, videoAssetID: video?.id, songStart: .init(seconds: chunk.songStart),
                          hostStart: time(chunk.anchor)!, duration: time(chunk.duration)!, audioFirstPTS: time(chunk.audioPTS),
                          videoFirstPTS: time(chunk.videoPTS), playbackHostTime: chunk.playbackHost,
                          inputLatency: chunk.inputLatency, outputLatency: chunk.outputLatency, route: chunk.route)
+        segment.sequence = chunk.sequence
         store.update { project in
             project.assets.append(vocal); if let video { project.assets.append(video) }
             if let index = project.takes.firstIndex(where: { $0.id == takeID }) {
                 project.takes[index].segments.append(segment)
-                // Independent audio/video finalizers may complete out of order.
-                project.takes[index].segments.sort { $0.hostStart.seconds < $1.hostStart.seconds }
+                // A reboot resets host clock values; only take-local sequence defines append order.
+                project.takes[index].segments = Timeline.orderedSegments(project.takes[index].segments)
             }
         }
         try await store.flush()

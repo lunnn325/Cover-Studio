@@ -2,6 +2,14 @@ import SwiftUI
 import AVFoundation
 import CoverCore
 
+struct PendingRecording: Identifiable {
+    var id: UUID { takeID }
+    var projectID: UUID
+    var takeID: UUID
+    var name: String
+    var savedSegments: Int
+}
+
 @MainActor final class StudioStore: ObservableObject {
     @Published var projects: [StudioProject] = []
     @Published var selectedID: UUID? {
@@ -11,6 +19,7 @@ import CoverCore
     @Published var notice: String?
     @Published var busy = false
     @Published var auxiliaryRecording = false
+    @Published var pendingRecordings: [PendingRecording] = []
     let repository: ProjectRepository
     let playback = PlaybackEngine()
     let recording: RecordingCoordinator
@@ -38,13 +47,25 @@ import CoverCore
             let last = UserDefaults.standard.string(forKey: "lastProject").flatMap(UUID.init(uuidString:))
             selectedID = projects.first(where: { $0.id == last })?.id ?? projects.first?.id
             recording.video = selected?.recordVideo ?? true
-            let recovered = projects.filter {
-                FileManager.default.fileExists(atPath: repository.directory($0.id).appendingPathComponent("recording.json").path)
-            }
-            if !recovered.isEmpty { notice = "发现上次中断的录制。已提交片段已保存在 Take 中；最后未封装片段可能无法播放，原文件仍保留在工程目录。" }
+            refreshPendingRecordings()
+            if !pendingRecordings.isEmpty { notice = "发现上次中断的录制，可在作品库预览已保存片段，或检查路由后接唱。最后未封装片段可能无法播放，原文件仍保留。" }
         } catch { self.error = "作品库读取失败，原文件未修改。\(error.localizedDescription)" }
     }
     func report(_ error: Error) { self.error = error.localizedDescription }
+    func refreshPendingRecordings() {
+        pendingRecordings = projects.filter { !$0.archived }.compactMap { project in
+            let url = repository.directory(project.id).appendingPathComponent("recording.json")
+            guard let data = try? Data(contentsOf: url), let journal = try? JSONDecoder().decode(Take.self, from: data),
+                  let take = project.takes.first(where: { $0.id == journal.id }) else { return nil }
+            return PendingRecording(projectID: project.id, takeID: take.id, name: project.song.title + " · " + take.name, savedSegments: take.segments.count)
+        }
+    }
+    func resumeRecording(_ pending: PendingRecording) async {
+        guard !recording.isBusy, !auxiliaryRecording, !busy else { error = "请先结束当前操作。"; return }
+        await select(pending.projectID)
+        guard selectedID == pending.projectID else { return }
+        await recording.preflight(recovering: pending.takeID)
+    }
     func update(_ mutate: (inout StudioProject) -> Void) {
         guard let id = selectedID, let index = projects.firstIndex(where: { $0.id == id }), !projects[index].archived else { return }
         let previous = projects[index]
@@ -68,9 +89,15 @@ import CoverCore
     }
     func undoEdit() {
         guard !recording.isBusy, !auxiliaryRecording, let id = selectedID,
-              let index = projects.firstIndex(where: { $0.id == id }), let previous = undoEdits[id]?.popLast() else { return }
-        projects[index].edit = previous; projects[index].touch()
-        Task { do { try await flush() } catch { report(error) } }
+              let index = projects.firstIndex(where: { $0.id == id }) else { return }
+        while let previous = undoEdits[id]?.popLast() {
+            var candidate = projects[index]; candidate.edit = previous
+            guard (try? ProjectRules.validate(candidate)) != nil else { continue }
+            candidate.touch(); projects[index] = candidate
+            Task { do { try await flush() } catch { report(error) } }
+            return
+        }
+        notice = "没有仍可恢复的后期修改；已永久删除的素材不能通过撤销找回。"
     }
     func flush() async throws {
         saveTask?.cancel()

@@ -90,6 +90,10 @@ public enum ProjectRules {
             required.formUnion(arrangement.assetIDs)
         }
         for take in project.takes {
+            let sequences = take.segments.compactMap(\.sequence)
+            guard sequences.allSatisfy({ $0 >= 0 && $0 < Int32.max }), Set(sequences).count == sequences.count else {
+                throw StudioError("录制片段的顺序编号无效或重复。")
+            }
             guard project.arrangement(for: take) != nil, (-12...12).contains(take.semitones),
                   Set(take.segments.map(\.id)).count == take.segments.count else { throw StudioError("Take 的伴奏版本或片段信息无效。") }
             required.formUnion(take.assetIDs)

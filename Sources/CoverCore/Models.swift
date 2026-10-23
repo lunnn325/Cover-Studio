@@ -101,6 +101,8 @@ public struct Arrangement: Identifiable, Codable, Equatable, Sendable {
 public enum TakeKind: String, Codable, Sendable { case audio, video }
 public struct RecordingSegment: Identifiable, Codable, Equatable, Sendable {
     public var id = UUID()
+    /// Take-local capture order survives device reboot; absent in early schema-1 packages.
+    public var sequence: Int?
     public var vocalAssetID: UUID
     public var videoAssetID: UUID?
     public var songStart: MediaTime

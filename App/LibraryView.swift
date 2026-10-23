@@ -8,6 +8,9 @@ struct LibraryView: View {
     @State private var storage = false
     @State private var rename = false
     @State private var restorePicker = false
+    @State private var recoverySheet = false
+    @State private var recoveryPreview = false
+    @State private var recoveryTakeID: UUID?
     var filtered: [StudioProject] {
         store.projects.filter { search.isEmpty || ($0.song.title + " " + $0.song.artist + " " + $0.song.group).localizedCaseInsensitiveContains(search) }
     }
@@ -22,6 +25,20 @@ struct LibraryView: View {
             Section {
                 Button { restorePicker = true } label: { Label("从工程包恢复 / 验证", systemImage: "square.and.arrow.down") }
                 Button { storage = true } label: { Label("存储管理", systemImage: "internaldrive") }
+            }
+            if !store.pendingRecordings.isEmpty {
+                Section("上次未完成的录制") {
+                    ForEach(store.pendingRecordings) { pending in
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(pending.name).font(.headline)
+                            Text("已保存 \(pending.savedSegments) 个片段，未封装的尾段不能保证恢复。").font(.footnote).foregroundStyle(.secondary)
+                            if pending.savedSegments > 0 {
+                                Button("预览已保存片段") { Task { await store.select(pending.projectID); recoveryTakeID = pending.takeID; recoveryPreview = true } }
+                            }
+                            Button("检查设备后接唱") { Task { await store.resumeRecording(pending); if store.recording.isBusy { recoverySheet = true } } }
+                        }
+                    }
+                }
             }
             if filtered.isEmpty { ContentUnavailableView(search.isEmpty ? "还没有作品" : "没有匹配的作品", systemImage: "square.stack", description: Text("导入伴奏开始录制，或从工程包恢复。")) }
             ForEach(groups.keys.sorted(), id: \.self) { group in
@@ -64,6 +81,12 @@ struct LibraryView: View {
             .sheet(isPresented: $backup) { NavigationStack { ArchiveView() } }
             .sheet(isPresented: $storage) { NavigationStack { StorageView() } }
             .sheet(isPresented: $rename) { NavigationStack { RenameProjectView() } }
+            .sheet(isPresented: $recoverySheet, onDismiss: { store.refreshPendingRecordings() }) {
+                NavigationStack { RecordView().toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { recoverySheet = false }.disabled(store.recording.isBusy) } } }
+                    .interactiveDismissDisabled(store.recording.isBusy)
+            }
+            .sheet(isPresented: $recoveryPreview) { NavigationStack { TakePreviewView(takeID: recoveryTakeID) } }
+            .onAppear { store.refreshPendingRecordings() }
             .fileImporter(isPresented: $restorePicker, allowedContentTypes: [.coverProject, .data]) { result in
                 Task {
                     do { try await store.restore(try result.get(), keepBoth: true) } catch { store.report(error) }
@@ -131,73 +154,14 @@ struct StorageView: View {
     @State private var snapshotPicker = false
     var project: StudioProject? { store.selected }
     var body: some View {
-        List {
-            Section("整个作品库") {
-                LabeledContent("源素材", value: bytes(summary.source))
-                LabeledContent("导出与临时渲染", value: bytes(summary.exports))
-                LabeledContent("可重建缓存", value: bytes(summary.cache))
-                LabeledContent("安全副本 / 恢复暂存", value: bytes(summary.retained))
-                LabeledContent("系统可用", value: bytes(summary.free))
-                Text("不会自动删除原始素材。保留的安全副本可在下方导出工程包；只有明确两次确认才会移除所选副本。").font(.footnote).foregroundStyle(.secondary)
-            }
-            if !snapshots.isEmpty {
-                Section("保留的安全 / 恢复副本") {
-                    ForEach(snapshots) { snapshot in
-                        VStack(alignment: .leading, spacing: 10) {
-                            LabeledContent(snapshot.title, value: bytes(snapshot.bytes))
-                            Text(snapshot.id.hasPrefix(".safety-") ? "替换前的旧工程，可能含独有录制。" : "失败恢复的暂存内容，尚不能视为完整工程。").font(.footnote).foregroundStyle(.secondary)
-                            if snapshot.hasIndex { Button("校验并导出此副本为工程包") { Task { await exportSnapshot(snapshot) } }.disabled(exportingSnapshot) }
-                            Button("移除此副本…", role: .destructive) { pendingSnapshot = snapshot; snapshotFirst = true }.disabled(exportingSnapshot)
-                        }
-                    }
-                    if exportingSnapshot { ProgressView("正在校验并生成副本工程包…") }
-                }
-            }
-            if let project, !project.archived {
-                Section("当前工程的 Take") {
-                    ForEach(project.takes) { take in
-                        let locked = project.edit.selectedTakeID == take.id || project.edit.referencedTakeIDs.contains(take.id)
-                        VStack(alignment: .leading, spacing: 8) {
-                            LabeledContent(take.name, value: bytes(project.assets.filter { take.assetIDs.contains($0.id) }.reduce(0) { $0 + $1.bytes }))
-                            if locked { Text("当前编辑引用，不能删除；先选择其他 Take 或解除引用。").font(.footnote).foregroundStyle(.secondary) }
-                            else { Button("删除这个 Take…", role: .destructive) { pendingTake = take; firstConfirm = true } }
-                        }
-                    }
-                }
-                Section("已导出成品") {
-                    ForEach(outputJobs.filter { $0.status == "完成" }) { job in
-                        HStack { Text(job.variant.label); Spacer(); Button("删除…", role: .destructive) { pendingOutput = job; outputFirst = true } }
-                    }
-                    Text("删除成品不会删除录制原件；仍可从工程重新导出。").font(.footnote).foregroundStyle(.secondary)
-                }
-                Section {
-                    Button("清理当前工程的试听缓存") { clearCache = true }
-                    Text("只清除 cache/ 中可重新生成的试听文件，不处理伴奏、Take 或已导出成品。").font(.footnote).foregroundStyle(.secondary)
-                }
-            }
-        }.navigationTitle("存储管理").navigationBarTitleDisplayMode(.inline)
+        takeProtectedContent
+            .navigationTitle("存储管理").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
             .task { await refresh() }
             .interactiveDismissDisabled(exportingSnapshot)
             .sheet(isPresented: $snapshotPicker) {
                 if let snapshotPackage { DocumentExportPicker(urls: [snapshotPackage]) { success in snapshotPicker = false; if success { store.notice = "安全副本已交给 Files，云上传仍未验证。可从作品库选择此包恢复。" } } }
             }
-            .confirmationDialog("移除所选安全 / 恢复副本？", isPresented: $snapshotFirst, titleVisibility: .visible) {
-                Button("取消", role: .cancel) {}
-                Button("继续查看最终确认", role: .destructive) { snapshotFinal = true }
-            } message: { Text("所选副本可能是旧版本录制的唯一来源。建议先校验并导出工程包，不能因新版本可打开就认为旧素材都已备份。") }
-            .alert("最终确认：永久移除副本", isPresented: $snapshotFinal) {
-                Button("取消", role: .cancel) {}
-                Button("确认移除所选副本", role: .destructive) { Task { await removeSnapshot() } }
-            } message: { Text("\(pendingSnapshot?.title ?? "") · \(bytes(pendingSnapshot?.bytes ?? 0))。此操作不可撤销，不会修改当前活动工程；所选副本的独有素材将永久移除。") }
-            .confirmationDialog("删除 \(pendingTake?.name ?? "Take")？", isPresented: $firstConfirm, titleVisibility: .visible) {
-                Button("取消", role: .cancel) {}
-                Button("继续查看影响", role: .destructive) { finalConfirm = true }
-            } message: { Text("删除该 Take 的索引及仅由它使用的原始片段。共享或被其他 Take 使用的素材会保留。") }
-            .alert("最终确认：永久删除 Take", isPresented: $finalConfirm) {
-                Button("取消", role: .cancel) {}
-                Button("确认删除", role: .destructive) { Task { await deleteTake() } }
-            } message: { Text("此操作不可撤销。建议先创建完整工程备份。当前后期引用已受保护。") }
             .confirmationDialog("清理可重建缓存？", isPresented: $clearCache) {
                 Button("取消", role: .cancel) {}
                 Button("清理缓存") { Task { await cleanCache() } }
@@ -210,6 +174,78 @@ struct StorageView: View {
                 Button("取消", role: .cancel) {}
                 Button("确认删除", role: .destructive) { Task { await deleteOutput() } }
             } message: { Text("只删除所选成品，不删除伴奏、人声和画面原件。") }
+    }
+    private var takeProtectedContent: some View {
+        snapshotProtectedContent
+            .confirmationDialog("删除 \(pendingTake?.name ?? "Take")？", isPresented: $firstConfirm, titleVisibility: .visible) {
+                Button("取消", role: .cancel) {}
+                Button("继续查看影响", role: .destructive) { finalConfirm = true }
+            } message: { Text("删除该 Take 的索引及仅由它使用的原始片段。共享或被其他 Take 使用的素材会保留。") }
+            .alert("最终确认：永久删除 Take", isPresented: $finalConfirm) {
+                Button("取消", role: .cancel) {}
+                Button("确认删除", role: .destructive) { Task { await deleteTake() } }
+            } message: { Text("此操作不可撤销。建议先创建完整工程备份。当前后期引用已受保护。") }
+    }
+    private var snapshotProtectedContent: some View {
+        storageList
+            .confirmationDialog("移除所选安全 / 恢复副本？", isPresented: $snapshotFirst, titleVisibility: .visible) {
+                Button("取消", role: .cancel) {}
+                Button("继续查看最终确认", role: .destructive) { snapshotFinal = true }
+            } message: { Text("所选副本可能是旧版本录制的唯一来源。建议先校验并导出工程包，不能因新版本可打开就认为旧素材都已备份。") }
+            .alert("最终确认：永久移除副本", isPresented: $snapshotFinal) {
+                Button("取消", role: .cancel) {}
+                Button("确认移除所选副本", role: .destructive) { Task { await removeSnapshot() } }
+            } message: { Text("\(pendingSnapshot?.title ?? "") · \(bytes(pendingSnapshot?.bytes ?? 0))。此操作不可撤销，不会修改当前活动工程；所选副本的独有素材将永久移除。") }
+    }
+    private var storageList: some View {
+        List {
+            Section("整个作品库") {
+                LabeledContent("源素材", value: bytes(summary.source))
+                LabeledContent("导出与临时渲染", value: bytes(summary.exports))
+                LabeledContent("可重建缓存", value: bytes(summary.cache))
+                LabeledContent("安全副本 / 恢复暂存", value: bytes(summary.retained))
+                LabeledContent("系统可用", value: bytes(summary.free))
+                Text("不会自动删除原始素材。保留的安全副本可在下方导出工程包；只有明确两次确认才会移除所选副本。").font(.footnote).foregroundStyle(.secondary)
+            }
+            if !snapshots.isEmpty {
+                Section("保留的安全 / 恢复副本") {
+                    ForEach(snapshots) { snapshot in snapshotRow(snapshot) }
+                    if exportingSnapshot { ProgressView("正在校验并生成副本工程包…") }
+                }
+            }
+            if let project, !project.archived {
+                Section("当前工程的 Take") {
+                    ForEach(project.takes) { take in takeRow(take, project: project) }
+                }
+                Section("已导出成品") {
+                    ForEach(outputJobs.filter { $0.status == "完成" }) { job in
+                        HStack { Text(job.variant.label); Spacer(); Button("删除…", role: .destructive) { pendingOutput = job; outputFirst = true } }
+                    }
+                    Text("删除成品不会删除录制原件；仍可从工程重新导出。").font(.footnote).foregroundStyle(.secondary)
+                }
+                Section {
+                    Button("清理当前工程的试听缓存") { clearCache = true }
+                    Text("只清除 cache/ 中可重新生成的试听文件，不处理伴奏、Take 或已导出成品。").font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+    private func snapshotRow(_ snapshot: RetainedSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            LabeledContent(snapshot.title, value: bytes(snapshot.bytes))
+            Text(snapshot.id.hasPrefix(".safety-") ? "替换前的旧工程，可能含独有录制。" : "失败恢复的暂存内容，尚不能视为完整工程。").font(.footnote).foregroundStyle(.secondary)
+            if snapshot.hasIndex { Button("校验并导出此副本为工程包") { Task { await exportSnapshot(snapshot) } }.disabled(exportingSnapshot) }
+            Button("移除此副本…", role: .destructive) { pendingSnapshot = snapshot; snapshotFirst = true }.disabled(exportingSnapshot)
+        }
+    }
+    private func takeRow(_ take: Take, project: StudioProject) -> some View {
+        let locked = project.edit.selectedTakeID == take.id || project.edit.referencedTakeIDs.contains(take.id)
+        let usedBytes = project.assets.filter { take.assetIDs.contains($0.id) }.reduce(Int64(0)) { $0 + $1.bytes }
+        return VStack(alignment: .leading, spacing: 8) {
+            LabeledContent(take.name, value: bytes(usedBytes))
+            if locked { Text("当前编辑引用，不能删除；先选择其他 Take 或解除引用。").font(.footnote).foregroundStyle(.secondary) }
+            else { Button("删除这个 Take…", role: .destructive) { pendingTake = take; firstConfirm = true } }
+        }
     }
     func refresh() async {
         let root = store.repository.root

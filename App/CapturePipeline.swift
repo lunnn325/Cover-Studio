@@ -2,6 +2,7 @@ import AVFoundation
 import CoverCore
 
 struct CapturedChunk {
+    var sequence: Int
     var vocalURL: URL
     var videoURL: URL?
     var songStart: Double
@@ -36,6 +37,7 @@ final class CapturePipeline: NSObject, AVCaptureAudioDataOutputSampleBufferDeleg
     private var songStart: Double = 0
     private var playbackHost: UInt64 = 0
     private var current: ChunkWriter?
+    private var nextSequence = 0
     private var pending = DispatchGroup()
     private var route = ""
     private var inputLatency: Double = 0
@@ -86,7 +88,7 @@ final class CapturePipeline: NSObject, AVCaptureAudioDataOutputSampleBufferDeleg
         }
     }
 
-    func begin(directory: URL, songStart: Double, host: UInt64, route: String, inputLatency: Double, outputLatency: Double) async throws {
+    func begin(directory: URL, songStart: Double, host: UInt64, route: String, inputLatency: Double, outputLatency: Double, sequenceStart: Int = 0) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             queue.async {
                 guard self.session.isRunning, !self.recording else { continuation.resume(throwing: StudioError("录制会话尚未就绪。")); return }
@@ -94,6 +96,7 @@ final class CapturePipeline: NSObject, AVCaptureAudioDataOutputSampleBufferDeleg
                 self.anchor = CMTime(seconds: AVAudioTime.seconds(forHostTime: host), preferredTimescale: 1_000_000_000)
                 self.route = route; self.inputLatency = inputLatency; self.outputLatency = outputLatency
                 self.finalError = nil
+                self.nextSequence = sequenceStart
                 self.current = nil; self.recording = true
                 continuation.resume()
             }
@@ -143,8 +146,9 @@ final class CapturePipeline: NSObject, AVCaptureAudioDataOutputSampleBufferDeleg
                 songStart += CMTimeGetSeconds(pts - anchor); anchor = pts
             }
             if current == nil {
-                current = try ChunkWriter(directory: directory, anchor: anchor, songStart: songStart, video: videoEnabled,
+                current = try ChunkWriter(sequence: nextSequence, directory: directory, anchor: anchor, songStart: songStart, video: videoEnabled,
                                           host: playbackHost, route: route, inputLatency: inputLatency, outputLatency: outputLatency)
+                nextSequence += 1
             }
             // Audio buffers contain many PCM samples. Preserve the per-sample duration;
             // using the buffer's total duration here stretches the encoded timeline.
@@ -237,6 +241,7 @@ final class CapturePipeline: NSObject, AVCaptureAudioDataOutputSampleBufferDeleg
 }
 
 private final class ChunkWriter {
+    let sequence: Int
     let anchor: CMTime
     let songStart: Double
     let vocalURL: URL
@@ -254,8 +259,9 @@ private final class ChunkWriter {
     let route: String
     let inputLatency: Double
     let outputLatency: Double
-    init(directory: URL, anchor: CMTime, songStart: Double, video: Bool, host: UInt64,
+    init(sequence: Int, directory: URL, anchor: CMTime, songStart: Double, video: Bool, host: UInt64,
          route: String, inputLatency: Double, outputLatency: Double) throws {
+        self.sequence = sequence
         self.anchor = anchor; self.songStart = songStart; self.end = anchor
         self.host = host; self.route = route; self.inputLatency = inputLatency; self.outputLatency = outputLatency
         let token = UUID().uuidString
@@ -316,7 +322,7 @@ private final class ChunkWriter {
             guard self.audioWriter.status == .completed, self.videoWriter == nil || self.videoWriter?.status == .completed else {
                 completion(.failure(self.audioWriter.error ?? self.videoWriter?.error ?? StudioError("片段封装未完成，源文件已保留。"))); return
             }
-            completion(.success(.init(vocalURL: self.vocalURL, videoURL: self.firstVideo == nil ? nil : self.videoURL,
+            completion(.success(.init(sequence: self.sequence, vocalURL: self.vocalURL, videoURL: self.firstVideo == nil ? nil : self.videoURL,
                 songStart: self.songStart, anchor: self.anchor, duration: self.end - self.anchor,
                 audioPTS: self.firstAudio, videoPTS: self.firstVideo, playbackHost: self.host,
                 sampleRate: self.sampleRate, channels: self.channels, route: self.route,

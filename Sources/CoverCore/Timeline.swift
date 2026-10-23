@@ -7,10 +7,16 @@ public struct TimelineRegion: Equatable, Sendable {
     public var duration: Double
 }
 public enum Timeline {
+    public static func orderedSegments(_ segments: [RecordingSegment]) -> [RecordingSegment] {
+        segments.enumerated().sorted {
+            let left = $0.element.sequence ?? $0.offset, right = $1.element.sequence ?? $1.offset
+            return left == right ? $0.offset < $1.offset : left < right
+        }.map(\.element)
+    }
     /// New resumed material replaces the old overlap. Original segment media remains unchanged.
     public static func regions(take: Take, edit: EditGraph) -> [TimelineRegion] {
         var result: [TimelineRegion] = []
-        for segment in take.segments {
+        for segment in orderedSegments(take.segments) {
             let start = edit.segmentStartOverrides[segment.id] ?? segment.songStart.seconds
             guard start.isFinite, start >= 0, segment.duration.timescale > 0, segment.duration.seconds > 0 else { continue }
             result = result.compactMap { old in
