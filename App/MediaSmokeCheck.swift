@@ -2,6 +2,7 @@
 import AVFoundation
 import UIKit
 import CoverCore
+import Combine
 
 /// Opt-in simulator check of real offline rendering and archive APIs, using only generated fixtures.
 @MainActor enum MediaSmokeCheck {
@@ -17,6 +18,7 @@ import CoverCore
     }
     private struct Report: Codable {
         var passed = false
+        var stage = "fixture"
         var errors: [String] = []
         var scope = "Synthetic offline only: generated two-second sine WAVs and geometric JPEG; real export/archive APIs. Does not validate microphone, camera, AirPods, acoustic sync, listening quality, subtitle appearance, cloud upload, or real-device performance."
         var startedAt = Date()
@@ -71,7 +73,13 @@ import CoverCore
             project.exportPreset.variants = expected; project.exportPreset.audioFormat = .wav
             try ProjectRules.validate(project)
             let exports = ExportService()
+            let observation = exports.$stage.sink { stage in
+                report.stage = "export: " + stage
+                try? write(report, to: reportURL)
+            }
+            defer { observation.cancel() }
             await exports.run(project: project, root: root)
+            report.stage = "inspect outputs"; try write(report, to: reportURL)
             if let failure = exports.failure { report.errors.append("Export service: " + failure) }
             for variant in ExportVariant.allCases where expected.contains(variant) {
                 do {
@@ -84,6 +92,7 @@ import CoverCore
             }
             // The source-only full archive is restored into a new, isolated repository, never the user's library.
             do {
+                report.stage = "archive roundtrip"; try write(report, to: reportURL)
                 let archive = temporaryRoot.appendingPathComponent("fixture.coverproject")
                 try ProjectArchive.create(project: project, root: root, destination: archive, mode: .full)
                 let restoredRepository = try ProjectRepository(root: temporaryRoot.appendingPathComponent("restored-library"))
@@ -103,6 +112,7 @@ import CoverCore
             report.passed = report.errors.isEmpty && report.outputs.count == expected.count && report.archiveRestored
         } catch { report.errors.append("Fixture/setup: " + error.localizedDescription) }
         report.finishedAt = Date()
+        report.stage = "finished"
         do { try write(report, to: reportURL) }
         catch { print("MediaSmokeCheck: report write failed: \(error.localizedDescription)") }
         // Generated media is retained under temporaryRoot for inspection; it is never registered in the user library.

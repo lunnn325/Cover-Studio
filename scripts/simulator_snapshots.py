@@ -18,24 +18,47 @@ def media_smoke(device_id, output):
     container = Path(command("xcrun", "simctl", "get_app_container", device_id, "studio.mycover.app", "data", capture=True).strip())
     source = container / "Documents/MediaSmokeReport.json"
     launched_at = time.time()
-    command("xcrun", "simctl", "launch", "--terminate-running-process", device_id, "studio.mycover.app", "--media-smoke")
+    console = (output / "media-smoke-console.log").open("w", encoding="utf-8")
+    launcher = subprocess.Popen(["xcrun", "simctl", "launch", "--terminate-running-process", "--console", device_id,
+                                 "studio.mycover.app", "--media-smoke"], stdin=subprocess.DEVNULL, stdout=console, stderr=subprocess.STDOUT)
     deadline = time.monotonic() + 120
-    while time.monotonic() < deadline:
-        try:
-            # Never accept a report left by an earlier simulator launch.
-            if source.exists() and source.stat().st_mtime >= launched_at - 1:
-                result = json.loads(source.read_text(encoding="utf-8"))
-                # Keep in-progress diagnostics, but only judge a finalized report.
-                shutil.copy2(source, output / "MediaSmokeReport.json")
-                if result.get("finishedAt"):
-                    if result.get("passed") is not True:
-                        raise RuntimeError("Synthetic media smoke failed: " + json.dumps(result.get("errors", []), ensure_ascii=False)[:2000])
-                    print("Synthetic media smoke passed; this does not validate camera capture or real-device audio.")
-                    return
-        except (FileNotFoundError, json.JSONDecodeError):
-            pass
-        time.sleep(2)
-    raise RuntimeError("No fresh MediaSmokeReport.json within 120 seconds; media pipeline smoke is unverified.")
+    try:
+        while time.monotonic() < deadline:
+            try:
+                if source.exists() and source.stat().st_mtime >= launched_at - 1:
+                    result = json.loads(source.read_text(encoding="utf-8"))
+                    shutil.copy2(source, output / "MediaSmokeReport.json")
+                    if result.get("finishedAt"):
+                        if result.get("passed") is not True:
+                            raise RuntimeError("Synthetic media smoke failed: " + json.dumps(result.get("errors", []), ensure_ascii=False)[:2000])
+                        print("Synthetic media smoke passed; this does not validate camera capture or real-device audio.")
+                        return
+                if launcher.poll() is not None:
+                    raise RuntimeError("Media smoke process exited before its final report; see media-smoke-console.log.")
+            except (FileNotFoundError, json.JSONDecodeError):
+                pass
+            time.sleep(2)
+        raise RuntimeError("No finalized MediaSmokeReport.json within 120 seconds; inspect stage and console diagnostics.")
+    finally:
+        if launcher.poll() is None:
+            launcher.terminate()
+            try:
+                launcher.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                launcher.kill()
+        console.close()
+        # Only generated test metadata, never user-library files or media bytes.
+        if source.exists():
+            result = json.loads(source.read_text(encoding="utf-8"))
+            fixture = Path(result.get("temporaryRoot", ""))
+            if container.resolve() in fixture.resolve().parents:
+                queue = fixture / "fixture/exports/queue.json"
+                if queue.exists():
+                    shutil.copy2(queue, output / "media-smoke-export-queue.json")
+        crash_root = Path.home() / "Library/Logs/DiagnosticReports"
+        for crash in crash_root.glob("MyCoverStudio*.ips"):
+            if crash.stat().st_mtime >= launched_at - 1:
+                shutil.copy2(crash, output / crash.name)
 
 
 def main():
