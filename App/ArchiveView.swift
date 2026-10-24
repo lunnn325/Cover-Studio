@@ -7,6 +7,10 @@ struct ArchiveView: View {
     @State private var mode: BackupMode = .full
     @State private var chosenTakes = Set<UUID>()
     @State private var includeOutputs = false
+    @State private var knownOutputs: [ExportedFile] = []
+    @State private var chosenOutputs = Set<String>()
+    @State private var outputReadError: String?
+    @State private var loadingOutputs = true
     @State private var packageURL: URL?
     @State private var archiveID: UUID?
     @State private var packageRevision: Int?
@@ -39,9 +43,11 @@ struct ArchiveView: View {
                             }
                         }
                         if mode != .slim { Toggle("包含已完成的导出成品", isOn: $includeOutputs) }
+                        if includeOutputs && mode != .slim { Text("包含当前和历史已完成成品；未登记或可能未完成的文件不在此包内，可从成品目录单独保存到 Files。").font(.footnote).foregroundStyle(.secondary) }
+                        if includeOutputs && mode == .custom { outputChoices }
                         Text(mode == .full ? "完整：全部伴奏版本、Take、练习、歌词与编辑。默认省略可重新生成的导出成品。" : "精简 / 自定义：自动补齐当前编辑所需的 Take、旧片段、伴奏和照片，不能移除依赖素材。").font(.footnote).foregroundStyle(.secondary)
                         LabeledContent("源素材总计", value: bytes(project.assets.reduce(0) { $0 + $1.bytes }))
-                        Button("生成并校验工程包") { Task { await prepare() } }.disabled(preparing)
+                        Button("生成并校验工程包") { Task { await prepare() } }.disabled(preparing || (includeOutputs && mode == .custom && loadingOutputs))
                         if preparing { ProgressView("正在流式打包并重新读取校验…") }
                         if packageURL != nil {
                             Button("保存到 Files / Google Drive") { picker = true }.disabled(preparing || packageRevision != project.revision || packageProjectID != project.id)
@@ -65,6 +71,12 @@ struct ArchiveView: View {
         }.navigationTitle("工程备份与恢复").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.disabled(preparing) } }
             .interactiveDismissDisabled(preparing)
+            .task(id: project?.id) { await loadOutputs() }
+            .onChange(of: mode) { _, _ in invalidatePackage() }
+            .onChange(of: includeOutputs) { _, _ in if mode != .slim { invalidatePackage() } }
+            .onChange(of: chosenTakes) { _, _ in if mode == .custom { invalidatePackage() } }
+            .onChange(of: chosenOutputs) { _, _ in if mode == .custom && includeOutputs { invalidatePackage() } }
+            .onChange(of: project?.id) { _, _ in invalidatePackage() }
             .sheet(isPresented: $picker) {
                 if let packageURL { DocumentExportPicker(urls: [packageURL]) { success in
                     picker = false
@@ -103,6 +115,34 @@ struct ArchiveView: View {
         guard let project else { return false }
         return project.backups.contains { $0.revision == project.revision && ($0.level == .exportedToProvider || $0.level == .restoreVerified) }
     }
+    private var requiredOutputPaths: Set<String> {
+        guard let project, let plan = try? ProjectRules.backupProject(project, mode: .custom, selected: chosenTakes) else { return [] }
+        return Set(plan.assets.filter { $0.role == .export }.map { $0.path.precomposedStringWithCanonicalMapping.lowercased() })
+    }
+    @ViewBuilder private var outputChoices: some View {
+        if loadingOutputs { ProgressView("正在读取可选成品…") }
+        if let outputReadError { Text(outputReadError).font(.footnote).foregroundStyle(.orange) }
+        ForEach(knownOutputs) { output in
+            let required = requiredOutputPaths.contains(output.path.precomposedStringWithCanonicalMapping.lowercased())
+            Toggle(output.name + (required ? "（编辑必需）" : ""), isOn: Binding(get: { required || chosenOutputs.contains(output.path) }, set: { selected in
+                if selected { chosenOutputs.insert(output.path) } else { chosenOutputs.remove(output.path) }
+            })).disabled(required)
+        }
+        if !loadingOutputs && knownOutputs.isEmpty && outputReadError == nil { Text("当前没有已登记的完成成品。").font(.footnote).foregroundStyle(.secondary) }
+    }
+    private func loadOutputs() async {
+        guard let project else { return }
+        loadingOutputs = true; defer { loadingOutputs = false }
+        let root = store.repository.directory(project.id)
+        do {
+            let outputs = try await Task.detached { try ExportCatalog.outputs(root: root, assets: project.assets).filter(\.completed) }.value
+            guard !Task.isCancelled, self.project?.id == project.id else { return }
+            knownOutputs = outputs; chosenOutputs = Set(outputs.map(\.path)); outputReadError = nil
+        } catch { knownOutputs = []; chosenOutputs = []; outputReadError = "成品记录无法读取。可取消包含成品，先备份原始素材。" }
+    }
+    private func invalidatePackage() {
+        packageURL = nil; archiveID = nil; packageRevision = nil; packageProjectID = nil
+    }
     func restore(keepBoth: Bool) {
         guard let url = pendingRestoreURL else { return }
         Task {
@@ -119,8 +159,8 @@ struct ArchiveView: View {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             if includeOutputs && mode != .slim {
                 let root = store.repository.directory(project.id)
-                if let data = try? Data(contentsOf: root.appendingPathComponent("exports/queue.json")), let jobs = try? JSONDecoder().decode([ExportJob].self, from: data) {
-                    let paths = Set(jobs.filter { $0.status == "完成" }.compactMap(\.path))
+                do {
+                    let paths = Set(try ExportCatalog.outputs(root: root, assets: project.assets).filter(\.completed).map(\.path))
                     let outputAssets = try await Task.detached(priority: .userInitiated) {
                         try paths.map { path -> MediaAsset in
                             guard ProjectRules.safePath(path), path.hasPrefix("exports/") else { throw StudioError("导出文件路径无效。") }
@@ -128,16 +168,19 @@ struct ArchiveView: View {
                             return try MediaAsset(path: path, role: .export, bytes: FileIntegrity.size(url), sha256: FileIntegrity.sha256(url))
                         }
                     }.value
-                    let existingPaths = Set(project.assets.map(\.path))
-                    project.assets.append(contentsOf: outputAssets.filter { !existingPaths.contains($0.path) })
+                    let existingPaths = Set(project.assets.map { $0.path.precomposedStringWithCanonicalMapping.lowercased() })
+                    project.assets.append(contentsOf: outputAssets.filter { !existingPaths.contains($0.path.precomposedStringWithCanonicalMapping.lowercased()) })
                 }
             }
             let output = directory.appendingPathComponent(UUID().uuidString + ".coverproject")
-            let manifest = try await store.repository.backup(project, mode: mode, selected: chosenTakes, to: output, includeExports: includeOutputs)
+            let selectedOutputs: Set<String>? = mode == .custom && includeOutputs ? chosenOutputs : nil
+            let manifest = try await store.repository.backup(project, mode: mode, selected: chosenTakes, to: output, includeExports: includeOutputs,
+                                                             selectedExportPaths: selectedOutputs)
             packageURL = output; archiveID = manifest.archiveID; packageRevision = project.revision; packageProjectID = project.id
             let kept = Set(manifest.project.takes.map(\.id))
             let excluded = project.takes.filter { !kept.contains($0.id) }.map(\.name)
             scopeNote = "\(mode.label)包包含 \(manifest.project.takes.count) 个 Take。" + (excluded.isEmpty ? "包含本地全部 Take。" : "未包含：" + excluded.joined(separator: "、") + "。释放本地素材后，这些 Take 无法从此包恢复。")
+            scopeNote += " 已包含 \(manifest.project.assets.filter { $0.role == .export }.count) 个导出成品，未登记文件未包含。"
             try await store.recordBackup(.init(archiveID: manifest.archiveID, revision: project.revision, level: .archivePrepared, note: scopeNote + " 仅本地工程包已校验，尚未交给文件提供者。"), projectID: project.id)
         } catch { store.report(error) }
     }

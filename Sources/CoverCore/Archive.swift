@@ -73,8 +73,9 @@ public enum ProjectArchive {
 
     @discardableResult
     public static func create(project: StudioProject, root: URL, destination: URL,
-                              mode: BackupMode, selected: Set<UUID> = [], includeExports: Bool = false) throws -> ArchiveManifest {
-        let payload = try ProjectRules.backupProject(project, mode: mode, selected: selected, includeExports: includeExports)
+                              mode: BackupMode, selected: Set<UUID> = [], includeExports: Bool = false,
+                              selectedExportPaths: Set<String>? = nil) throws -> ArchiveManifest {
+        let payload = try ProjectRules.backupProject(project, mode: mode, selected: selected, includeExports: includeExports, selectedExportPaths: selectedExportPaths)
         let manifest = ArchiveManifest(project: payload, mode: mode)
         let json = try FileIntegrity.encoder().encode(manifest)
         guard json.count <= maximumManifestBytes, payload.assets.count <= maximumAssetCount else {

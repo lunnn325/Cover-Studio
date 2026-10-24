@@ -46,6 +46,9 @@ public enum BackupMode: String, Codable, CaseIterable, Sendable {
 }
 
 public enum ProjectRules {
+    public static func isExportMetadata(_ path: String) -> Bool {
+        ["exports/queue.json", "exports/history.json"].contains(path.lowercased())
+    }
     public static func safePath(_ path: String) -> Bool {
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
         return !path.isEmpty && !path.hasPrefix("/") && !path.contains("\\") && !path.contains(":")
@@ -54,7 +57,7 @@ public enum ProjectRules {
     }
     /// Media may never replace project metadata. Resolved paths also reject symlink escapes.
     public static func mediaURL(_ path: String, root: URL) throws -> URL {
-        guard safePath(path), path.lowercased() != "exports/queue.json",
+        guard safePath(path), !isExportMetadata(path),
               path.hasPrefix("media/") || path.hasPrefix("exports/") else { throw StudioError("素材必须位于工程 media 或 exports 目录内，不能覆盖索引。") }
         let base = root.standardizedFileURL.resolvingSymlinksInPath()
         let direct = base.appendingPathComponent(path).standardizedFileURL
@@ -124,7 +127,7 @@ public enum ProjectRules {
             throw StudioError("编辑参数或时间轴超出安全范围。")
         }
         for asset in project.assets {
-            guard safePath(asset.path), asset.path.lowercased() != "exports/queue.json",
+            guard safePath(asset.path), !isExportMetadata(asset.path),
                   asset.path.hasPrefix("media/") || (asset.path.hasPrefix("exports/") && asset.role == .export), asset.bytes >= 0,
                   asset.duration.timescale > 0, asset.duration.value >= 0,
                   asset.sampleRate == nil || (asset.sampleRate!.isFinite && asset.sampleRate! > 0),
@@ -135,8 +138,14 @@ public enum ProjectRules {
         }
     }
 
-    public static func backupProject(_ project: StudioProject, mode: BackupMode, selected: Set<UUID> = [], includeExports: Bool = false) throws -> StudioProject {
+    public static func backupProject(_ project: StudioProject, mode: BackupMode, selected: Set<UUID> = [], includeExports: Bool = false,
+                                     selectedExportPaths: Set<String>? = nil) throws -> StudioProject {
         try validate(project)
+        let chosenExports = selectedExportPaths.map { Set($0.map { $0.precomposedStringWithCanonicalMapping.lowercased() }) }
+        if mode == .custom, includeExports, let chosenExports {
+            let available = Set(project.assets.filter { $0.role == .export }.map { $0.path.precomposedStringWithCanonicalMapping.lowercased() })
+            guard chosenExports.isSubset(of: available) else { throw StudioError("选择的导出成品已不存在，请重新选择后打包。") }
+        }
         var result = project
         if mode == .full {
             if !includeExports {
@@ -162,7 +171,11 @@ public enum ProjectRules {
         var assets = result.arrangements.reduce(into: Set<UUID>()) { $0.formUnion($1.assetIDs) }
         result.takes.forEach { assets.formUnion($0.assetIDs) }
         assets.formUnion([project.edit.visualAssetID, project.song.coverAssetID].compactMap { $0 })
-        if mode == .custom && includeExports { assets.formUnion(project.assets.filter { $0.role == .export }.map(\.id)) }
+        if mode == .custom && includeExports {
+            assets.formUnion(project.assets.filter { asset in
+                asset.role == .export && (chosenExports == nil || chosenExports!.contains(asset.path.precomposedStringWithCanonicalMapping.lowercased()))
+            }.map(\.id))
+        }
         result.assets = project.assets.filter { assets.contains($0.id) }
         try validate(result)
         return result

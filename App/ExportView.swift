@@ -9,6 +9,7 @@ struct ExportView: View {
     @State private var share = false
     @State private var files = false
     @State private var archive = false
+    @State private var outputLibrary = false
     @State private var preview = false
     @State private var player: AVPlayer?
     var body: some View {
@@ -44,7 +45,10 @@ struct ExportView: View {
                     Button("分享已完成文件") { share = true }.disabled(service.working)
                 }
             } footer: { Text("失败不会删除源文件或已完成项。更换文件提供者目标不能减少本地渲染的最低临时空间。") }
-            Section { Button("导出可编辑工程包") { archive = true } }
+            Section {
+                Button("全部成品与未登记文件") { outputLibrary = true }.disabled(service.working)
+                Button("导出可编辑工程包") { archive = true }.disabled(service.working)
+            }
         }
         .navigationTitle("导出").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.disabled(service.working) } }
@@ -52,6 +56,7 @@ struct ExportView: View {
         .sheet(isPresented: $share) { ShareSheet(urls: service.shareURLs) }
         .sheet(isPresented: $files) { DocumentExportPicker(urls: service.shareURLs) { success in files = false; if success { store.notice = "已交给文件提供者；不代表云端上传完成。" } } }
         .sheet(isPresented: $archive) { NavigationStack { ArchiveView() } }
+        .sheet(isPresented: $outputLibrary) { NavigationStack { OutputLibraryView() } }
         .sheet(isPresented: $preview) { if let player { PlayerSheet(title: "导出版本预览", player: player) } }
         .interactiveDismissDisabled(service.working)
     }

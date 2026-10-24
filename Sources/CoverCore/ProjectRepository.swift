@@ -152,8 +152,10 @@ public actor ProjectRepository {
         try files.moveItem(at: staging, to: destination)
         return copy
     }
-    public func backup(_ project: StudioProject, mode: BackupMode, selected: Set<UUID>, to destination: URL, includeExports: Bool = false) throws -> ArchiveManifest {
-        try ProjectArchive.create(project: project, root: directory(project.id), destination: destination, mode: mode, selected: selected, includeExports: includeExports)
+    public func backup(_ project: StudioProject, mode: BackupMode, selected: Set<UUID>, to destination: URL, includeExports: Bool = false,
+                       selectedExportPaths: Set<String>? = nil) throws -> ArchiveManifest {
+        try ProjectArchive.create(project: project, root: directory(project.id), destination: destination, mode: mode, selected: selected,
+                                  includeExports: includeExports, selectedExportPaths: selectedExportPaths)
     }
     public func releaseLocal(_ project: StudioProject, confirmedRevision: Int) throws -> StudioProject {
         guard project.revision == confirmedRevision, project.backups.contains(where: { $0.revision == project.revision && ($0.level == .exportedToProvider || $0.level == .restoreVerified) }) else {

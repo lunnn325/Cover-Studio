@@ -2,14 +2,6 @@ import AVFoundation
 import Combine
 import CoverCore
 
-struct ExportJob: Identifiable, Codable {
-    var id = UUID()
-    var variant: ExportVariant
-    var status = "待处理"
-    var path: String?
-    var error: String?
-}
-
 @MainActor final class ExportService: ObservableObject {
     @Published var jobs: [ExportJob] = []
     @Published var working = false
@@ -18,34 +10,47 @@ struct ExportJob: Identifiable, Codable {
     @Published var failure: String?
     private var projectID: UUID?
     func load(root: URL, projectID: UUID, exportedAssets: [MediaAsset] = []) {
-        guard !working, self.projectID != projectID else { return }
+        guard !working else { return }
         self.projectID = projectID
-        if let data = try? Data(contentsOf: root.appendingPathComponent("exports/queue.json")),
-           let saved = try? JSONDecoder().decode([ExportJob].self, from: data) {
-            jobs = saved.map { var job = $0; if job.status == "运行中" { job.status = "中断"; job.error = "上次导出中断，可单独重试。" }; return job }
-            shareURLs = jobs.filter { $0.status == "完成" }.compactMap { job in
-                guard let path = job.path, path.hasPrefix("exports/"), !path.contains("..") else { return nil }
-                let url = root.appendingPathComponent(path)
-                return FileManager.default.fileExists(atPath: url.path) ? url : nil
+        failure = nil
+        do {
+            let saved = try ExportCatalog.queue(root: root)
+            if !saved.isEmpty {
+                jobs = saved.map { var job = $0; if job.status == "运行中" { job.status = "中断"; job.error = "上次导出中断，可单独重试。" }; return job }
+                shareURLs = jobs.filter { $0.status == "完成" }.compactMap { job in
+                    guard let path = job.path, ExportCatalog.isOutputPath(path), let url = try? ProjectRules.mediaURL(path, root: root) else { return nil }
+                    return FileManager.default.fileExists(atPath: url.path) ? url : nil
+                }
+            } else {
+                jobs = Self.restoredJobs(assets: exportedAssets)
+                shareURLs = jobs.compactMap { job in
+                    guard let path = job.path, let url = try? ProjectRules.mediaURL(path, root: root), FileManager.default.fileExists(atPath: url.path) else { return nil }
+                    return url
+                }
             }
-        } else {
-            jobs = Self.restoredJobs(assets: exportedAssets)
-            shareURLs = jobs.compactMap { $0.path.map { root.appendingPathComponent($0) } }.filter { FileManager.default.fileExists(atPath: $0.path) }
+        } catch {
+            jobs = []; shareURLs = []; failure = error.localizedDescription
         }
     }
     static func restoredJobs(assets: [MediaAsset]) -> [ExportJob] {
         assets.filter { $0.role == .export }.compactMap { asset in
-            guard let variant = ExportVariant.allCases.first(where: { asset.path.contains("-" + $0.rawValue + ".") }) else { return nil }
+            guard ExportCatalog.isOutputPath(asset.path), let variant = ExportCatalog.variant(for: asset.path) else { return nil }
             return ExportJob(variant: variant, status: "完成", path: asset.path)
         }
     }
     func run(project: StudioProject, root: URL, retry: ExportVariant? = nil) async {
         guard !working else { return }
+        if projectID != project.id { load(root: root, projectID: project.id, exportedAssets: project.assets) }
         working = true; failure = nil; defer { working = false; stage = "" }
         projectID = project.id
         let target = root.appendingPathComponent("exports", isDirectory: true)
+        var queueWritable = false
         do {
             try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+            // Preserve this project's completed queue before replacing it. Never
+            // copy an in-memory queue from another selected project into history.
+            try ExportCatalog.rememberCompleted(ExportCatalog.queue(root: root), root: root)
+            queueWritable = true
             guard let take = project.selectedTake else { throw StudioError("请先选择已保存的 Take。") }
             let hasVideo = project.edit.visualAssetID != nil || take.segments.contains { $0.videoAssetID != nil }
             var preset = project.exportPreset
@@ -137,7 +142,7 @@ struct ExportJob: Identifiable, Codable {
             failure = error.localizedDescription
             if jobs.isEmpty { jobs = [ExportJob(variant: retry ?? .cleanVideo, status: "失败", error: error.localizedDescription)] }
             else { for i in jobs.indices where jobs[i].status != "完成" { jobs[i].status = "失败"; jobs[i].error = error.localizedDescription } }
-            try? persist(root: root)
+            if queueWritable { try? persist(root: root) }
         }
     }
     func previewMix(project: StudioProject, root: URL) async throws -> URL {
@@ -228,6 +233,6 @@ struct ExportJob: Identifiable, Codable {
         try await complete(session)
     }
     private func persist(root: URL) throws {
-        try FileIntegrity.encoder().encode(jobs).write(to: root.appendingPathComponent("exports/queue.json"), options: .atomic)
+        try ExportCatalog.saveQueue(jobs, root: root)
     }
 }

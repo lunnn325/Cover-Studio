@@ -132,6 +132,7 @@ final class CoverCoreTests: XCTestCase {
         XCTAssertThrowsError(try ProjectRules.mediaURL("media/link.wav", root: root))
         XCTAssertThrowsError(try ProjectRules.mediaURL("project.json", root: root))
         XCTAssertThrowsError(try ProjectRules.mediaURL("exports/queue.json", root: root))
+        XCTAssertThrowsError(try ProjectRules.mediaURL("exports/history.json", root: root))
     }
 
     func testSlimAndCustomKeepReferencedOldTakesAndArrangementDependencies() throws {

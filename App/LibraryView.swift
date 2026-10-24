@@ -140,11 +140,8 @@ struct StorageView: View {
     @State private var pendingTake: Take?
     @State private var firstConfirm = false
     @State private var finalConfirm = false
+    @State private var outputLibrary = false
     @State private var clearCache = false
-    @State private var outputJobs: [ExportJob] = []
-    @State private var pendingOutput: ExportJob?
-    @State private var outputFirst = false
-    @State private var outputFinal = false
     @State private var snapshots: [RetainedSnapshot] = []
     @State private var pendingSnapshot: RetainedSnapshot?
     @State private var snapshotFirst = false
@@ -158,6 +155,7 @@ struct StorageView: View {
             .navigationTitle("存储管理").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
             .task { await refresh() }
+            .sheet(isPresented: $outputLibrary, onDismiss: { Task { await refresh() } }) { NavigationStack { OutputLibraryView() } }
             .interactiveDismissDisabled(exportingSnapshot)
             .sheet(isPresented: $snapshotPicker) {
                 if let snapshotPackage { DocumentExportPicker(urls: [snapshotPackage]) { success in snapshotPicker = false; if success { store.notice = "安全副本已交给 Files，云上传仍未验证。可从作品库选择此包恢复。" } } }
@@ -166,14 +164,7 @@ struct StorageView: View {
                 Button("取消", role: .cancel) {}
                 Button("清理缓存") { Task { await cleanCache() } }
             }
-            .confirmationDialog("删除所选导出成品？", isPresented: $outputFirst, titleVisibility: .visible) {
-                Button("取消", role: .cancel) {}
-                Button("继续", role: .destructive) { outputFinal = true }
-            }
-            .alert("最终确认：删除导出成品", isPresented: $outputFinal) {
-                Button("取消", role: .cancel) {}
-                Button("确认删除", role: .destructive) { Task { await deleteOutput() } }
-            } message: { Text("只删除所选成品，不删除伴奏、人声和画面原件。") }
+
     }
     private var takeProtectedContent: some View {
         snapshotProtectedContent
@@ -213,15 +204,15 @@ struct StorageView: View {
                     if exportingSnapshot { ProgressView("正在校验并生成副本工程包…") }
                 }
             }
+            if project != nil {
+                Section("导出成品") {
+                    Button("浏览全部成品与未登记文件") { outputLibrary = true }.disabled(store.exports.working)
+                    Text("历史成品按文件保留；未登记输出单独标明，可预览、分享或两次确认后删除。").font(.footnote).foregroundStyle(.secondary)
+                }
+            }
             if let project, !project.archived {
                 Section("当前工程的 Take") {
                     ForEach(project.takes) { take in takeRow(take, project: project) }
-                }
-                Section("已导出成品") {
-                    ForEach(outputJobs.filter { $0.status == "完成" }) { job in
-                        HStack { Text(job.variant.label); Spacer(); Button("删除…", role: .destructive) { pendingOutput = job; outputFirst = true } }
-                    }
-                    Text("删除成品不会删除录制原件；仍可从工程重新导出。").font(.footnote).foregroundStyle(.secondary)
                 }
                 Section {
                     Button("清理当前工程的试听缓存") { clearCache = true }
@@ -276,10 +267,7 @@ struct StorageView: View {
                 return RetainedSnapshot(id: name, title: project?.song.title ?? "未提交的恢复暂存", bytes: size, hasIndex: project != nil)
             }.sorted { $0.title < $1.title }
         }.value
-        if let project {
-            if let data = try? Data(contentsOf: store.repository.directory(project.id).appendingPathComponent("exports/queue.json")), let jobs = try? JSONDecoder().decode([ExportJob].self, from: data) { outputJobs = jobs }
-            else { outputJobs = ExportService.restoredJobs(assets: project.assets) }
-        }
+
     }
     nonisolated static func validSnapshotName(_ name: String) -> Bool {
         for prefix in [".safety-", ".restore-", ".replaced-"] where name.hasPrefix(prefix) {
@@ -345,21 +333,7 @@ struct StorageView: View {
             await refresh()
         } catch { store.report(error) }
     }
-    func deleteOutput() async {
-        guard let job = pendingOutput, let project, let path = job.path, !store.exports.working else { return }
-        do {
-            let root = store.repository.directory(project.id).resolvingSymlinksInPath()
-            let target = root.appendingPathComponent(path).resolvingSymlinksInPath()
-            guard ProjectRules.safePath(path), path.hasPrefix("exports/"), target.path.hasPrefix(root.path + "/exports/") else { throw StudioError("成品路径无效，已阻止删除。") }
-            try FileManager.default.removeItem(at: target)
-            if let asset = project.assets.first(where: { $0.path == path && $0.role == .export }) {
-                store.update { $0.assets.removeAll { $0.id == asset.id } }; try await store.flush()
-            }
-            if let i = outputJobs.firstIndex(where: { $0.id == job.id }) { outputJobs[i].status = "已删除"; outputJobs[i].path = nil }
-            try FileIntegrity.encoder().encode(outputJobs).write(to: root.appendingPathComponent("exports/queue.json"), options: .atomic)
-            await refresh()
-        } catch { store.report(error) }
-    }
+
 }
 
 struct SettingsView: View {
