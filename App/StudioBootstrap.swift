@@ -17,8 +17,17 @@ import CoverCore
             guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
                 throw StudioError("系统未提供本地应用目录，尚未创建或切换作品库。")
             }
-            let base = support.appendingPathComponent("MyCoverStudio/Projects", isDirectory: true)
-            root = base
+            let base: URL
+            if let root { base = root }
+            else {
+                #if DEBUG && targetEnvironment(simulator)
+                if ProcessInfo.processInfo.arguments.contains("--startup-ui-fixture") { base = try await StartupUITestFixture.makeLibrary() }
+                else { base = support.appendingPathComponent("MyCoverStudio/Projects", isDirectory: true) }
+                #else
+                base = support.appendingPathComponent("MyCoverStudio/Projects", isDirectory: true)
+                #endif
+                root = base
+            }
             let repository = try await Task.detached(priority: .userInitiated) { try ProjectRepository(root: base) }.value
             let candidate = StudioStore(repository: repository)
             guard await candidate.load() else { throw StudioError(candidate.error ?? "作品库暂时无法读取。") }

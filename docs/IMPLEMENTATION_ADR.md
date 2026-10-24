@@ -151,3 +151,13 @@ queue.json/history.json 都是保留的元数据路径，不允许工程资产�
 安全副本即使没有有效索引，也支持受控目录内逐原件另存；复用坏索引恢复页，禁止把隐藏安全目录当作活动工程回退。计入保留占用；完整包验证入口与二次确认删除规则不变。合法范围仅 UUID 工程或既有安全/恢复前缀，拒绝别名和越界。
 
 轻量验证使用真实文件系统失败、日志保留/陈旧候选/链接边界、占用/坏目标、已提交事务和坏安全索引原件检查及必要编译。启动错误页渲染、按钮交互、security scope 的真实提供者和设备仍待验证；不把字节保留当作工程修复通过。
+
+## ADR 015：一次性的原生启动/恢复 UI 检查
+
+问题：启动/恢复页面仅有编译和纯文件系统证据，尚未真正点击和观察 SwiftUI 的通知、弹层、列表和恢复副本。
+
+决策：增加一个 Apple 原生 XCUITest target，仅一条手动选中的启动→保留日志→旧索引恢复→原件浏览流程，截图附加到测试结果。使用 [Apple launchArguments](https://developer.apple.com/documentation/xcuiautomation/xcuiapplication/launcharguments) 启动隔离 fixture，按 [XCTest 附件](https://developer.apple.com/documentation/xctest/adding-attachments-to-tests-activities-and-issues) 保存真实截图；不在普通 push/常规编译中自动运行，不增加多机型矩阵或外部框架。
+
+fixture 只编入 Debug simulator；每次启动创建独立 tmp/StartupUIFixture-UUID，重试复用同一根目录，不读写实际作品目录。素材是明确标注的非可播放字节，无 Take/录制/导出成功数据。UI test 在非 simulator 直接跳过，不能对设备真实库执行；Release 和设备程序均没有 fixture 路径。
+
+XCUITest 实际点击用户控件，不绕过保留确认或直接调用恢复 handler。结束后脚本独立核对原索引/原件 SHA-256、保留 marker 和生成副本数量。只采集该流程截图/摘要，不重跑媒体引擎。结果只支持指定 simulator 的 UI/文件保留结论，不能推广为真实 Files 提供者、声音、AirPods、相机、同步或迁移通过。

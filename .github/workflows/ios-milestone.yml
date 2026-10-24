@@ -15,6 +15,10 @@ on:
         description: Check edited previews on one simulator, reusing prior export evidence
         type: boolean
         default: false
+      startup_ui_check:
+        description: One isolated native startup/recovery UI workflow with screenshots
+        type: boolean
+        default: false
   pull_request:
     types: [opened, ready_for_review]
 
@@ -61,6 +65,10 @@ jobs:
           if [ "$MEDIA_ONLY" = "true" ]; then args+=(--media-only); fi
           if [ "$PREVIEW_ONLY" = "true" ]; then args+=(--preview-only); fi
           python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app "${args[@]}"
+      - name: Native startup and recovery UI check
+        if: github.event_name == 'workflow_dispatch' && inputs.startup_ui_check
+        timeout-minutes: 15
+        run: python3 scripts/startup_ui_check.py
       - name: Report scope
         if: always()
         run: |
@@ -71,6 +79,8 @@ jobs:
           export/archive code and writes MediaSmokeReport.json; it does not record hardware.
           No signed IPA, AirPods/audio route, camera/microphone, audio/video synchronization,
           cloud transfer or real-device recovery result is implied. See docs/QUALITY_GATES.md.
+          Optional startup_ui_check separately runs one native UI workflow against
+          isolated generated metadata and saves screenshots; it does not validate media.
           REPORT
       - name: Keep short-lived validation evidence
         if: always()
@@ -81,5 +91,6 @@ jobs:
             build/*.log
             build/*.txt
             build/simulator-evidence/
+            build/startup-ui-evidence/
           retention-days: 7
           if-no-files-found: warn

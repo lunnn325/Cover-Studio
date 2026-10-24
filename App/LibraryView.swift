@@ -105,6 +105,7 @@ struct LibraryView: View {
                     Button { damagedIssue = issue } label: {
                         Label(issue.directoryName, systemImage: "exclamationmark.folder").font(.caption).lineLimit(2)
                     }
+                    .accessibilityIdentifier("library-issue-" + issue.directoryName)
                 }
                 Button("重新检查作品库") { Task { await store.refreshLibrary() } }
             }
