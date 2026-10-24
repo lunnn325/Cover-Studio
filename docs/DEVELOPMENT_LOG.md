@@ -1,5 +1,11 @@
 # 开发记录
 
+## 2026-10-24：用户要求沿用 WL 获取 IPA
+
+实际核对 William Lecture 本地及 GitHub `scripts/build-ios.sh`：macos-26 上以 Release/iphoneos 禁用签名编译，Payload 打包 unsigned IPA，再由用户本地签名。Cover Studio 仅有 Simulator 构建，缺少此设备产物路径；无签名并不阻止生成 unsigned IPA，修正此前过严的阻塞判断。
+
+已在现有手动工作流补 `build_unsigned_ipa`、设备构建/打包脚本和 ZIP/元数据/Mach-O 平台/哈希核验。此模式不运行模拟器或重复媒体检查，不使用 Secrets、不修改签名配置。待一次集中设备 Release 构建，实际 IPA 下载/检查成功后补结果，硬件 gate 不变。
+
 ## 2026-10-24：原生 V1 集成
 
 沿用 `codex/my-cover-studio-v1` 与 Draft PR #1，未合并 main，未改账号/密钥/仓库安全设置。根说明和完整规格已阅读，原始规格保留。早期阶段由单一 Agent 继续；本轮依据用户最新授权恢复多 Agent 审查。

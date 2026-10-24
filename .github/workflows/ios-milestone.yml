@@ -3,6 +3,10 @@ name: iOS milestone build
 on:
   workflow_dispatch:
     inputs:
+      build_unsigned_ipa:
+        description: Build a Release device IPA for local signing, like William Lecture
+        type: boolean
+        default: false
       simulator_snapshots:
         description: Simulator screenshots and synthetic 2-second media smoke
         type: boolean
@@ -56,9 +60,24 @@ jobs:
           set -o pipefail
           swift test --parallel 2>&1 | tee build/swift-tests.log
       - name: Build universal iOS simulator app without signing
+        if: github.event_name != 'workflow_dispatch' || !inputs.build_unsigned_ipa || inputs.simulator_snapshots || inputs.media_smoke_only || inputs.preview_check_only || inputs.startup_ui_check
         run: |
           set -o pipefail
           xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build/xcodebuild.log
+      - name: Build Release device app and package unsigned IPA
+        if: github.event_name == 'workflow_dispatch' && inputs.build_unsigned_ipa
+        run: bash scripts/build-ios.sh
+      - name: Upload unsigned device IPA
+        if: github.event_name == 'workflow_dispatch' && inputs.build_unsigned_ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyCoverStudio-V1-unsigned-IPA
+          path: |
+            dist/MyCoverStudio-V1-unsigned.ipa
+            dist/MyCoverStudio-V1-unsigned.ipa.sha256
+            dist/ipa-report.json
+          retention-days: 14
+          if-no-files-found: error
       - name: Simulator launch evidence and synthetic media smoke
         if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && (inputs.simulator_snapshots || inputs.media_smoke_only || inputs.preview_check_only))
         timeout-minutes: 15
@@ -88,6 +107,8 @@ jobs:
           cloud transfer or real-device recovery result is implied. See docs/QUALITY_GATES.md.
           Optional startup_ui_check separately runs one native UI workflow against
           isolated generated metadata and saves screenshots; it does not validate media.
+          Manual build_unsigned_ipa instead builds a Release iphoneos arm64 app and
+          packages Payload/MyCoverStudio.app. This IPA needs local signing before install.
           REPORT
       - name: Keep short-lived validation evidence
         if: always()

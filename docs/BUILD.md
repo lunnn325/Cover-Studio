@@ -29,7 +29,9 @@ xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration
 
 ## GitHub Actions
 
-`.github/workflows/ios-milestone.yml` 使用官方 `macos-26` runner 标签，`select_xcode.py` 显式选择镜像已安装的最新稳定 Xcode 26，并记录实际 Xcode/Swift 与可用 Simulator runtime/设备清单。仅 Actions 手动 **Run workflow** 或 PR 的 `opened` / `ready_for_review` 里程碑触发（草稿首次打开也构建）；普通 push 与 PR synchronize 不触发。工作流不打包 IPA、不使用签名 Secrets、不自动发布。
+`.github/workflows/ios-milestone.yml` 使用官方 `macos-26` runner 标签，`select_xcode.py` 显式选择镜像已安装的最新稳定 Xcode 26，并记录实际 Xcode/Swift 与可用 Simulator runtime/设备清单。仅 Actions 手动 **Run workflow** 或 PR 的 `opened` / `ready_for_review` 里程碑触发（草稿首次打开也构建）；普通 push 与 PR synchronize 不触发。默认不打包 IPA；手动明确选择时可生成下述未签名设备 IPA，不使用签名 Secrets、不自动发布。
+
+手动选择 `build_unsigned_ipa` 可沿用 William Lecture 的设备版流程：Release + `iphoneos` + arm64 + 禁用签名，将 `Payload/MyCoverStudio.app` 打包为 `dist/MyCoverStudio-V1-unsigned.ipa`。它不是模拟器 `.app` 改名；检查实际 Mach-O 的 iOS device 平台、版本/设备系列、ZIP 完整性并输出 SHA-256 和 `ipa-report.json`。仅选此项时跳过模拟器编译/启动，保留核心测试；artifact 保存 14 天。该包需在本地签名后安装，构建不读取证书、Apple ID 或仓库 Secrets，也不宣称已安装/通过实机验收。可在已选择 Xcode 的 Mac 上运行 `bash scripts/build-ios.sh` 重现打包。
 
 PR `opened` 与 `ready_for_review` 两个明确里程碑默认截图及轻量合成媒体检查；手动运行可勾选 `simulator_snapshots`。同一次构建后各启动一个可用 iPhone/iPad Simulator（iPad 优先宽屏 Pro），保存浅色正常字号与深色辅助功能大字号截图。修复媒体路径可改选 `media_smoke_only`，只启动一个 iPhone，不重复已采集的布局证据；对应脚本参数 `--media-only`。可本地执行：
 

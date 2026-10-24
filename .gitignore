@@ -10,3 +10,4 @@ xcuserdata/
 .DS_Store
 .impeccable/
 __pycache__/
+dist/

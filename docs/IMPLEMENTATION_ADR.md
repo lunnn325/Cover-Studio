@@ -173,3 +173,11 @@ XCUITest 实际点击用户控件，不绕过保留确认或直接调用恢复 h
 这是 UI/交互修正，不用模拟录制证明。集中编译检查后仍须在真实录制中核对锁定/解锁、停止、后台/路由中断后的自动解除和 iPhone/iPad 大字号；未获得设备证据前维持 IMPLEMENTED_UNVERIFIED。
 
 并行审查发现正式会话未锁定时可切到练习，旧 Take 回听会直接停止共享伴奏，且该页单击结束可绕过长按。练习页回听在忙时禁用，handler 在停止伴奏前和异步准备返回后复查会话；录制中的结束操作统一为 1 秒长按（保留辅助功能操作），其他准备/收尾流程不变。忙时关闭歌词编辑入口，避免进入共享播放操作。真实录制跨页/辅助功能仍待设备验证。
+
+## ADR 017：沿用 William Lecture 的未签名设备 IPA
+
+用户要求沿用 WL 的 GitHub macOS 打包方式。核对 WL 当前构建脚本确认使用 Release/iphoneos、禁用签名，将设备 `.app` 放入 Payload 后 ZIP 为 unsigned IPA；此前仅提供 Simulator 编译，以及把缺签名当作无法生成任何 IPA 的前提，限制过严。
+
+在现有手动工作流新增 `build_unsigned_ipa`，不另建自动构建或模拟器矩阵。仅选择该项时运行核心测试和一次 Release arm64 设备构建，复用确定性工程与 runner/Xcode 选择。使用独立临时 Payload，避免旧包残留；上传 IPA、SHA-256 和真实元数据报告。验证 Mach-O LC_BUILD_VERSION 为 iOS device（arm64 不能单独排除模拟器）、iPhone/iPad、权限、ZIP 完整性和无签名材料。
+
+不导入/创建证书，不改账号/Secrets，不将未签名包称为可直接安装。用户本地签名安装后的录制、AirPods、同步、Files 和设备迁移 gate 仍须真实执行。产品功能、工程格式和原始素材保护均不变。
