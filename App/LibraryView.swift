@@ -122,7 +122,7 @@ struct LibraryView: View {
                 Button("检查设备后接唱") { Task { await store.resumeRecording(pending); if store.recording.isBusy { recoverySheet = true } } }
             }
             Button("保留文件并结束接唱") { pendingClosure = pending; closeRecovery = true }
-        }.disabled(store.exports.working || store.busy || store.auxiliaryRecording)
+        }.buttonStyle(.borderless).disabled(store.exports.working || store.busy || store.auxiliaryRecording)
     }
     @ViewBuilder func cover(_ project: StudioProject) -> some View {
         if let id = project.song.coverAssetID, let asset = project.asset(id), let image = UIImage(contentsOfFile: store.repository.directory(project.id).appendingPathComponent(asset.path).path) {
@@ -190,7 +190,7 @@ struct StorageView: View {
             .task { await refresh() }
             .sheet(isPresented: $outputLibrary, onDismiss: { Task { await refresh() } }) { NavigationStack { OutputLibraryView() } }
             .sheet(isPresented: $mediaRecovery, onDismiss: { Task { await refresh() } }) { NavigationStack { MediaRecoveryView() } }
-            .sheet(item: $snapshotFiles) { issue in NavigationStack { DamagedProjectView(issue: issue) } }
+            .navigationDestination(item: $snapshotFiles) { issue in DamagedProjectView(issue: issue) }
             .interactiveDismissDisabled(exportingSnapshot)
             .sheet(isPresented: $snapshotPicker) {
                 if let snapshotPackage { DocumentExportPicker(urls: [snapshotPackage]) { success in snapshotPicker = false; if success { store.notice = "安全副本已交给 Files，云上传仍未验证。可从作品库选择此包恢复。" } } }
@@ -267,7 +267,7 @@ struct StorageView: View {
             if snapshot.hasIndex { Button("校验并导出此副本为工程包") { Task { await exportSnapshot(snapshot) } }.disabled(exportingSnapshot) }
             Button("浏览并另存原件") { snapshotFiles = LibraryIssue(directoryName: snapshot.id, reason: "这是保留的安全/恢复目录，索引可能不完整。可逐个另存文件，不改变原目录。") }.disabled(exportingSnapshot)
             Button("移除此副本…", role: .destructive) { pendingSnapshot = snapshot; snapshotFirst = true }.disabled(exportingSnapshot)
-        }
+        }.buttonStyle(.borderless)
     }
     private func takeRow(_ take: Take, project: StudioProject) -> some View {
         let locked = project.edit.selectedTakeID == take.id || project.edit.referencedTakeIDs.contains(take.id)

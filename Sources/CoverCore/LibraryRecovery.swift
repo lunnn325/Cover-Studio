@@ -1,6 +1,6 @@
 import Foundation
 
-public struct LibraryIssue: Identifiable, Equatable, Sendable {
+public struct LibraryIssue: Identifiable, Hashable, Sendable {
     public var id: String { directoryName }
     public let directoryName: String
     public let reason: String
