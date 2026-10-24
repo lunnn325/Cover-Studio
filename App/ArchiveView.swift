@@ -26,7 +26,7 @@ struct ArchiveView: View {
     @State private var pendingRestoreURL: URL?
     @State private var restoreChoice = false
     var project: StudioProject? { store.selected }
-    var body: some View {
+    private var archiveForm: some View {
         Form {
             if let project {
                 Section {
@@ -38,16 +38,13 @@ struct ArchiveView: View {
                     Section("工程包内容") {
                         Picker("备份类型", selection: $mode) { ForEach(BackupMode.allCases, id: \.self) { Text($0.label).tag($0) } }.pickerStyle(.segmented)
                         if mode == .custom {
-                            ForEach(project.takes) { take in
-                                let required = project.edit.selectedTakeID == take.id || project.edit.referencedTakeIDs.contains(take.id)
-                                Toggle(take.name + (required ? "（当前编辑必需）" : ""), isOn: Binding(get: { required || chosenTakes.contains(take.id) }, set: { value in if value { chosenTakes.insert(take.id) } else { chosenTakes.remove(take.id) } })).disabled(required)
-                            }
+                            ForEach(project.takes) { take in takeChoice(take, project: project) }
                         }
                         if mode != .slim { Toggle("包含已完成的导出成品", isOn: $includeOutputs) }
                         if includeOutputs && mode != .slim { Text("包含当前和历史已完成成品；未登记或可能未完成的文件不在此包内，可从成品目录单独保存到 Files。").font(.footnote).foregroundStyle(.secondary) }
                         if includeOutputs && mode == .custom { outputChoices }
                         Text(mode == .full ? "完整：全部伴奏版本、Take、练习、歌词与编辑。默认省略可重新生成的导出成品。" : "精简 / 自定义：自动补齐当前编辑所需的 Take、旧片段、伴奏和照片，不能移除依赖素材。").font(.footnote).foregroundStyle(.secondary)
-                        LabeledContent("源素材总计", value: bytes(project.assets.reduce(0) { $0 + $1.bytes }))
+                        LabeledContent("源素材总计", value: bytes(project.assets.filter { $0.role != .export }.reduce(0) { $0 + $1.bytes }))
                         Button("生成并校验工程包") { Task { await prepare() } }.disabled(preparing || (includeOutputs && mode == .custom && (loadingOutputs || outputScopeID != project.id)))
                         if preparing { ProgressView("正在流式打包并重新读取校验…") }
                         if packageURL != nil {
@@ -56,12 +53,7 @@ struct ArchiveView: View {
                         }
                     }.disabled(preparing)
                     if canRelease {
-                        Section("释放本地空间") {
-                            Text("将移除本工程列出的 \(project.assets.count) 个源文件（\(bytes(project.assets.reduce(0) { $0 + $1.bytes }))），保留作品标题和备份记录。其他工程不会受影响。").font(.footnote)
-                            Text("当前状态：\(project.backups.last?.level.label ?? "未验证")。建议先从外部重新选择工程包，验证恢复后再释放。").font(.footnote).foregroundStyle(.orange)
-                            Text(project.backups.last(where: { $0.revision == project.revision })?.note ?? "").font(.footnote).foregroundStyle(.orange)
-                            Button("释放本地源素材…", role: .destructive) { releaseRevision = project.revision; releaseFirst = true }
-                        }
+                        releaseSection(project)
                     }
                 }
             }
@@ -69,7 +61,10 @@ struct ArchiveView: View {
                 Button("选择外部工程包恢复 / 验证") { importing = true }.disabled(preparing)
                 Text("校验全部哈希、长度和依赖后才恢复。同 ID 可保留两份或先留安全副本再替换。云文件不可用或空间不足会明确失败。").font(.footnote).foregroundStyle(.secondary)
             }
-        }.navigationTitle("工程备份与恢复").navigationBarTitleDisplayMode(.inline)
+        }
+    }
+    var body: some View {
+        archiveForm.navigationTitle("工程备份与恢复").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.disabled(preparing) } }
             .interactiveDismissDisabled(preparing)
             .task(id: project?.id) { await loadOutputs() }
@@ -116,6 +111,25 @@ struct ArchiveView: View {
         guard let project else { return false }
         return project.backups.contains { $0.revision == project.revision && ($0.level == .exportedToProvider || $0.level == .restoreVerified) }
     }
+    private func takeChoice(_ take: Take, project: StudioProject) -> some View {
+        let required: Bool = project.edit.selectedTakeID == take.id || project.edit.referencedTakeIDs.contains(take.id)
+        let title = take.name + (required ? "（当前编辑必需）" : "")
+        let selection = Binding<Bool>(get: { required || chosenTakes.contains(take.id) }, set: { selected in
+            if selected { chosenTakes.insert(take.id) } else { chosenTakes.remove(take.id) }
+        })
+        return Toggle(title, isOn: selection).disabled(required)
+    }
+    private func releaseSection(_ project: StudioProject) -> some View {
+        let sources = project.assets.filter { $0.role != .export }
+        let total = sources.reduce(Int64(0)) { $0 + $1.bytes }
+        return Section("释放本地空间") {
+            Text("将移除本工程列出的 \(sources.count) 个源文件（\(bytes(total))），保留作品标题和备份记录。其他工程不会受影响。").font(.footnote)
+            Text("已导出成品会保留，可到成品目录单独确认删除。").font(.footnote).foregroundStyle(.secondary)
+            Text("当前状态：\(project.backups.last?.level.label ?? "未验证")。建议先从外部重新选择工程包，验证恢复后再释放。").font(.footnote).foregroundStyle(.orange)
+            Text(project.backups.last(where: { $0.revision == project.revision })?.note ?? "").font(.footnote).foregroundStyle(.orange)
+            Button("释放本地源素材…", role: .destructive) { releaseRevision = project.revision; releaseFirst = true }
+        }
+    }
     private var requiredOutputPaths: Set<String> {
         guard let project, let plan = try? ProjectRules.backupProject(project, mode: .custom, selected: chosenTakes) else { return [] }
         return Set(plan.assets.filter { $0.role == .export }.map { $0.path.precomposedStringWithCanonicalMapping.lowercased() })
@@ -123,13 +137,16 @@ struct ArchiveView: View {
     @ViewBuilder private var outputChoices: some View {
         if loadingOutputs { ProgressView("正在读取可选成品…") }
         if let outputReadError { Text(outputReadError).font(.footnote).foregroundStyle(.orange) }
-        ForEach(knownOutputs) { output in
-            let required = requiredOutputPaths.contains(output.path.precomposedStringWithCanonicalMapping.lowercased())
-            Toggle(output.name + (required ? "（编辑必需）" : ""), isOn: Binding(get: { required || chosenOutputs.contains(output.path) }, set: { selected in
-                if selected { chosenOutputs.insert(output.path) } else { chosenOutputs.remove(output.path) }
-            })).disabled(required)
-        }
+        ForEach(knownOutputs) { output in outputChoice(output) }
         if !loadingOutputs && knownOutputs.isEmpty && outputReadError == nil { Text("当前没有已登记的完成成品。").font(.footnote).foregroundStyle(.secondary) }
+    }
+    private func outputChoice(_ output: ExportedFile) -> some View {
+        let required = requiredOutputPaths.contains(output.path.precomposedStringWithCanonicalMapping.lowercased())
+        let title = output.name + (required ? "（编辑必需）" : "")
+        let selection = Binding<Bool>(get: { required || chosenOutputs.contains(output.path) }, set: { selected in
+            if selected { chosenOutputs.insert(output.path) } else { chosenOutputs.remove(output.path) }
+        })
+        return Toggle(title, isOn: selection).disabled(required)
     }
     private func loadOutputs() async {
         guard let project else { return }

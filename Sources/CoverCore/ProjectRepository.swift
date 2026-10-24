@@ -167,7 +167,9 @@ public actor ProjectRepository {
         }
         // Preflight every path before any destructive work or archived-state commit.
         try ProjectRules.validate(project)
-        let targets = try project.assets.map { try ProjectRules.mediaURL($0.path, root: dir) }
+        // Source release is separate from the explicitly confirmed per-output
+        // deletion flow. Historical exports may not exist in the chosen backup.
+        let targets = try project.assets.filter { $0.role != .export }.map { try ProjectRules.mediaURL($0.path, root: dir) }
         var archived = project; archived.archived = true
         // Commit the recoverable index first. Every asset is project-local; no other project shares these paths.
         try save(archived)

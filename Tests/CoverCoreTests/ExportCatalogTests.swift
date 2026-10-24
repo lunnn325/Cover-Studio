@@ -101,6 +101,12 @@ final class ExportCatalogTests: XCTestCase {
         XCTAssertTrue(outputs.allSatisfy(\.completed))
         XCTAssertFalse(restored.assets.contains { ProjectRules.isExportMetadata($0.path) })
         XCTAssertEqual(try FileIntegrity.sha256(repository.directory(restored.id).appendingPathComponent(backing.path)), backing.sha256)
+        let archived = try await repository.releaseLocal(restored, confirmedRevision: restored.revision)
+        XCTAssertTrue(archived.archived)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: repository.directory(restored.id).appendingPathComponent(backing.path).path))
+        for output in [first, second] {
+            XCTAssertEqual(try FileIntegrity.sha256(repository.directory(restored.id).appendingPathComponent(output.path)), output.sha256)
+        }
     }
     func testCustomBackupSelectsOutputsButCannotDropAnOutputUsedAsBacking() throws {
         let root = try directory()
