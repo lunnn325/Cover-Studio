@@ -33,17 +33,9 @@ public actor ProjectRepository {
     }
     public nonisolated func directory(_ id: UUID) -> URL { root.appendingPathComponent(id.uuidString, isDirectory: true) }
     public func loadAll() throws -> [StudioProject] {
-        var projects: [StudioProject] = []
-        for dir in try files.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) where !dir.lastPathComponent.hasPrefix(".") {
-            let url = dir.appendingPathComponent("project.json")
-            guard files.fileExists(atPath: url.path) else { continue }
-            // A corrupt index must be reported, not silently disappear from the library.
-            let project = try JSONDecoder().decode(StudioProject.self, from: Data(contentsOf: url))
-            guard dir.lastPathComponent == project.id.uuidString else { throw StudioError("工程索引与目录不一致，素材已保留。") }
-            if !project.archived { try ProjectRules.validate(project) }
-            projects.append(project)
-        }
-        return projects.sorted { $0.modifiedAt > $1.modifiedAt }
+        let scan = try scanLibrary()
+        guard scan.issues.isEmpty else { throw StudioError("有工程索引不可用，请使用作品库恢复入口。原目录未修改。") }
+        return scan.projects
     }
     public func save(_ project: StudioProject) throws {
         if !project.archived { try ProjectRules.validate(project) }

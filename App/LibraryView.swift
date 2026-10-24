@@ -13,6 +13,7 @@ struct LibraryView: View {
     @State private var recoveryTakeID: UUID?
     @State private var pendingClosure: PendingRecording?
     @State private var closeRecovery = false
+    @State private var damagedIssue: LibraryIssue?
     var filtered: [StudioProject] {
         store.projects.filter { search.isEmpty || ($0.song.title + " " + $0.song.artist + " " + $0.song.group).localizedCaseInsensitiveContains(search) }
     }
@@ -28,12 +29,13 @@ struct LibraryView: View {
                 Button { restorePicker = true } label: { Label("从工程包恢复 / 验证", systemImage: "square.and.arrow.down") }
                 Button { storage = true } label: { Label("存储管理", systemImage: "internaldrive") }
             }
+            issueSection
             if !store.pendingRecordings.isEmpty {
                 Section("上次未完成的录制") {
                     ForEach(store.pendingRecordings) { pending in pendingRow(pending) }
                 }
             }
-            if filtered.isEmpty { ContentUnavailableView(search.isEmpty ? "还没有作品" : "没有匹配的作品", systemImage: "square.stack", description: Text("导入伴奏开始录制，或从工程包恢复。")) }
+            if filtered.isEmpty && store.libraryIssues.isEmpty { ContentUnavailableView(search.isEmpty ? "还没有作品" : "没有匹配的作品", systemImage: "square.stack", description: Text("导入伴奏开始录制，或从工程包恢复。")) }
             ForEach(groups.keys.sorted(), id: \.self) { group in
                 Section(group) {
                     ForEach(groups[group] ?? []) { project in
@@ -74,6 +76,7 @@ struct LibraryView: View {
             .sheet(isPresented: $backup) { NavigationStack { ArchiveView() } }
             .sheet(isPresented: $storage) { NavigationStack { StorageView() } }
             .sheet(isPresented: $rename) { NavigationStack { RenameProjectView() } }
+            .sheet(item: $damagedIssue) { issue in NavigationStack { DamagedProjectView(issue: issue) } }
             .sheet(isPresented: $recoverySheet, onDismiss: { store.refreshPendingRecordings() }) {
                 NavigationStack { RecordView().toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { recoverySheet = false }.disabled(store.recording.isBusy) } } }
                     .interactiveDismissDisabled(store.recording.isBusy)
@@ -93,6 +96,19 @@ struct LibraryView: View {
                     do { try await store.restore(try result.get(), keepBoth: true) } catch { store.report(error) }
                 }
             }
+    }
+    @ViewBuilder private var issueSection: some View {
+        if !store.libraryIssues.isEmpty {
+            Section("需要恢复的工程目录") {
+                Text("这些目录未被删除。可校验上一版索引创建副本、另存原件，或从外部工程包恢复。").font(.footnote).foregroundStyle(.secondary)
+                ForEach(store.libraryIssues) { issue in
+                    Button { damagedIssue = issue } label: {
+                        Label(issue.directoryName, systemImage: "exclamationmark.folder").font(.caption).lineLimit(2)
+                    }
+                }
+                Button("重新检查作品库") { Task { await store.refreshLibrary() } }
+            }
+        }
     }
     private func pendingRow(_ pending: PendingRecording) -> some View {
         VStack(alignment: .leading, spacing: 10) {

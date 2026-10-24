@@ -20,6 +20,7 @@ struct PendingRecording: Identifiable {
     @Published var busy = false
     @Published var auxiliaryRecording = false
     @Published var pendingRecordings: [PendingRecording] = []
+    @Published var libraryIssues: [LibraryIssue] = []
     let repository: ProjectRepository
     let playback = PlaybackEngine()
     let recording: RecordingCoordinator
@@ -43,15 +44,30 @@ struct PendingRecording: Identifiable {
     }
     func load() async {
         do {
-            projects = try await repository.loadAll()
+            let scan = try await repository.scanLibrary()
+            projects = scan.projects; libraryIssues = scan.issues
             let last = UserDefaults.standard.string(forKey: "lastProject").flatMap(UUID.init(uuidString:))
             selectedID = projects.first(where: { $0.id == last })?.id ?? projects.first?.id
             recording.video = selected?.recordVideo ?? true
             refreshPendingRecordings()
             if !pendingRecordings.isEmpty { notice = "发现上次中断的录制，可在作品库预览已保存片段，或检查路由后接唱。最后未封装片段可能无法播放，原文件仍保留。" }
+            if !libraryIssues.isEmpty { notice = "有 \(libraryIssues.count) 个工程目录的索引暂不可用，已在作品库单独列出。其他作品仍可打开，损坏目录和原件未修改。" }
         } catch { self.error = "作品库读取失败，原文件未修改。\(error.localizedDescription)" }
     }
     func report(_ error: Error) { self.error = error.localizedDescription }
+    func refreshLibrary() async {
+        guard !recording.isBusy, !busy, !auxiliaryRecording, !exports.working else { return }
+        busy = true; defer { busy = false }
+        do { try await flush(); await load() } catch { report(error) }
+    }
+    func recoverLibraryIssue(_ candidate: IndexRecoveryCandidate) async throws {
+        guard !recording.isBusy, !busy, !auxiliaryRecording, !exports.working else { throw StudioError("请先结束当前操作。") }
+        busy = true; defer { busy = false }
+        try await flush(); playback.suspendEngine(); playback.loop = nil
+        let recovered = try await repository.recoverPreviousIndex(candidate)
+        await load(); selectedID = recovered.id; loadedArrangement = nil
+        notice = "已生成索引恢复副本，原损坏目录仍保留。上一版索引可能缺少最近编辑或 Take；额外原件只保留字节，不代表已恢复可播放或同步。请预览并重新完整备份。"
+    }
     func refreshPendingRecordings() {
         pendingRecordings = projects.filter { !$0.archived }.compactMap { project in
             let url = repository.directory(project.id).appendingPathComponent("recording.json")
@@ -107,7 +123,7 @@ struct PendingRecording: Identifiable {
             refreshPendingRecordings()
         } catch {
             // The log or index may already be committed when an I/O failure is reported.
-            if let loaded = try? await repository.loadAll() { projects = loaded }
+            if let scan = try? await repository.scanLibrary() { projects = scan.projects; libraryIssues = scan.issues }
             refreshPendingRecordings()
             throw error
         }
