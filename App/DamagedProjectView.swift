@@ -23,6 +23,7 @@ struct DamagedProjectPanel: View {
     @State private var exporting = false
     @State private var urls: [URL] = []
     var blocked: Bool { working || store.busy || store.recording.isBusy || store.auxiliaryRecording || service.working }
+    var canBrowseFiles: Bool { issue.projectID != nil || ProjectFiles.isRetainedDirectory(issue.directoryName) }
     var body: some View {
         contents
         .disabled(blocked)
@@ -30,7 +31,7 @@ struct DamagedProjectPanel: View {
         .navigationTitle("工程索引恢复").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.disabled(working) } }
         .interactiveDismissDisabled(working)
-        .task { if issue.projectID != nil { await refreshFiles() } }
+        .task { if canBrowseFiles { await refreshFiles() } }
         .confirmationDialog("根据上一版创建独立恢复副本？", isPresented: $confirm, titleVisibility: .visible) {
             Button("取消", role: .cancel) {}
             Button("保留原目录，创建恢复副本") { Task { await recover() } }
@@ -62,7 +63,7 @@ struct DamagedProjectPanel: View {
             }
             Section("可另存的原始文件") {
                 Text("文件存在不等于可播放或已恢复。缓存不列出；逐个保存副本，不移除原文件。Files 接收不代表云上传完成。").font(.footnote).foregroundStyle(.secondary)
-                Button("重新读取文件列表") { Task { await refreshFiles() } }.disabled(issue.projectID == nil)
+                Button("重新读取文件列表") { Task { await refreshFiles() } }.disabled(!canBrowseFiles)
                 ForEach(files, id: \.path) { file in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(file.path).font(.caption).textSelection(.enabled)

@@ -4,25 +4,15 @@ import UniformTypeIdentifiers
 import CoverCore
 
 @main struct MyCoverStudioApp: App {
-    @StateObject private var store = StudioStore()
+    @StateObject private var bootstrap = StudioBootstrap()
     @Environment(\.scenePhase) private var scenePhase
     var body: some Scene {
         WindowGroup {
-            StudioRoot().environmentObject(store)
-                .task {
-                    UIDevice.current.isBatteryMonitoringEnabled = true; await store.load()
-                    #if DEBUG
-                    await MediaSmokeCheck.runIfRequested()
-                    #endif
-                }
-                .onOpenURL { url in
-                    Task {
-                        do { try await store.restore(url, keepBoth: true) }
-                        catch { store.report(error) }
-                    }
-                }
+            StudioLaunchView(bootstrap: bootstrap)
+                .task { UIDevice.current.isBatteryMonitoringEnabled = true; await bootstrap.open() }
+                .onOpenURL { url in Task { await bootstrap.openArchive(url) } }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase != .active { Task { do { try await store.flush() } catch { store.report(error) } } }
+                    if phase != .active, let store = bootstrap.store { Task { do { try await store.flush() } catch { store.report(error) } } }
                 }
         }
     }

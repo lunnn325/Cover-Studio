@@ -180,6 +180,7 @@ struct StorageView: View {
     @State private var snapshotPackage: URL?
     @State private var exportingSnapshot = false
     @State private var snapshotPicker = false
+    @State private var snapshotFiles: LibraryIssue?
     var project: StudioProject? { store.selected }
     var body: some View {
         takeProtectedContent
@@ -188,6 +189,7 @@ struct StorageView: View {
             .task { await refresh() }
             .sheet(isPresented: $outputLibrary, onDismiss: { Task { await refresh() } }) { NavigationStack { OutputLibraryView() } }
             .sheet(isPresented: $mediaRecovery, onDismiss: { Task { await refresh() } }) { NavigationStack { MediaRecoveryView() } }
+            .sheet(item: $snapshotFiles) { issue in NavigationStack { DamagedProjectView(issue: issue) } }
             .interactiveDismissDisabled(exportingSnapshot)
             .sheet(isPresented: $snapshotPicker) {
                 if let snapshotPackage { DocumentExportPicker(urls: [snapshotPackage]) { success in snapshotPicker = false; if success { store.notice = "安全副本已交给 Files，云上传仍未验证。可从作品库选择此包恢复。" } } }
@@ -262,6 +264,7 @@ struct StorageView: View {
             LabeledContent(snapshot.title, value: bytes(snapshot.bytes))
             Text(snapshot.id.hasPrefix(".safety-") ? "替换前的旧工程，可能含独有录制。" : "失败复制 / 恢复的暂存内容，尚不能视为完整工程。").font(.footnote).foregroundStyle(.secondary)
             if snapshot.hasIndex { Button("校验并导出此副本为工程包") { Task { await exportSnapshot(snapshot) } }.disabled(exportingSnapshot) }
+            Button("浏览并另存原件") { snapshotFiles = LibraryIssue(directoryName: snapshot.id, reason: "这是保留的安全/恢复目录，索引可能不完整。可逐个另存文件，不改变原目录。") }.disabled(exportingSnapshot)
             Button("移除此副本…", role: .destructive) { pendingSnapshot = snapshot; snapshotFirst = true }.disabled(exportingSnapshot)
         }
     }
@@ -283,7 +286,7 @@ struct StorageView: View {
             while let file = enumerator?.nextObject() as? URL {
                 guard let size = try? FileIntegrity.size(file) else { continue }
                 let relative = String(file.path.dropFirst(root.path.count))
-                if relative.contains("/.safety-") || relative.contains("/.replaced-") || relative.contains("/.restore-") || relative.contains("/.duplicate-") { result.retained += size }
+                if relative.contains("/.safety-") || relative.contains("/.replaced-") || relative.contains("/.restore-") || relative.contains("/.duplicate-") || relative.contains("/.startup-transaction-") { result.retained += size }
                 else if relative.contains("/media/") { result.source += size }
                 else if relative.contains("/exports/") { result.exports += size }
                 else if relative.contains("/cache/") { result.cache += size }
@@ -373,6 +376,7 @@ struct StorageView: View {
 struct SettingsView: View {
     @EnvironmentObject var store: StudioStore
     @Environment(\.dismiss) var dismiss
+    @State private var startupLogs = false
     var body: some View {
         List {
             Section("录制") {
@@ -389,6 +393,7 @@ struct SettingsView: View {
                 Text(UnavailableAI().capability.explanation).font(.footnote).foregroundStyle(.secondary)
             }
             Section("隐私与工程") {
+                Button("保留的启动恢复日志") { startupLogs = true }
                 Text("本地优先，无账号、无遥测、不上传音视频。Google Drive 通过系统 Files 选择，不内置登录。")
                 Text("iPhone 和 iPad 各自编辑，通过 .coverproject 包手动迁移。Files 接收文件不能证明远端上传完成。")
                 LabeledContent("最低系统", value: "iOS / iPadOS 17")
@@ -396,6 +401,7 @@ struct SettingsView: View {
                 LabeledContent("外观", value: "跟随系统")
             }
         }.navigationTitle("设置").navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $startupLogs) { NavigationStack { StartupLogsView(root: store.repository.root) } }
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
     }
 }

@@ -34,15 +34,12 @@ struct PendingRecording: Identifiable {
         if let value = UserDefaults.standard.string(forKey: "deviceID") { return value }
         let value = UUID().uuidString; UserDefaults.standard.set(value, forKey: "deviceID"); return value
     }
-    init() {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("MyCoverStudio/Projects", isDirectory: true)
-        do { repository = try ProjectRepository(root: base) }
-        catch { fatalError("Cannot open local application support: \(error)") }
+    init(repository: ProjectRepository) {
+        self.repository = repository
         recording = RecordingCoordinator(playback: playback, repository: repository)
         recording.store = self
     }
-    func load() async {
+    @discardableResult func load() async -> Bool {
         do {
             let scan = try await repository.scanLibrary()
             projects = scan.projects; libraryIssues = scan.issues
@@ -52,7 +49,11 @@ struct PendingRecording: Identifiable {
             refreshPendingRecordings()
             if !pendingRecordings.isEmpty { notice = "发现上次中断的录制，可在作品库预览已保存片段，或检查路由后接唱。最后未封装片段可能无法播放，原文件仍保留。" }
             if !libraryIssues.isEmpty { notice = "有 \(libraryIssues.count) 个工程目录的索引暂不可用，已在作品库单独列出。其他作品仍可打开，损坏目录和原件未修改。" }
-        } catch { self.error = "作品库读取失败，原文件未修改。\(error.localizedDescription)" }
+            if let logs = try? RepositoryStartup.retainedLogs(root: repository.root), !logs.isEmpty {
+                notice = [notice, "存在保留的启动事务日志，可在设置中另存。请检查存储页的安全/恢复副本；打开作品库不代表相关工程已恢复成功。"].compactMap { $0 }.joined(separator: "\n\n")
+            }
+            return true
+        } catch { self.error = "作品库读取失败，原文件未修改。\(error.localizedDescription)"; return false }
     }
     func report(_ error: Error) { self.error = error.localizedDescription }
     func refreshLibrary() async {
@@ -65,7 +66,8 @@ struct PendingRecording: Identifiable {
         busy = true; defer { busy = false }
         try await flush(); playback.suspendEngine(); playback.loop = nil
         let recovered = try await repository.recoverPreviousIndex(candidate)
-        await load(); selectedID = recovered.id; loadedArrangement = nil
+        guard await load() else { throw StudioError("恢复副本已创建，但作品库重新读取失败；原件保留，请重新打开后检查。") }
+        selectedID = recovered.id; loadedArrangement = nil
         notice = "已生成索引恢复副本，原损坏目录仍保留。上一版索引可能缺少最近编辑或 Take；额外原件只保留字节，不代表已恢复可播放或同步。请预览并重新完整备份。"
     }
     func refreshPendingRecordings() {
@@ -251,7 +253,8 @@ struct PendingRecording: Identifiable {
         let access = url.startAccessingSecurityScopedResource(); defer { if access { url.stopAccessingSecurityScopedResource() } }
         try await flush()
         let restored = try await repository.restore(archive: url, keepBoth: keepBoth)
-        await load(); selectedID = restored.id; loadedArrangement = nil
+        guard await load() else { throw StudioError("工程包已恢复，但作品库重新读取失败；文件保留，请重新打开后检查。") }
+        selectedID = restored.id; loadedArrangement = nil
         notice = "工程已恢复并通过哈希和依赖校验。云端永久保留情况无法验证。"
     }
     func duplicate() async throws {

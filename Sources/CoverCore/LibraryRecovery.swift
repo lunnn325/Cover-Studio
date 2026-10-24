@@ -5,6 +5,7 @@ public struct LibraryIssue: Identifiable, Equatable, Sendable {
     public let directoryName: String
     public let reason: String
     public var projectID: UUID? { UUID(uuidString: directoryName) }
+    public init(directoryName: String, reason: String) { self.directoryName = directoryName; self.reason = reason }
 }
 public struct LibraryScan: Sendable {
     public let projects: [StudioProject]
@@ -22,7 +23,7 @@ public struct IndexRecoveryCandidate: Equatable, Sendable {
 
 extension ProjectRepository {
     private func libraryDirectory(_ name: String) throws -> URL {
-        guard UUID(uuidString: name) != nil else { throw StudioError("此目录没有有效工程身份，原文件仍保留。") }
+        guard UUID(uuidString: name) != nil || ProjectFiles.isRetainedDirectory(name) else { throw StudioError("此目录不是受控工程或恢复副本，原文件仍保留。") }
         let directory = try ProjectFiles.url(name, root: root)
         let values = try directory.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
         guard values.isDirectory == true, values.isSymbolicLink != true else { throw StudioError("工程目录不是受控普通目录，未读取链接目标。") }
@@ -64,7 +65,8 @@ extension ProjectRepository {
         return try ProjectFiles.url(path, root: directory)
     }
     public func inspectPreviousIndex(_ name: String) throws -> IndexRecoveryCandidate {
-        let files = FileManager.default, directory = try libraryDirectory(name), identity = UUID(uuidString: name)!
+        guard let identity = UUID(uuidString: name) else { throw StudioError("安全副本请先另存原件，或校验并导出完整包恢复。") }
+        let files = FileManager.default, directory = try libraryDirectory(name)
         guard (try? readLibraryIndex("project.json", directory: directory, identity: identity)) == nil else {
             throw StudioError("当前工程索引已可正常读取，无需回退。请刷新作品库。")
         }

@@ -15,20 +15,33 @@ public actor ProjectRepository {
     }
     /// A process termination between the two same-volume renames cannot hide the old project.
     private static func recoverRestore(at root: URL) throws {
-        let journal = root.appendingPathComponent(".restore-transaction.json")
+        let journal = try ProjectFiles.url(".restore-transaction.json", root: root)
         let files = FileManager.default
-        guard files.fileExists(atPath: journal.path) else { return }
-        let transaction = try JSONDecoder().decode(RestoreTransaction.self, from: Data(contentsOf: journal))
+        guard let expected = try RepositoryStartup.pending(root: root) else { return }
+        guard let transaction = try? JSONDecoder().decode(RestoreTransaction.self, from: Data(contentsOf: journal)) else {
+            throw StudioError("恢复事务日志无法读取。工程与安全副本已保留，请先处理启动恢复。")
+        }
         guard transaction.safetyDirectory.hasPrefix(".safety-"),
               UUID(uuidString: String(transaction.safetyDirectory.dropFirst(8))) != nil else {
             throw StudioError("恢复事务记录无效；现有素材已保留，请勿清理恢复目录。")
         }
-        let target = root.appendingPathComponent(transaction.projectID.uuidString)
-        let safety = root.appendingPathComponent(transaction.safetyDirectory)
+        let target = try ProjectFiles.url(transaction.projectID.uuidString, root: root)
+        let safety = try ProjectFiles.url(transaction.safetyDirectory, root: root)
+        func validateDirectory(_ directory: URL) throws {
+            guard try directory.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else { throw StudioError("恢复位置不是工程目录，原件已保留。") }
+            let index = try ProjectFiles.url("project.json", root: directory)
+            guard try index.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true,
+                  try FileIntegrity.size(index) <= Int64(ProjectArchive.maximumManifestBytes),
+                  let project = try? JSONDecoder().decode(StudioProject.self, from: Data(contentsOf: index)),
+                  project.id == transaction.projectID else { throw StudioError("恢复位置的工程索引不完整，事务日志与安全副本仍保留。") }
+            try ProjectRules.validate(project)
+        }
         if !files.fileExists(atPath: target.path) {
             guard files.fileExists(atPath: safety.path) else { throw StudioError("恢复尚未提交且原工程位置不可用，请保留恢复目录。") }
+            try validateDirectory(safety)
             try files.moveItem(at: safety, to: target)
-        }
+        } else { try validateDirectory(target) }
+        guard try RepositoryStartup.pending(root: root) == expected else { throw StudioError("恢复事务在处理期间变化，日志未清除。") }
         try files.removeItem(at: journal)
     }
     public nonisolated func directory(_ id: UUID) -> URL { root.appendingPathComponent(id.uuidString, isDirectory: true) }
