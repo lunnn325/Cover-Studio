@@ -24,6 +24,7 @@ def main():
         raise SystemExit("No available iPhone simulator.")
     device = max(choices, key=lambda item: (item["name"] == "iPhone 17 Pro", "Pro" in item["name"], item["name"]))
     report["device"] = device["name"]
+    report["testArchitecture"] = platform.machine()
     device_id, was_booted = device["udid"], device["state"] == "Booted"
     try:
         (output / "scope.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
@@ -34,12 +35,12 @@ def main():
         with (output / "xcodebuild-test.log").open("w", encoding="utf-8") as stream:
             result = subprocess.run([
                 "xcodebuild", "test", "-project", "MyCoverStudio.xcodeproj", "-scheme", "MyCoverStudio",
-                "-configuration", "Debug", "-destination", "id=" + device_id,
+                "-configuration", "Debug", "-sdk", "iphonesimulator", "-destination", "id=" + device_id,
                 "-derivedDataPath", "build/DerivedData", "-resultBundlePath", str(bundle),
                 "-only-testing:StartupUITests/StartupRecoveryUITests/testStartupAndIndexRecovery",
                 "-parallel-testing-enabled", "NO", "-maximum-concurrent-test-simulator-destinations", "1",
                 "-test-timeouts-enabled", "YES", "-maximum-test-execution-time-allowance", "180",
-                "CODE_SIGNING_ALLOWED=NO"], stdout=stream, stderr=subprocess.STDOUT, timeout=600)
+                "ONLY_ACTIVE_ARCH=YES", "ARCHS=" + platform.machine(), "CODE_SIGNING_ALLOWED=NO"], stdout=stream, stderr=subprocess.STDOUT, timeout=600)
         if bundle.exists():
             summary = json.loads(command("xcrun", "xcresulttool", "get", "test-results", "summary", "--path", str(bundle), capture=True))
             (output / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
