@@ -32,6 +32,8 @@ import CoverCore
     private var practice = false
     private var stopping = false
     private var countdownTask: Task<Void, Never>?
+    private var startInFlight = false
+    private var preflightInFlight = false
     private var routeFingerprint = ""
     private var persistenceError: Error?
     private var observedBytesPerSecond: Double = 1_500_000
@@ -141,22 +143,30 @@ import CoverCore
         state = next
     }
     func preflight(practice: Bool = false, recovering: UUID? = nil) async {
-        guard !isCapturing, state != .finalizing, let store, let project = store.selected, !project.archived else { return }
+        guard !isCapturing, !preflightInFlight, state != .preflight, state != .finalizing, !stopping, !startInFlight,
+              let store, let project = store.selected, !project.archived else { return }
         guard !store.exports.working, !store.busy, !store.auxiliaryRecording else { store.error = "请先结束预览、导出或其他文件操作。"; return }
+        preflightInFlight = true; defer { preflightInFlight = false }
         do {
             let previous = recovering.flatMap { id in project.takes.first { $0.id == id } }
             if recovering != nil && previous == nil { throw StudioError("待恢复 Take 不在当前工程，原素材未修改。") }
             try transition(.preflight); self.practice = previous?.isPractice ?? practice
+            try await store.flush()
+            try checkPreflighting()
+            try await repository.validateRecordingStart(project, recovering: recovering)
+            try checkPreflighting()
             if let previous { video = previous.kind == .video }
             observedBytesPerSecond = video && !self.practice ? 1_500_000 : 40_000
             disableMonitoring(); monitoringConfigured = false; monitoringFormat = nil
             savedTakeID = nil; reason = nil; warning = nil; level = nil; persistenceError = nil; takeID = previous?.id; projectID = project.id
             playback.suspendEngine(); playback.loop = nil
             guard await AVCaptureDevice.requestAccess(for: .audio) else { throw StudioError("麦克风权限被拒绝。请在系统设置允许麦克风。") }
+            try checkPreflighting()
             if video && !self.practice {
                 guard await AVCaptureDevice.requestAccess(for: .video) else {
                     video = false; throw StudioError("摄像头权限未允许。已切换纯音频，请重新检查后继续，或前往系统设置。")
                 }
+                try checkPreflighting()
             }
             let audioSession = AVAudioSession.sharedInstance()
             var options: AVAudioSession.CategoryOptions = [.allowBluetooth, .allowBluetoothA2DP]
@@ -172,6 +182,7 @@ import CoverCore
                 try audioSession.setPreferredInput(preferred)
             }
             try await pipeline.configure(video: video && !self.practice, front: project.frontCamera, landscape: project.landscapeRecording)
+            try checkPreflighting()
             readRoute(); routeConfirmed = false
             availableBytes = try FileIntegrity.available(repository.directory(project.id))
             let budget = DiskBudget(bytesPerSecond: observedBytesPerSecond)
@@ -186,11 +197,20 @@ import CoverCore
             try transition(.ready)
             refreshMonitoringAvailability()
             UIDevice.current.isBatteryMonitoringEnabled = true
+        } catch is CancellationError {
+            disableMonitoring(); monitoringAvailable = false
+            await pipeline.shutDown()
+            if state == .preflight { state = takeID == nil ? .idle : .interrupted }
+            store.refreshPendingRecordings()
         } catch {
             disableMonitoring(); monitoringAvailable = false
             await pipeline.shutDown()
             state = .recoverableError; reason = error.localizedDescription; store.report(error)
         }
+    }
+    private func checkPreflighting() throws {
+        try Task.checkCancellation()
+        guard state == .preflight, !stopping else { throw CancellationError() }
     }
     func changeInput() async {
         guard state == .ready || state == .interrupted else { return }
@@ -206,7 +226,7 @@ import CoverCore
         await preflight(practice: practice, recovering: takeID)
     }
     func leavePreparedSession() async {
-        guard (state == .ready || state == .interrupted), !stopping else { return }
+        guard (state == .ready || state == .interrupted), !stopping, !startInFlight else { return }
         stopping = true; disableMonitoring(); monitoringAvailable = false
         playback.suspendEngine(); monitor?.invalidate()
         await pipeline.shutDown()
@@ -257,23 +277,28 @@ import CoverCore
             + "|\(session.sampleRate)|\(session.inputNumberOfChannels)|\(session.outputNumberOfChannels)"
     }
     func start() {
+        guard !startInFlight, !stopping else { return }
         guard (state == .ready || state == .interrupted), routeConfirmed else { store?.error = "请先确认实际收音与伴奏输出。"; return }
         guard persistenceError == nil else { store?.error = "片段登记失败，请先结束当前录制并保留恢复文件。"; return }
+        do { try transition(.countdown) } catch { store?.report(error); return }
+        startInFlight = true
         countdownTask = Task {
+            defer { startInFlight = false }
             do {
-                try transition(.countdown)
                 for value in (1...3).reversed() { countdown = value; try await Task.sleep(nanoseconds: 1_000_000_000) }
-                try Task.checkCancellation(); countdown = nil
+                try checkStarting(); countdown = nil
                 guard currentFingerprint() == routeFingerprint, let store, let project = store.selected, let arrangement = project.arrangement,
                       project.id == projectID else { throw StudioError("录制准备已变化，请重新检查。") }
                 if takeID == nil {
                     let take = Take(name: (practice ? "练习 " : "Take ") + String(project.takes.count + 1),
                                     kind: video && !practice ? .video : .audio, arrangementID: arrangement.id,
                                     semitones: arrangement.semitones, isPractice: practice)
+                    try await store.beginRecordingTake(take)
                     takeID = take.id
-                    store.update { $0.takes.append(take); if !practice { $0.edit.selectedTakeID = take.id } }
-                    try await store.flush()
-                    try FileIntegrity.encoder().encode(take).write(to: repository.directory(project.id).appendingPathComponent("recording.json"), options: .atomic)
+                    try checkStarting()
+                } else {
+                    try await repository.validateRecordingStart(project, recovering: takeID)
+                    try checkStarting()
                 }
                 guard resumePosition.isFinite, resumePosition >= 0, resumePosition < playback.duration else {
                     throw StudioError("接唱位置必须在伴奏时长内，请调整秒数后重试。")
@@ -287,12 +312,22 @@ import CoverCore
                 let sequenceStart = (savedSegments.enumerated().map { $0.element.sequence ?? $0.offset }.max() ?? -1) + 1
                 try await pipeline.begin(directory: repository.directory(project.id), songStart: resumePosition, host: host,
                        route: route, inputLatency: session.inputLatency, outputLatency: session.outputLatency, sequenceStart: sequenceStart)
+                try checkStarting()
                 try playback.play(from: resumePosition, hostTime: host)
                 try transition(.recording); refreshMonitoringAvailability(); UIApplication.shared.isIdleTimerDisabled = true
                 startMonitor()
-            } catch is CancellationError { countdown = nil }
+            } catch is CancellationError {
+                countdown = nil; disableMonitoring(); playback.suspendEngine()
+                do { try await pipeline.end() } catch { store?.report(error) }
+                if [.countdown, .ready, .interrupted].contains(state) { state = takeID == nil ? .ready : .interrupted }
+                store?.refreshPendingRecordings()
+            }
             catch { countdown = nil; await interrupt(error.localizedDescription); store?.report(error) }
         }
+    }
+    private func checkStarting() throws {
+        try Task.checkCancellation()
+        guard state == .countdown, !stopping else { throw CancellationError() }
     }
     func cancelCountdown() {
         guard state == .countdown else { return }
@@ -319,10 +354,8 @@ import CoverCore
                 throw StudioError("尚无已保存的录制片段，未标记为保存成功。")
             }
             try await store.flush()
-            if let projectID {
-                let journal = repository.directory(projectID).appendingPathComponent("recording.json")
-                if FileManager.default.fileExists(atPath: journal.path) { try FileManager.default.removeItem(at: journal) }
-            }
+            guard let project = store.selected, project.id == projectID else { throw StudioError("录制工程已变化，恢复日志仍保留。") }
+            try await repository.completeRecordingTake(project, takeID: takeID)
             state = .saved; savedTakeID = takeID
         } catch { state = .recoverableError; reason = error.localizedDescription; store?.report(error) }
         await pipeline.shutDown(); level = nil; stopping = false; UIApplication.shared.isIdleTimerDisabled = false

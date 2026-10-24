@@ -33,6 +33,75 @@ final class RecoveryFilesTests: XCTestCase {
         try await repository.save(project)
         return project
     }
+    func testPendingJournalBlocksNewTakeAndRequiresItsOriginalOwner() async throws {
+        let repository = try ProjectRepository(root: try directory()), project = try await fixture(repository)
+        let source = repository.directory(project.id), journal = source.appendingPathComponent("recording.json")
+        let indexBefore = try Data(contentsOf: source.appendingPathComponent("project.json"))
+        let owner = project.takes[0]
+        let next = Take(name: "Next", kind: .audio, arrangementID: project.arrangementID, semitones: 0)
+        for data in [try FileIntegrity.encoder().encode(owner), Data("interrupted incomplete log".utf8)] {
+            try data.write(to: journal)
+            do { _ = try await repository.beginRecordingTake(project, take: next); XCTFail("Overwrote a pending log") } catch {}
+            XCTAssertEqual(try Data(contentsOf: journal), data)
+            XCTAssertEqual(try Data(contentsOf: source.appendingPathComponent("project.json")), indexBefore)
+        }
+        try FileIntegrity.encoder().encode(owner).write(to: journal)
+        try await repository.validateRecordingStart(project, recovering: owner.id)
+        do { try await repository.completeRecordingTake(project, takeID: next.id); XCTFail("Cleared another Take's log") } catch {}
+        var mismatched = owner; mismatched.semitones = 1
+        let altered = try FileIntegrity.encoder().encode(mismatched)
+        try altered.write(to: journal)
+        do { try await repository.validateRecordingStart(project, recovering: owner.id); XCTFail("Accepted changed capture settings") } catch {}
+        XCTAssertEqual(try Data(contentsOf: journal), altered)
+    }
+    func testNewTakeJournalPersistsUntilOwnedNonemptyTakeIsCommitted() async throws {
+        let repository = try ProjectRepository(root: try directory()), project = try await fixture(repository)
+        let source = repository.directory(project.id), journal = source.appendingPathComponent("recording.json")
+        let originalHash = try FileIntegrity.sha256(source.appendingPathComponent(project.assets[1].path))
+        let take = Take(name: "Next", kind: .audio, arrangementID: project.arrangementID, semitones: 0)
+        var updated = try await repository.beginRecordingTake(project, take: take)
+        XCTAssertEqual(updated.takes.count, project.takes.count + 1)
+        XCTAssertEqual(updated.edit.selectedTakeID, take.id)
+        XCTAssertEqual(try JSONDecoder().decode(Take.self, from: Data(contentsOf: journal)), take)
+        try await repository.validateRecordingStart(updated, recovering: take.id)
+        do { try await repository.completeRecordingTake(updated, takeID: take.id); XCTFail("Empty Take marked complete") } catch {}
+        XCTAssertTrue(FileManager.default.fileExists(atPath: journal.path))
+        updated.takes[updated.takes.count - 1].segments = project.takes[0].segments
+        updated.touch(); try await repository.save(updated)
+        try await repository.completeRecordingTake(updated, takeID: take.id)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: journal.path))
+        XCTAssertEqual(try FileIntegrity.sha256(source.appendingPathComponent(project.assets[1].path)), originalHash)
+        do { try await repository.validateRecordingStart(updated, recovering: take.id); XCTFail("Resumed a closed log") } catch {}
+        try await repository.validateRecordingStart(updated)
+    }
+    func testTakeCreationRejectsStaleSnapshotAndJournalSymlinkWithoutChangingBytes() async throws {
+        let repository = try ProjectRepository(root: try directory()), project = try await fixture(repository)
+        let source = repository.directory(project.id), journal = source.appendingPathComponent("recording.json")
+        var current = project; current.song.title = "New edit"; current.touch(); try await repository.save(current)
+        let take = Take(name: "Next", kind: .audio, arrangementID: project.arrangementID, semitones: 0)
+        do { _ = try await repository.beginRecordingTake(project, take: take); XCTFail("Used stale project") } catch {}
+        XCTAssertFalse(FileManager.default.fileExists(atPath: journal.path))
+        let outside = try directory().appendingPathComponent("keep.json"), bytes = Data("external original".utf8)
+        try bytes.write(to: outside)
+        try FileManager.default.createSymbolicLink(at: journal, withDestinationURL: outside)
+        do { _ = try await repository.beginRecordingTake(current, take: take); XCTFail("Followed a journal symlink") } catch {}
+        XCTAssertEqual(try Data(contentsOf: outside), bytes)
+        let saved = try await repository.loadAll()
+        XCTAssertEqual(saved.first?.takes, project.takes)
+    }
+    func testFailedTakeIndexCommitRetainsLogAndPreviousSourceIndex() async throws {
+        let repository = try ProjectRepository(root: try directory()), project = try await fixture(repository)
+        let source = repository.directory(project.id), index = source.appendingPathComponent("project.json")
+        let before = try Data(contentsOf: index)
+        // Force a real filesystem write failure at the safety-index destination.
+        try FileManager.default.createDirectory(at: source.appendingPathComponent("project.previous.json"), withIntermediateDirectories: false)
+        let take = Take(name: "Not yet committed", kind: .audio, arrangementID: project.arrangementID, semitones: 0)
+        do { _ = try await repository.beginRecordingTake(project, take: take); XCTFail("Unexpected index commit") } catch {}
+        XCTAssertEqual(try Data(contentsOf: index), before)
+        let retained = try JSONDecoder().decode(Take.self, from: Data(contentsOf: source.appendingPathComponent("recording.json")))
+        XCTAssertEqual(retained.id, take.id)
+        for asset in project.assets { XCTAssertEqual(try FileIntegrity.sha256(source.appendingPathComponent(asset.path)), asset.sha256) }
+    }
     func testDuplicatePreservesUnindexedFilesAndHistoryButOmitsRebuildableCache() async throws {
         let repository = try ProjectRepository(root: try directory()), project = try await fixture(repository)
         let source = repository.directory(project.id)

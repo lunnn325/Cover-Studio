@@ -173,6 +173,47 @@ public actor ProjectRepository {
         let current = try JSONDecoder().decode(StudioProject.self, from: Data(contentsOf: directory(project.id).appendingPathComponent("project.json")))
         guard current.id == project.id, current.revision == project.revision else { throw StudioError("工程已有更新，请重新打开后再执行此操作。") }
     }
+    /// A pending log belongs to one Take. A new capture must never replace it.
+    public func validateRecordingStart(_ project: StudioProject, recovering takeID: UUID? = nil) throws {
+        guard !project.archived else { throw StudioError("请先恢复本地工程。") }
+        try requireCurrent(project)
+        let journal = try ProjectFiles.url("recording.json", root: directory(project.id))
+        guard files.fileExists(atPath: journal.path) else {
+            if takeID != nil { throw StudioError("待恢复日志已变化，请从作品库重新选择。") }
+            return
+        }
+        guard let takeID else { throw StudioError("此工程仍有未结束的录制。请在作品库接唱，或先保留文件并结束接唱，再录制新 Take。") }
+        guard try FileIntegrity.size(journal) <= 16 * 1024 * 1024,
+              let saved = project.takes.first(where: { $0.id == takeID }),
+              let original = try? JSONDecoder().decode(Take.self, from: Data(contentsOf: journal)),
+              original.id == saved.id, original.arrangementID == saved.arrangementID,
+              original.semitones == saved.semitones, original.kind == saved.kind, original.isPractice == saved.isPractice else {
+            throw StudioError("录制日志与所选 Take 不一致，未启动采集。请保留原件后在作品库处理。")
+        }
+    }
+    public func beginRecordingTake(_ project: StudioProject, take: Take) throws -> StudioProject {
+        try validateRecordingStart(project)
+        guard take.segments.isEmpty, take.arrangementID == project.arrangementID,
+              !project.takes.contains(where: { $0.id == take.id }) else { throw StudioError("新 Take 的身份或伴奏版本无效。") }
+        var result = project
+        result.takes.append(take)
+        if !take.isPractice { result.edit.selectedTakeID = take.id }
+        result.touch(); try ProjectRules.validate(result)
+        let journal = try ProjectFiles.url("recording.json", root: directory(project.id))
+        // Exclusive creation protects even a file that appears after preflight.
+        // Do not combine this with .atomic, which permits replacement.
+        try FileIntegrity.encoder().encode(take).write(to: journal, options: .withoutOverwriting)
+        // If saving fails, retain the new log for explicit recovery; capture has not begun.
+        try save(result)
+        return result
+    }
+    public func completeRecordingTake(_ project: StudioProject, takeID: UUID) throws {
+        try validateRecordingStart(project, recovering: takeID)
+        guard project.takes.first(where: { $0.id == takeID })?.segments.isEmpty == false else {
+            throw StudioError("尚无已保存片段，恢复日志继续保留。")
+        }
+        try files.removeItem(at: ProjectFiles.url("recording.json", root: directory(project.id)))
+    }
     public func adoptUnregistered(_ project: StudioProject, paths: Set<String>) throws -> StudioProject {
         guard !project.archived else { throw StudioError("请先恢复工程源素材，再登记原件。") }
         try requireCurrent(project)

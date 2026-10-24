@@ -95,6 +95,23 @@ struct PendingRecording: Identifiable {
             if let index = projects.firstIndex(where: { $0.id == updated.id }) { projects[index] = updated }
         } catch { await load(); throw error }
     }
+    func beginRecordingTake(_ take: Take) async throws {
+        try Task.checkCancellation()
+        try await flush()
+        try Task.checkCancellation()
+        guard let project = selected, recording.state == .countdown else { throw CancellationError() }
+        do {
+            let updated = try await repository.beginRecordingTake(project, take: take)
+            guard let index = projects.firstIndex(where: { $0.id == updated.id }) else { throw StudioError("录制工程已变化，日志仍保留。") }
+            projects[index] = updated
+            refreshPendingRecordings()
+        } catch {
+            // The log or index may already be committed when an I/O failure is reported.
+            if let loaded = try? await repository.loadAll() { projects = loaded }
+            refreshPendingRecordings()
+            throw error
+        }
+    }
     func update(_ mutate: (inout StudioProject) -> Void) {
         guard let id = selectedID, let index = projects.firstIndex(where: { $0.id == id }), !projects[index].archived else { return }
         let previous = projects[index]
