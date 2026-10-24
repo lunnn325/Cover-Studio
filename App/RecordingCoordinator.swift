@@ -4,7 +4,10 @@ import UIKit
 import CoverCore
 
 @MainActor final class RecordingCoordinator: ObservableObject {
-    @Published private(set) var state: RecordingState = .idle
+    @Published private(set) var state: RecordingState = .idle {
+        didSet { if state != .recording { controlsLocked = false } }
+    }
+    @Published private(set) var controlsLocked = false
     @Published var route = "未检查"
     @Published var routeConfirmed = false
     @Published var highQuality = "尚未检测"
@@ -41,6 +44,7 @@ import CoverCore
     private var monitoringConfigured = false
     var isBusy: Bool { [.preflight, .ready, .countdown, .recording, .interrupted, .finalizing].contains(state) }
     var isCapturing: Bool { state == .recording || state == .countdown }
+    func setControlsLocked(_ locked: Bool) { controlsLocked = state == .recording && locked }
     var currentLyrics: Lyrics {
         guard let project = store?.selected else { return Lyrics() }
         if let takeID, let take = project.takes.first(where: { $0.id == takeID }) { return project.arrangement(for: take)?.lyrics ?? Lyrics() }

@@ -46,8 +46,9 @@ struct StudioRoot: View {
     @State private var settings = false
     @State private var tab = 0
     @State private var processing = false
+    @State private var recordingLocked = false
     var body: some View {
-        TabView(selection: $tab) {
+        TabView(selection: Binding(get: { tab }, set: { if !recordingLocked { tab = $0 } })) {
             NavigationStack { PracticeView().navigationTitle("练习").toolbar { commonToolbar } }
                 .tabItem { Label("练习", systemImage: "waveform") }.tag(0)
             NavigationStack { RecordView().navigationTitle("录制").toolbar { commonToolbar } }
@@ -59,6 +60,7 @@ struct StudioRoot: View {
         }
         .tint(.indigo)
         .onReceive(store.exports.$working) { processing = $0 }
+        .onReceive(store.recording.$controlsLocked) { recordingLocked = $0 }
         .disabled(store.busy)
         .sheet(isPresented: $importing) { ImportSongView() }
         .sheet(isPresented: $settings) { NavigationStack { SettingsView() } }
@@ -80,7 +82,7 @@ struct StudioRoot: View {
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
             Button { importing = true } label: { Label("导入伴奏", systemImage: "plus") }.disabled(store.recording.isBusy || processing)
-            Button { settings = true } label: { Label("设置", systemImage: "gearshape") }
+            Button { settings = true } label: { Label("设置", systemImage: "gearshape") }.disabled(recordingLocked)
         }
     }
 }

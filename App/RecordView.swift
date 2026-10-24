@@ -32,7 +32,7 @@ struct RecordPanel: View {
     @ObservedObject var recording: RecordingCoordinator
     @ObservedObject var playback: PlaybackEngine
     @State private var preview = false
-    @State private var locked = false
+    var locked: Bool { recording.controlsLocked }
     var project: StudioProject? { store.selected }
     var body: some View {
         ScrollView {
@@ -47,22 +47,11 @@ struct RecordPanel: View {
                 } else {
                     Image(systemName: recording.video ? "video" : "mic").font(.largeTitle).foregroundStyle(.secondary).frame(height: 100)
                 }
-                if project?.showLyrics == true { LyricsDisplay(lyrics: recording.currentLyrics, position: playback.position).padding(.horizontal) }
+                if project?.showLyrics == true { LyricsDisplay(lyrics: recording.currentLyrics, position: playback.position).padding(.horizontal).allowsHitTesting(!locked) }
                 if let countdown = recording.countdown { Text("\(countdown)").font(.largeTitle.bold()).monospacedDigit().accessibilityLabel("倒计时 \(countdown)") }
                 if let reason = recording.reason { Text(reason).font(.callout).foregroundStyle(.orange) }
                 if let warning = recording.warning { Label(warning, systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
-                if recording.state == .recording {
-                    Text(clock(playback.position)).font(.title.monospacedDigit())
-                    if let level = recording.level { ProgressView(value: Double(level)).tint(.green).accessibilityLabel("人声电平") }
-                    else { Text("当前采样格式不提供可解析电平").font(.caption).foregroundStyle(.secondary) }
-                    Toggle("锁定控制", isOn: $locked)
-                    Text("长按下方按钮 1 秒停止；锁定时仍可紧急停止。").font(.footnote).foregroundStyle(.secondary)
-                    Text("长按停止并保存").font(.headline).foregroundStyle(.white).frame(maxWidth: .infinity, minHeight: 54)
-                        .background(.red, in: Capsule()).contentShape(Capsule())
-                        .onLongPressGesture(minimumDuration: 1) { Task { await recording.finish() } }
-                        .accessibilityAddTraits(.isButton)
-                        .accessibilityAction { Task { await recording.finish() } }
-                } else if recording.state == .countdown {
+                if recording.state == .countdown {
                     Button("取消倒计时", role: .cancel) { recording.cancelCountdown() }.buttonStyle(.bordered)
                 } else if recording.state == .finalizing {
                     ProgressView("正在保存原始片段…")
@@ -76,7 +65,7 @@ struct RecordPanel: View {
                     Button("倒数 3 秒后开始") { recording.start() }.buttonStyle(.borderedProminent).controlSize(.large).disabled(!recording.routeConfirmed)
                     Button("结束并保留已有片段") { Task { await recording.finish() } }
                     Button(recording.state == .ready ? "取消本次准备" : "稍后继续（保留待恢复）") { Task { await recording.leavePreparedSession() } }
-                } else {
+                } else if recording.state != .recording {
                     config
                     Button { Task { await recording.preflight() } } label: { Label("检查设备与路由", systemImage: "checkmark.shield") }
                         .buttonStyle(.borderedProminent).controlSize(.large)
@@ -84,10 +73,30 @@ struct RecordPanel: View {
                 }
             }.padding().frame(maxWidth: 760).frame(maxWidth: .infinity)
         }
+        .scrollDisabled(locked)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if recording.state == .recording { captureControls }
+        }
         .onChange(of: recording.savedTakeID) { _, id in if id != nil { preview = true } }
         .onChange(of: recording.video) { _, value in if project?.recordVideo != value { store.update { $0.recordVideo = value } } }
-        .onChange(of: recording.state) { _, state in if state == .saved || state == .recoverableError { locked = false } }
         .sheet(isPresented: $preview) { NavigationStack { TakePreviewView(takeID: recording.savedTakeID) } }
+    }
+    private var captureControls: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text(clock(playback.position)).font(.title2.monospacedDigit())
+                Spacer()
+                if let level = recording.level { ProgressView(value: Double(level)).tint(.green).frame(maxWidth: 180).accessibilityLabel("人声电平") }
+                else { Text("电平暂不可用").font(.caption).foregroundStyle(.secondary) }
+            }
+            Toggle("锁定控制", isOn: Binding(get: { recording.controlsLocked }, set: { recording.setControlsLocked($0) }))
+            Text(locked ? "已锁定页面切换、设置和滚动。可随时解锁或长按停止。" : "长按 1 秒停止；锁定后仍可紧急停止。").font(.footnote).foregroundStyle(.secondary)
+            Text("长按停止并保存").font(.headline).foregroundStyle(.white).frame(maxWidth: .infinity, minHeight: 54)
+                .background(.red, in: Capsule()).contentShape(Capsule())
+                .onLongPressGesture(minimumDuration: 1) { Task { await recording.finish() } }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { Task { await recording.finish() } }
+        }.padding().frame(maxWidth: 760).frame(maxWidth: .infinity).background(.regularMaterial)
     }
     var routeControls: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -117,7 +126,7 @@ struct RecordPanel: View {
             }
             Toggle("显示歌词", isOn: store.binding(\.showLyrics, fallback: true))
             Button("打开系统权限设置") { if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) } }
-        }.disabled(locked)
+        }
     }
 }
 
