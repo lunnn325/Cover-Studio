@@ -176,3 +176,8 @@ Debug simulator 使用独立临时 fixture 根目录，Release/设备不含 fixt
 
 
 `2cdf6a2` / Actions `40098813576`：60 项核心测试、arm64/x86_64 Simulator 编译、Release iphoneos arm64 与 1.0.2/build 3 IPA 均成功，独立下载校验通过。后续 iPad UI 在 156 秒处因 `record-wide-layout` 容器不出现在辅助功能树而断言失败；录像末帧实际呈现左右分区与固定主按钮，不能把该失败当作完整 UI 通过。改用实际按钮/文字坐标断言，拆出歌词单条用例，复验只选 lyrics flow，不重跑已覆盖的完整恢复 UI 或 Release 打包。应用代码及 IPA 保持 `2cdf6a2`；本次仅修改测试/脚本。保留 300 秒用例预算适配实际原生交互，不放宽功能断言。
+
+
+`54b3382` / Actions `40100160436` 全部成功：60 核心测试、双架构 Simulator 编译、1 条 iPad Pro 13-inch (M5) / iOS 26.4.1 原生歌词用例（141.784 秒）。实际直接输入/保存 LRC、跨到练习修改、结束进程后同库读取、再次打开编辑器通过；控件坐标确认左右分区，独立 project.json 歌词、源字节、日志与事务检查通过。四张完整截图均已查看；修改时当前光标拆开标签，测试输入按普通文本保留，未冒充有效 LRC 或自动同步运行。完整报告在 docs/validation/2026-10-24-ipad-feedback。
+
+只进行一次 Release 设备打包：1.0.2/build 3，应用代码 2cdf6a2，1,553,516 字节，SHA-256 cbe672e407b5c624e8383bf6351b7423cc640319190e1bd5ca47831977bc8f06。验证 UI harness 54b3382 的 App/Sources/Xcode/Package 树与 IPA 一致，不因测试/文档重复打包。原有旧包保留；之后只提交证据和更新同一 Draft PR。真实 iPad 三次 Take、收音/视频起点、同步、摄像头、Files/剪贴板和大字号仍待用户复测；不标 V1 全部完成。

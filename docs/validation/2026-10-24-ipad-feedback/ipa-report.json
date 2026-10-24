@@ -1,0 +1,21 @@
+{
+  "file": "MyCoverStudio-V1-unsigned.ipa",
+  "bytes": 1553516,
+  "sha256": "cbe672e407b5c624e8383bf6351b7423cc640319190e1bd5ca47831977bc8f06",
+  "bundleID": "studio.mycover.app",
+  "version": "1.0.2",
+  "build": "3",
+  "minimumOS": "17.0",
+  "supportedPlatforms": [
+    "iPhoneOS"
+  ],
+  "deviceFamily": [
+    1,
+    2
+  ],
+  "architecture": "arm64",
+  "machOPlatform": "iOS device",
+  "signed": false,
+  "sourceCommit": "2cdf6a2792588f2d16c79ce83997464fba6beb70",
+  "scope": "ZIP, app metadata and device executable checks only. Needs local signing; no installation or hardware test implied."
+}

@@ -2,7 +2,15 @@
 
 日期：2026-10-24（Asia/Singapore）。分支 `codex/my-cover-studio-v1`，草稿 [PR #1](https://github.com/lunnn325/Cover-Studio/pull/1)。产品要求未重新访谈；技术优化见 IMPLEMENTATION_ADR.md。
 
-这是已实现并进入集中验证的原生开发版本，**不等于完成全部实机验收**。未接触 Apple 签名凭证。用户已报告 1.0 安装成功（安装日志显示设备 iOS 26.6.1）；尚无真实录制、AirPods、同步或跨设备验收结果。
+这是已实现并进入集中验证的原生开发版本，**不等于完成全部实机验收**。未接触 Apple 签名凭证。用户已报告初版在 iPad 安装并实际录制，反馈新 Take 续用进度、歌词流程不可用及横屏布局问题；本轮按反馈修复。尚无修复版连续三录、AirPods、同步或跨设备验收结果。
+
+## 1.0.2 / build 3 初版 iPad 反馈修复
+
+完整新 Take 实际播放器归零并统一 capture/playback 歌曲起点；练习、指定片段和中断接唱分流。歌词从录制/练习均可添加，TXT/LRC/直接粘贴编辑与明确保存连接当前伴奏版本，失败留草稿并报错。iPad 宽横屏摄像头/歌词左右分区，歌曲/Take/进度置顶，主操作固定底部，高级诊断收纳；录完预览可重录/进入后期，后期/作品库优先歌曲/Take/时长。
+
+应用 `2cdf6a2` / [run 40098813576](https://github.com/lunnn325/Cover-Studio/actions/runs/40098813576)：60 核心测试、双架构编译、Release 设备 IPA 成功；后续 UI 定位断言失败，不标整个 run 成功。仅修测试后 `54b3382` / [run 40100160436](https://github.com/lunnn325/Cover-Studio/actions/runs/40100160436) 全部成功：60 测试、双架构编译、单条 iPad 原生歌词保存/跨页修改/进程重开、控件位置与独立磁盘/原字节检查。IPA 与 UI 的应用/核心/工程源码 tree 完全一致。
+
+交付 `dist/MyCoverStudio-1.0.2-unsigned.ipa`，1,553,516 字节，设备 arm64，SHA-256 `cbe672e407b5c624e8383bf6351b7423cc640319190e1bd5ca47831977bc8f06`，独立下载验证通过；需原有本地签名。截图/日志、失败尝试与限制见[反馈修复证据](validation/2026-10-24-ipad-feedback/README.md)。完整新 Take 三次真实录制、共同起点/音画同步、实际摄像头、Files/剪贴板及 TXT 触摸滚动仍需[实机复测](validation/2026-10-24-ipad-feedback/IPAD_RETEST.md)，P0 硬件 gate 不改为 PASS。
 
 ## 构建证据
 

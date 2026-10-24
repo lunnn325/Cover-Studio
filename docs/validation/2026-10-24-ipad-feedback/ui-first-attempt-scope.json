@@ -1,0 +1,12 @@
+{
+  "scope": "One native iPad simulator UI workflow: recovery, recording layout, lyrics text Save, cross-tab edit and process relaunch on isolated metadata/raw bytes. No playable media, hardware capture, Files picker/provider, AirPods or real-device validation.",
+  "passed": false,
+  "errors": [
+    "Native UI workflow did not pass exactly one selected test; inspect xcodebuild-test.log and attachments."
+  ],
+  "family": "iPad",
+  "device": "iPad Pro 13-inch (M5)",
+  "testArchitecture": "arm64",
+  "passedTests": 0,
+  "failedTests": 1
+}

@@ -1,0 +1,110 @@
+2026-10-24T13:31:41.2738120Z Building for debugging...
+2026-10-24T13:31:41.3064270Z [0/9] /Users/runner/work/Cover-Studio/Cover-Studio/.build/arm64-apple-macosx/debug/CoverCorePackageTests.derived/runner.swift
+2026-10-24T13:31:41.3070960Z [1/9] Write sources
+2026-10-24T13:31:41.3071690Z [3/9] Copying AudioFixtures
+2026-10-24T13:31:41.5054470Z [5/9] Write swift-version-7974D3F7F03D5E95.txt
+2026-10-24T13:31:42.4761920Z In file included from /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CVorbis/VorbisDecoder.c:6:
+2026-10-24T13:31:42.4763520Z /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CVorbis/vendor/stb_vorbis.c:1404:75: warning: pointer comparison always evaluates to false [-Wtautological-compare]
+2026-10-24T13:31:42.4764730Z  1404 |       if (f->stream_start + loc >= f->stream_end || f->stream_start + loc < f->stream_start) {
+2026-10-24T13:31:42.4765320Z       |                                                                           ^
+2026-10-24T13:31:42.4765610Z 1 warning generated.
+2026-10-24T13:31:42.4768590Z [6/9] Compiling CVorbis VorbisDecoder.c
+2026-10-24T13:31:49.7225230Z [8/18] Emitting module CoverCore
+2026-10-24T13:31:53.8889970Z [9/22] Compiling CoverCore RecordingOrigin.swift
+2026-10-24T13:31:53.9123910Z [10/22] Compiling CoverCore RepositoryStartup.swift
+2026-10-24T13:31:53.9124400Z [11/22] Compiling CoverCore Rules.swift
+2026-10-24T13:31:53.9125300Z [12/22] Compiling CoverCore Timeline.swift
+2026-10-24T13:31:54.5232930Z [13/22] Compiling CoverCore LyricsDocument.swift
+2026-10-24T13:31:54.5336690Z [14/22] Compiling CoverCore Models.swift
+2026-10-24T13:31:54.5448900Z [15/22] Compiling CoverCore ProjectFiles.swift
+2026-10-24T13:31:54.5552190Z [16/22] Compiling CoverCore ProjectRepository.swift
+2026-10-24T13:31:54.5614060Z [17/22] Compiling CoverCore Archive.swift
+2026-10-24T13:31:54.5635160Z [18/22] Compiling CoverCore AudioImport.swift
+2026-10-24T13:31:54.5635940Z [19/22] Compiling CoverCore ExportCatalog.swift
+2026-10-24T13:31:54.5636910Z [20/22] Compiling CoverCore LibraryRecovery.swift
+2026-10-24T13:32:10.2868990Z [21/29] Compiling CoverCoreTests LibraryRecoveryTests.swift
+2026-10-24T13:32:10.3014000Z /Users/runner/work/Cover-Studio/Cover-Studio/Tests/CoverCoreTests/RecordingLyricsTests.swift:55:39: error: ambiguous use of 'infinity'
+2026-10-24T13:32:10.3116990Z  53 |         XCTAssertEqual(try RecordingOrigin.session(practice: false, playbackPosition: 95, sectionStart: 24, recoveringEnd: 40).position(duration: 180), 37)
+2026-10-24T13:32:10.3232950Z  54 |         XCTAssertEqual(try RecordingOrigin.recovery(savedEnd: 2).position(duration: 180), 0)
+2026-10-24T13:32:10.3345120Z  55 |         for invalid in [Double.nan, -.infinity, -1, 180, 200] {
+2026-10-24T13:32:10.3462150Z     |                                       `- error: ambiguous use of 'infinity'
+2026-10-24T13:32:10.3527340Z  56 |             XCTAssertThrowsError(try RecordingOrigin.section(start: invalid).position(duration: 180))
+2026-10-24T13:32:10.3529140Z  57 |         }
+2026-10-24T13:32:10.3529690Z 
+2026-10-24T13:32:10.3530120Z Swift.Float16.infinity:2:30: note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3531970Z 1 | struct Float16 {
+2026-10-24T13:32:10.3532640Z 2 | @inlinable public static var infinity: Float16 { get }}
+2026-10-24T13:32:10.3533300Z   |                              `- note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3533910Z 3 | 
+2026-10-24T13:32:10.3534000Z 
+2026-10-24T13:32:10.3534450Z Swift.Float.infinity:2:30: note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3534890Z 1 | struct Float {
+2026-10-24T13:32:10.3752030Z 2 | @inlinable public static var infinity: Float { get }}
+2026-10-24T13:32:10.3752930Z   |                              `- note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3753290Z 3 | 
+2026-10-24T13:32:10.3753440Z 
+2026-10-24T13:32:10.3753660Z Swift.Double.infinity:2:30: note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3754110Z 1 | struct Double {
+2026-10-24T13:32:10.3754390Z 2 | @inlinable public static var infinity: Double { get }}
+2026-10-24T13:32:10.3754970Z   |                              `- note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3755330Z 3 | 
+2026-10-24T13:32:10.3755700Z [22/29] Compiling CoverCoreTests RecordingLyricsTests.swift
+2026-10-24T13:32:10.3756340Z /Users/runner/work/Cover-Studio/Cover-Studio/Tests/CoverCoreTests/RecordingLyricsTests.swift:55:39: error: ambiguous use of 'infinity'
+2026-10-24T13:32:10.3757410Z  53 |         XCTAssertEqual(try RecordingOrigin.session(practice: false, playbackPosition: 95, sectionStart: 24, recoveringEnd: 40).position(duration: 180), 37)
+2026-10-24T13:32:10.3759950Z  54 |         XCTAssertEqual(try RecordingOrigin.recovery(savedEnd: 2).position(duration: 180), 0)
+2026-10-24T13:32:10.3760730Z  55 |         for invalid in [Double.nan, -.infinity, -1, 180, 200] {
+2026-10-24T13:32:10.3761160Z     |                                       `- error: ambiguous use of 'infinity'
+2026-10-24T13:32:10.3761770Z  56 |             XCTAssertThrowsError(try RecordingOrigin.section(start: invalid).position(duration: 180))
+2026-10-24T13:32:10.3762530Z  57 |         }
+2026-10-24T13:32:10.3763650Z 
+2026-10-24T13:32:10.3764130Z Swift.Float16.infinity:2:30: note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3765270Z 1 | struct Float16 {
+2026-10-24T13:32:10.3765590Z 2 | @inlinable public static var infinity: Float16 { get }}
+2026-10-24T13:32:10.3765990Z   |                              `- note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3766340Z 3 | 
+2026-10-24T13:32:10.3766420Z 
+2026-10-24T13:32:10.3767720Z Swift.Float.infinity:2:30: note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3771580Z 1 | struct Float {
+2026-10-24T13:32:10.3951330Z 2 | @inlinable public static var infinity: Float { get }}
+2026-10-24T13:32:10.3952020Z   |                              `- note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3952510Z 3 | 
+2026-10-24T13:32:10.3952670Z 
+2026-10-24T13:32:10.3953020Z Swift.Double.infinity:2:30: note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3953540Z 1 | struct Double {
+2026-10-24T13:32:10.3953880Z 2 | @inlinable public static var infinity: Double { get }}
+2026-10-24T13:32:10.3954340Z   |                              `- note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3954660Z 3 | 
+2026-10-24T13:32:10.3955000Z [23/29] Compiling CoverCoreTests RecoveryFilesTests.swift
+2026-10-24T13:32:10.3955700Z /Users/runner/work/Cover-Studio/Cover-Studio/Tests/CoverCoreTests/RecordingLyricsTests.swift:55:39: error: ambiguous use of 'infinity'
+2026-10-24T13:32:10.3956730Z  53 |         XCTAssertEqual(try RecordingOrigin.session(practice: false, playbackPosition: 95, sectionStart: 24, recoveringEnd: 40).position(duration: 180), 37)
+2026-10-24T13:32:10.3957640Z  54 |         XCTAssertEqual(try RecordingOrigin.recovery(savedEnd: 2).position(duration: 180), 0)
+2026-10-24T13:32:10.3958290Z  55 |         for invalid in [Double.nan, -.infinity, -1, 180, 200] {
+2026-10-24T13:32:10.3958850Z     |                                       `- error: ambiguous use of 'infinity'
+2026-10-24T13:32:10.3959380Z  56 |             XCTAssertThrowsError(try RecordingOrigin.section(start: invalid).position(duration: 180))
+2026-10-24T13:32:10.3959960Z  57 |         }
+2026-10-24T13:32:10.3960150Z 
+2026-10-24T13:32:10.3960310Z Swift.Float16.infinity:2:30: note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3960800Z 1 | struct Float16 {
+2026-10-24T13:32:10.3961100Z 2 | @inlinable public static var infinity: Float16 { get }}
+2026-10-24T13:32:10.3962980Z   |                              `- note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3963470Z 3 | 
+2026-10-24T13:32:10.3963570Z 
+2026-10-24T13:32:10.3963910Z Swift.Float.infinity:2:30: note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3964460Z 1 | struct Float {
+2026-10-24T13:32:10.3964740Z 2 | @inlinable public static var infinity: Float { get }}
+2026-10-24T13:32:10.3969080Z   |                              `- note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3969390Z 3 | 
+2026-10-24T13:32:10.3969520Z 
+2026-10-24T13:32:10.3969720Z Swift.Double.infinity:2:30: note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3970410Z 1 | struct Double {
+2026-10-24T13:32:10.3970680Z 2 | @inlinable public static var infinity: Double { get }}
+2026-10-24T13:32:10.3971090Z   |                              `- note: found this candidate in module 'Swift'
+2026-10-24T13:32:10.3971390Z 3 | 
+2026-10-24T13:32:10.4306630Z [24/31] Emitting module CoverCoreTests
+2026-10-24T13:32:10.4307200Z [25/31] Compiling CoverCoreTests AudioImportTests.swift
+2026-10-24T13:32:10.4307810Z [26/31] Compiling CoverCoreTests CoverCoreTests.swift
+2026-10-24T13:32:10.4308830Z [27/31] Compiling CoverCoreTests ExportCatalogTests.swift
+2026-10-24T13:32:11.1373410Z [28/31] Compiling CoverCoreTests RepositoryStartupTests.swift
+2026-10-24T13:32:11.1505480Z [29/31] Compiling CoverCoreTests resource_bundle_accessor.swift
+2026-10-24T13:32:11.1736350Z error: fatalError
+2026-10-24T13:32:11.1845830Z ##[error]Process completed with exit code 1.

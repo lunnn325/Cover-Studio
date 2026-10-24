@@ -1,0 +1,16 @@
+{
+  "scope": "One native iPad simulator UI workflow (selected flow: lyrics) on isolated metadata/raw bytes. Lyrics flow checks recording layout, direct text Save, cross-tab edit and process relaunch. No playable media, hardware capture, Files picker/provider, AirPods or real-device validation.",
+  "passed": true,
+  "errors": [],
+  "flow": "lyrics",
+  "family": "iPad",
+  "device": "iPad Pro 13-inch (M5)",
+  "testArchitecture": "arm64",
+  "passedTests": 1,
+  "failedTests": 0,
+  "originalHashesUnchanged": true,
+  "retainedLogMatches": true,
+  "pendingMarkerCleared": true,
+  "recoveredProjectCount": 0,
+  "lyricsPersistedAfterRelaunch": true
+}
