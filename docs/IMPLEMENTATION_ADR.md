@@ -161,3 +161,5 @@ queue.json/history.json 都是保留的元数据路径，不允许工程资产�
 fixture 只编入 Debug simulator；每次启动创建独立 tmp/StartupUIFixture-UUID，重试复用同一根目录，不读写实际作品目录。素材是明确标注的非可播放字节，无 Take/录制/导出成功数据。UI test 在非 simulator 直接跳过，不能对设备真实库执行；Release 和设备程序均没有 fixture 路径。
 
 XCUITest 实际点击用户控件，不绕过保留确认或直接调用恢复 handler。结束后脚本独立核对原索引/原件 SHA-256、保留 marker 和生成副本数量。只采集该流程截图/摘要，不重跑媒体引擎。结果只支持指定 simulator 的 UI/文件保留结论，不能推广为真实 Files 提供者、声音、AirPods、相机、同步或迁移通过。
+
+实际检查发现原件入口未打开，改为使用存储的现有导航栈，同行多个动作采用独立 borderless 按钮样式，避免默认整行行为造成歧义。保留源文件和两次删除确认，未扩大删除范围；同一原生 UI 流程复查通过。

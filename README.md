@@ -22,6 +22,8 @@
 
 `1a05390` 增加启动失败页/重试、显式保留根事务日志和坏安全索引下的逐原件另存；50 项核心测试和双架构编译通过。页面/Files 交互尚待验证，见[启动保护证据](docs/validation/2026-10-24-startup-recovery/README.md)。
 
+`136103c` 修复安全副本原件入口，在单个 iPhone Simulator 通过 1 条真实原生 UI 流程，50 项核心测试和双架构编译继续通过；六张截图、原件哈希核对与实际范围见[原生 UI 验证](docs/validation/2026-10-24-startup-ui/README.md)。这不代表录制、Files 或实机验收通过。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：
