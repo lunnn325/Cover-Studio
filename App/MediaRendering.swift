@@ -15,11 +15,14 @@ enum MixRenderer {
         let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2)!
         let backingFile = try AVAudioFile(forReading: root.appendingPathComponent(backing.path))
         let engine = AVAudioEngine(), background = AVAudioPlayerNode(), pitch = AVAudioUnitTimePitch()
+        // Disconnect hardware before building the graph; otherwise nil effect
+        // formats can inherit a 44.1 kHz device clock for a 48 kHz source.
+        try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 4096)
         let eq = AVAudioUnitEQ(numberOfBands: 3), reverb = AVAudioUnitReverb()
         let vocals = AVAudioMixerNode()
         engine.attach(background); engine.attach(pitch); engine.attach(eq); engine.attach(reverb); engine.attach(vocals)
         engine.connect(background, to: pitch, format: backingFile.processingFormat)
-        engine.connect(pitch, to: engine.mainMixerNode, fromBus: 0, toBus: 0, format: nil)
+        engine.connect(pitch, to: engine.mainMixerNode, fromBus: 0, toBus: 0, format: backingFile.processingFormat)
         engine.connect(vocals, to: eq, format: format); engine.connect(eq, to: reverb, format: format)
         engine.connect(reverb, to: engine.mainMixerNode, fromBus: 0, toBus: 1, format: format)
         pitch.pitch = Float(take.semitones * 100); pitch.rate = 1
@@ -54,11 +57,17 @@ enum MixRenderer {
                              destination: cropped.start + skip, duration: cropped.duration - skip)
             }
         }
-        try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 4096)
         let writer = try AVAudioFile(forWriting: output, settings: format.settings)
         let buffer = AVAudioPCMBuffer(pcmFormat: engine.manualRenderingFormat, frameCapacity: engine.manualRenderingMaximumFrameCount)!
         try engine.start(); background.play(); nodes.forEach { $0.play() }
         defer { background.stop(); nodes.forEach { $0.stop() }; engine.stop(); engine.disableManualRenderingMode() }
+        guard abs(pitch.inputFormat(forBus: 0).sampleRate - backingFile.processingFormat.sampleRate) < 0.1,
+              abs(pitch.outputFormat(forBus: 0).sampleRate - backingFile.processingFormat.sampleRate) < 0.1 else {
+            throw StudioError("变调节点与源音频采样率不一致，已停止导出以避免错误音高和速度。")
+        }
+        #if DEBUG
+        print("Offline audio rates: source=\(backingFile.processingFormat.sampleRate), pitchIn=\(pitch.inputFormat(forBus: 0).sampleRate), pitchOut=\(pitch.outputFormat(forBus: 0).sampleRate), render=\(engine.manualRenderingFormat.sampleRate), semitones=\(take.semitones)")
+        #endif
         let total = AVAudioFramePosition((range.upperBound - range.lowerBound) * sampleRate)
         var retries = 0
         while engine.manualRenderingSampleTime < total {

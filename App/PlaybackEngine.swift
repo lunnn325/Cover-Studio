@@ -99,15 +99,21 @@ final class LiveInputMonitor: @unchecked Sendable {
         // AVAudioPlayerNode's output format must match scheduled files. An engine
         // created before import may otherwise inherit a different hardware rate.
         engine.disconnectNodeOutput(player)
+        engine.disconnectNodeOutput(pitch)
         engine.connect(player, to: pitch, format: loaded.processingFormat)
+        engine.connect(pitch, to: engine.mainMixerNode, fromBus: 0, toBus: 0, format: loaded.processingFormat)
         file = loaded
         duration = Double(loaded.length) / loaded.processingFormat.sampleRate
         self.semitones = semitones; position = 0
     }
     func prepare() throws {
-        guard file != nil else { throw StudioError("请先导入可用伴奏。") }
+        guard let file else { throw StudioError("请先导入可用伴奏。") }
         engine.prepare()
         if !engine.isRunning { try engine.start() }
+        guard abs(pitch.inputFormat(forBus: 0).sampleRate - file.processingFormat.sampleRate) < 0.1,
+              abs(pitch.outputFormat(forBus: 0).sampleRate - file.processingFormat.sampleRate) < 0.1 else {
+            engine.stop(); throw StudioError("播放采样率发生变化，请重新打开伴奏后再试。")
+        }
     }
     func configureMonitoring(format: AVAudioFormat) throws {
         guard !engine.isRunning, format.sampleRate > 0, format.channelCount > 0, format.channelCount <= 2,
