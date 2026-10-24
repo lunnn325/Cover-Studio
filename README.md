@@ -14,6 +14,8 @@
 
 `f3b6b23` 增加无需重新开麦的录制收尾、原件登记/管理，以及复制的真实空间预算和失败暂存保护，通过 33 项核心测试和双架构编译；见 [恢复验证](docs/validation/2026-10-24-recovery/README.md)。保留尾段字节不等于恢复了可播放或同步录音。
 
+`ab45992` 补齐独立字幕描边与旧工程兼容，通过 34 项核心测试、双架构编译和中英文描边/填充帧检查；见[描边证据与失败修复](docs/validation/2026-10-24-outline/README.md)。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：
