@@ -10,6 +10,8 @@
 
 `f569647` 补齐编辑页导出前的画面/字幕预览，通过独立的裁剪、镜像、字幕帧及缓存/数据保护检查；见 [预览验证](docs/validation/2026-10-24-preview/README.md)。
 
+`9480730` 增加持久历史成品目录、未登记文件管理、自定义成品选择与源释放保护，通过 28 项核心测试和双架构编译；见 [成品/备份验证](docs/validation/2026-10-24-catalog/README.md)。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：

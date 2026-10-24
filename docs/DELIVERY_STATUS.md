@@ -13,6 +13,7 @@
 - `690af59` 的独立频谱检查捕获变调音频实际采样率错误（240.417 Hz，而非预期 261.626 Hz），已修正 effect 两侧格式及 offline 构图时机，未放宽阈值。
 - **[run 40042964676](https://github.com/lunnn325/Cover-Studio/actions/runs/40042964676)，`b3bfcdf`：全部成功。** 23 项核心 XCTest、arm64/x86_64 无签名编译、五种两秒真实导出、中英文字幕帧和工程包恢复通过；独立 FFT 得到 261.658 Hz，时长两秒，干声仍 440 Hz。[保留的小报告与输出帧](validation/2026-10-24/README.md)。只验证隔离合成素材离线路径，不代表硬件采集或真人听感。
 - **[run 40044401370](https://github.com/lunnn325/Cover-Studio/actions/runs/40044401370)，`f569647`：编辑预览增量检查成功。** 23 项核心测试及双架构编译通过；1.5 秒方形裁剪/镜像、中英文预览帧、源哈希、原队列不变与缓存释放通过。[预览证据](validation/2026-10-24-preview/README.md)。复用上述成品/工程恢复结果，未重复运行；原生交互播放器与设备听感仍待验。
+- **[run 40047238677](https://github.com/lunnn325/Cover-Studio/actions/runs/40047238677)，`9480730`：28 项核心测试及双架构编译通过。** 新增历史成品保留、未登记可信度、删除边界、带成品包恢复、自定义输出依赖和源释放保留成品检查；本轮未启动模拟器。[目录/备份证据与日志](validation/2026-10-24-catalog/README.md)。UI 操作与真实文件提供者仍待验。
 - 后续补丁和每次实际结果见 DEVELOPMENT_LOG.md；具体 commit 的通过结果不能自动推广到未测试改动。
 
 ## P0 核心
@@ -30,8 +31,8 @@
 | P0-07 1080p 输出 | IMPLEMENTED_UNVERIFIED | 双视频顺序导出，M4A/WAV 混音/干声/伴奏、歌词、分项重试、App 内成品播放，照片或独立补拍。两秒 MP4/WAV 路径已通过；仍需真实听看验收 |
 | P0-08 中断/低空间 | IMPLEMENTED_UNVERIFIED | 约 8 秒片段 + MOV fragment、journal、空间/热保护和后台暂停。最后未封装片段可能无法恢复 |
 | P0-09 完整工程迁移 | IMPLEMENTED_UNVERIFIED | 字节/哈希/依赖/版本纯逻辑测试已过；真实 Files→另一台 iPad 编辑/导出尚未测试 |
-| P0-10 精简/自定义/冲突 | IMPLEMENTED_UNVERIFIED | 依赖闭包、可选成品、并存或保留安全目录再替换、事务回滚。设备空间不足场景待验 |
-| P0-11 云/归档 | IMPLEMENTED_UNVERIFIED | 分离打包/Files接收/恢复验证，列出排除 Take，二次确认；待恢复录制阻止释放源素材。未测真实 Google Drive 提供者 |
+| P0-10 精简/自定义/冲突 | IMPLEMENTED_UNVERIFIED | 依赖闭包、自定义逐个选择历史成品、并存或保留安全目录再替换、事务回滚；选择变化后旧包失效。依赖/包恢复测试已过，设备空间不足场景待验 |
+| P0-11 云/归档 | IMPLEMENTED_UNVERIFIED | 分离打包/Files接收/恢复验证，列出排除 Take，二次确认；待恢复录制阻止源释放，源释放保留成品。目录支持历史及未登记文件的预览/分享/单独删除，UI 与真实 Google Drive 提供者未测 |
 | P0-12 无摄像头 | IMPLEMENTED_UNVERIFIED | 权限说明、设置入口和纯音频正式录制，不输出假摄像头画面 |
 
 ## P1 与有条件能力
