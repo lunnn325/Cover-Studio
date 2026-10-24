@@ -30,6 +30,8 @@
 
 已沿用 William Lecture 的 GitHub macOS 流程生成 `dist/MyCoverStudio-V1-unsigned.ipa`：Release arm64、版本 1.0/build 1、最低 iOS/iPadOS 17，支持 iPhone/iPad。50 项核心测试与设备编译通过，下载后 ZIP/设备平台/哈希复核一致；安装前仍需本地签名。[IPA 交付记录](docs/validation/2026-10-24-device-ipa/README.md)。
 
+**1.0.1/build 2** 新增 OGG/Vorbis、AAC、FLAC、AIFF、CAF 导入；OGG 原件和本机解码的 PCM CAF 分开保存。55 项核心/实际音频解码及三种包恢复测试、Release 设备构建通过，已取回新版 IPA。[格式/IPA 验证与限制](docs/validation/2026-10-24-audio-import/README.md)。OGG/Opus、串接 Ogg 暂不支持。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：

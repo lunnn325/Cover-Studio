@@ -28,6 +28,8 @@
 
 - **[run 40090776593](https://github.com/lunnn325/Cover-Studio/actions/runs/40090776593)，`0b078d1`：50 项核心测试与 Release arm64 设备编译、未签名 IPA 打包通过。** 沿用 WL 的 GitHub macOS 路径，本地下载复核 SHA-256/ZIP/iOS device Mach-O/版本与 iPhone+iPad 通过；需用户本地签名安装，不代表设备 gate 通过。[IPA 元数据和日志](validation/2026-10-24-device-ipa/README.md)。
 
+- **[run 40094808859](https://github.com/lunnn325/Cover-Studio/actions/runs/40094808859)，`05e51ce`：55 项测试、Release 设备编译及 1.0.1/build 2 IPA 通过。** OGG/Vorbis 单双声道实际 PCM 解码/音高/时长、AAC/FLAC/AIFF/CAF 与旧格式、损坏/Opus 拒绝、三种备份原件+播放副本恢复和源变化保护通过。未重复媒体/模拟器矩阵；文件选择与实际用户样本仍须设备核验。[格式/IPA 证据](validation/2026-10-24-audio-import/README.md)。
+
 ## P0 核心
 
 `IMPLEMENTED_UNVERIFIED` 表示代码路径已实现，但未完成对应真实设备验证，不能按 QUALITY_GATES 标 PASS。

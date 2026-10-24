@@ -25,7 +25,7 @@ swift test --parallel
 xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build
 ```
 
-`swift test` 在 macOS 测试纯逻辑；CryptoKit 使用 Apple 系统实现。Simulator `.app` 位于 `build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app`，不能安装至真实 iPhone/iPad。
+`swift test` 在 macOS 测试核心规则，并用自生成短音频实际解码原生格式与 OGG/Vorbis、核对原件/播放副本的工程包恢复，不访问麦克风/相机；CryptoKit 使用 Apple 系统实现。Simulator `.app` 位于 `build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app`，不能安装至真实 iPhone/iPad。
 
 ## GitHub Actions
 

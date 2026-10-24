@@ -155,3 +155,8 @@ Debug simulator 使用独立临时 fixture 根目录，Release/设备不含 fixt
 
 
 `0b078d1` / Actions `40090776593` 成功：50 项核心测试、Release iphoneos arm64 编译、unsigned IPA 打包与上传。已下载 `dist/MyCoverStudio-V1-unsigned.ipa`（1,435,900 字节），独立 ZIP/平台/元数据/SHA-256 复核通过，报告及原始日志保存在 `docs/validation/2026-10-24-device-ipa/`。与 WL 一样需用户本地签名安装，未使用签名凭据；真实设备 gate 仍未通过。后续仅记录/PR 更新，不为文档重复构建。
+
+
+`05e51ce` / Actions `40094808859` 一次通过：55 项核心/实际音频解码测试、Release iphoneos arm64 编译与新版 IPA 打包。已取回 1.0.1/build 2，1,475,769 字节，本地 ZIP/平台/元数据/SHA-256 与 CI 一致，MIT 许可已随包，测试音频未随包。原始日志、样本哈希及限制在 `docs/validation/2026-10-24-audio-import/`。未运行模拟器/重复媒体导出；后续记录与 PR 更新不再触发构建。
+
+交付 `dist/MyCoverStudio-1.0.1-unsigned.ipa`，沿用同一应用 ID，用户按原签名账号/应用标识覆盖安装后可选实际 OGG/Vorbis 样本核验。OGG/Opus 等明确未开放；用户上一版安装反馈不计新版格式或硬件录制验收通过。
