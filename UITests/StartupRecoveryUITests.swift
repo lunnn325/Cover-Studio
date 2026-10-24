@@ -47,13 +47,32 @@ import UIKit
         XCTAssertTrue(app.navigationBars["启动恢复日志"].waitForExistence(timeout: 15))
         XCTAssertTrue(app.buttons["保存副本到 Files"].waitForExistence(timeout: 15))
         capture(app, "06-retained-startup-log")
-        tap(app.navigationBars["启动恢复日志"].buttons["完成"], in: app)
-        tap(app.navigationBars["设置"].buttons["完成"], in: app)
+    }
+    func testLyricsAndRecording() throws {
+        #if !targetEnvironment(simulator)
+        throw XCTSkip("Isolated simulator metadata only.")
+        #endif
+        continueAfterFailure = false
+        let widePad = UIDevice.current.userInterfaceIdiom == .pad
+        if widePad { XCUIDevice.shared.orientation = .landscapeLeft }
+        defer { if widePad { XCUIDevice.shared.orientation = .portrait } }
+        let app = XCUIApplication(bundleIdentifier: "studio.mycover.app")
+        app.launchArguments = ["--startup-ui-fixture", "-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["本地作品库未能打开"].waitForExistence(timeout: 30))
+        tap(app.buttons["保留事务日志并重新打开…"], in: app)
+        tap(app.buttons["保留日志，重试打开作品库"], in: app)
+        dismissNotice(app)
         tap(app.buttons["录制"].firstMatch, in: app)
         XCTAssertTrue(app.buttons["record-prepare"].waitForExistence(timeout: 15))
-        if widePad { XCTAssertTrue(app.otherElements["record-wide-layout"].firstMatch.exists) }
+        if widePad {
+            let addLyrics = app.buttons["添加歌词"]
+            XCTAssertTrue(addLyrics.waitForExistence(timeout: 15))
+            XCTAssertGreaterThan(addLyrics.frame.midX, app.windows.firstMatch.frame.midX)
+            XCTAssertLessThan(app.staticTexts["准备录制后显示摄像头"].frame.midX, app.windows.firstMatch.frame.midX)
+        }
         capture(app, "07-record-empty-lyrics")
-        tap(app.buttons["record-lyrics"], in: app)
+        tap(app.buttons["添加歌词"], in: app)
         let editor = app.textViews["lyrics-text"]
         XCTAssertTrue(editor.waitForExistence(timeout: 15)); editor.tap()
         editor.typeText("[00:00.00]Saved first line\n[00:05.00]Saved second line")
@@ -74,7 +93,7 @@ import UIKit
         tap(app.buttons["录制"].firstMatch, in: app)
         XCTAssertTrue(app.staticTexts["Revised plain lyric"].waitForExistence(timeout: 15))
         capture(app, "09-record-lyrics-after-relaunch")
-        tap(app.buttons["record-lyrics"], in: app)
+        tap(app.buttons["编辑歌词"], in: app)
         XCTAssertTrue(editor.waitForExistence(timeout: 15))
         XCTAssertTrue((editor.value as? String ?? "").contains("Revised plain lyric"))
         capture(app, "10-reopened-lyrics-editor")

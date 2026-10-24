@@ -13,13 +13,14 @@ from simulator_snapshots import command
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--family", choices=["iPhone", "iPad"], default="iPhone")
+    parser.add_argument("--flow", choices=["recovery", "lyrics"], default="recovery")
     args = parser.parse_args()
     if platform.system() != "Darwin":
         raise SystemExit("Requires macOS, Xcode and an iOS/iPadOS simulator.")
     output = Path("build/startup-ui-evidence")
     output.mkdir(parents=True, exist_ok=True)
     bundle = Path("build/StartupUI.xcresult")
-    report = {"scope": "One native " + args.family + " simulator UI workflow: recovery, recording layout, lyrics text Save, cross-tab edit and process relaunch on isolated metadata/raw bytes. No playable media, hardware capture, Files picker/provider, AirPods or real-device validation.",
+    report = {"scope": "One native " + args.family + " simulator UI workflow (selected flow: " + args.flow + ") on isolated metadata/raw bytes. Lyrics flow checks recording layout, direct text Save, cross-tab edit and process relaunch. No playable media, hardware capture, Files picker/provider, AirPods or real-device validation.",
               "passed": False, "errors": []}
     inventory = json.loads(command("xcrun", "simctl", "list", "devices", "available", "--json", capture=True))
     choices = [item for runtime, group in inventory["devices"].items() if ".iOS-" in runtime
@@ -30,6 +31,7 @@ def main():
         device = max(choices, key=lambda item: ("13-inch" in item["name"] or "12.9-inch" in item["name"], "Pro" in item["name"], item["name"]))
     else:
         device = max(choices, key=lambda item: (item["name"] == "iPhone 17 Pro", "Pro" in item["name"], item["name"]))
+    report["flow"] = args.flow
     report["family"] = args.family
     report["device"] = device["name"]
     report["testArchitecture"] = platform.machine()
@@ -45,9 +47,9 @@ def main():
                 "xcodebuild", "test", "-project", "MyCoverStudio.xcodeproj", "-scheme", "MyCoverStudio",
                 "-configuration", "Debug", "-sdk", "iphonesimulator", "-destination", "id=" + device_id,
                 "-derivedDataPath", "build/DerivedData", "-resultBundlePath", str(bundle),
-                "-only-testing:StartupUITests/StartupRecoveryUITests/testStartupAndIndexRecovery",
+                "-only-testing:StartupUITests/StartupRecoveryUITests/" + ("testLyricsAndRecording" if args.flow == "lyrics" else "testStartupAndIndexRecovery"),
                 "-parallel-testing-enabled", "NO", "-maximum-concurrent-test-simulator-destinations", "1",
-                "-test-timeouts-enabled", "YES", "-maximum-test-execution-time-allowance", "180",
+                "-test-timeouts-enabled", "YES", "-maximum-test-execution-time-allowance", "300",
                 "ONLY_ACTIVE_ARCH=YES", "ARCHS=" + platform.machine(), "CODE_SIGNING_ALLOWED=NO"], stdout=stream, stderr=subprocess.STDOUT, timeout=600)
         if bundle.exists():
             summary = json.loads(command("xcrun", "xcresulttool", "get", "test-results", "summary", "--path", str(bundle), capture=True))
@@ -71,13 +73,13 @@ def main():
         originals = {"11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"}
         recovered = [path for path in root.iterdir() if path.is_dir() and not path.name.startswith(".") and path.name not in originals]
         report["recoveredProjectCount"] = len(recovered)
-        if len(recovered) == 1:
-            saved = json.loads((recovered[0] / "project.json").read_text(encoding="utf-8"))
+        if args.flow == "lyrics":
+            saved = json.loads((root / "11111111-1111-4111-8111-111111111111/project.json").read_text(encoding="utf-8"))
             current = next(item for item in saved["arrangements"] if item["id"] == saved["arrangementID"])
             report["lyricsPersistedAfterRelaunch"] = any("Revised plain lyric" in line["text"] for line in current["lyrics"]["lines"])
             if not report["lyricsPersistedAfterRelaunch"]:
-                raise RuntimeError("UI-edited lyric did not persist in the recovered project's saved arrangement.")
-        if not all(report[key] for key in ["originalHashesUnchanged", "retainedLogMatches", "pendingMarkerCleared"]) or len(recovered) != 1:
+                raise RuntimeError("UI-edited lyric did not persist in the fixture project's saved arrangement.")
+        if not all(report[key] for key in ["originalHashesUnchanged", "retainedLogMatches", "pendingMarkerCleared"]) or len(recovered) != (0 if args.flow == "lyrics" else 1):
             raise RuntimeError("Post-UI original-byte preservation or recovery state differs.")
         report["passed"] = True
     except Exception as error:

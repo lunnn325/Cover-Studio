@@ -28,6 +28,11 @@ on:
         type: choice
         options: [iPhone, iPad]
         default: iPhone
+      startup_ui_flow:
+        description: Choose one native UI flow, without a test matrix
+        type: choice
+        options: [recovery, lyrics]
+        default: recovery
   pull_request:
     types: [opened, ready_for_review]
 
@@ -94,7 +99,8 @@ jobs:
         timeout-minutes: 15
         env:
           STARTUP_UI_FAMILY: ${{ inputs.startup_ui_family || 'iPhone' }}
-        run: python3 scripts/startup_ui_check.py --family "$STARTUP_UI_FAMILY"
+          STARTUP_UI_FLOW: ${{ inputs.startup_ui_flow || 'recovery' }}
+        run: python3 scripts/startup_ui_check.py --family "$STARTUP_UI_FAMILY" --flow "$STARTUP_UI_FLOW"
       - name: Report scope
         if: always()
         run: |

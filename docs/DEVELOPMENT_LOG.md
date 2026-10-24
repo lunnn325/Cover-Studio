@@ -173,3 +173,6 @@ Debug simulator 使用独立临时 fixture 根目录，Release/设备不含 fixt
 
 
 `a5028d2` / Actions `40098683960` 编译并运行 60 项核心测试，59 项通过；TXT Unicode 用例失败。发现 Foundation controlCharacters 同时包含 emoji ZWJ 等格式字符，原二进制过滤过严。改为仅拒绝 Unicode Cc 控制码（保留正常空白），继续拒绝二进制且接受合法组合 emoji；保留原测试复验。前两次均在轻量测试阶段停止，未运行大构建。
+
+
+`2cdf6a2` / Actions `40098813576`：60 项核心测试、arm64/x86_64 Simulator 编译、Release iphoneos arm64 与 1.0.2/build 3 IPA 均成功，独立下载校验通过。后续 iPad UI 在 156 秒处因 `record-wide-layout` 容器不出现在辅助功能树而断言失败；录像末帧实际呈现左右分区与固定主按钮，不能把该失败当作完整 UI 通过。改用实际按钮/文字坐标断言，拆出歌词单条用例，复验只选 lyrics flow，不重跑已覆盖的完整恢复 UI 或 Release 打包。应用代码及 IPA 保持 `2cdf6a2`；本次仅修改测试/脚本。保留 300 秒用例预算适配实际原生交互，不放宽功能断言。
