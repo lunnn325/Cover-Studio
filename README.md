@@ -12,6 +12,8 @@
 
 `9480730` 增加持久历史成品目录、未登记文件管理、自定义成品选择与源释放保护，通过 28 项核心测试和双架构编译；见 [成品/备份验证](docs/validation/2026-10-24-catalog/README.md)。
 
+`f3b6b23` 增加无需重新开麦的录制收尾、原件登记/管理，以及复制的真实空间预算和失败暂存保护，通过 33 项核心测试和双架构编译；见 [恢复验证](docs/validation/2026-10-24-recovery/README.md)。保留尾段字节不等于恢复了可播放或同步录音。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：

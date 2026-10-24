@@ -108,7 +108,7 @@ queue.json/history.json 都是保留的元数据路径，不允许工程资产�
 
 ## ADR 011：字幕描边与旧工程兼容
 
-问题：基础字幕已有阴影，但没有独立描边宽度。决策：保留现有 Core Text 逐帧合成器，增加 0–6 输出像素的黑色描边，与阴影分别调整；按字号换算为负百分比，保留文字填充。依据 [Apple kCTStrokeWidthAttributeName](https://developer.apple.com/documentation/coretext/kctstrokewidthattributename)。不引入新的绘制后端或重复音视频编码。
+问题：基础字幕已有阴影，但没有独立描边宽度。决策：保留现有 Core Text 逐帧合成器，增加 0–6 输出像素的黑色描边，与阴影分别调整。依据 [Apple kCTStrokeWidthAttributeName](https://developer.apple.com/documentation/coretext/kctstrokewidthattributename) 按字号百分比换算；先绘制两倍宽度的纯描边、再绘原填充，使可见外缘符合像素宽度并保留细笔画。不引入新的绘制后端或重复音视频编码。
 
 新增字段保持 schema 1 向后可读，缺少字段时默认 0；旧样式不因更新出现描边。位图额外扩边，并抵消位置偏移，不改变原文字换行/锚点。工程参数校验限制字号、位置及描边范围，拒绝非有限值。备份完整保存参数；轻量兼容/往返检查与复用画面的中英文描边帧比较用于验证，真实设备显示和成品观看仍待验收。
 

@@ -244,19 +244,28 @@ final class SubtitleFrameRenderer: @unchecked Sendable {
             return CTParagraphStyleCreate([setting], 1)
         }
         let color = style.whiteText ? CGColor(gray: 1, alpha: 1) : CGColor(red: 1, green: 1, blue: 0, alpha: 1)
-        let attributes: [NSAttributedString.Key: Any] = [
+        var attributes: [NSAttributedString.Key: Any] = [
             NSAttributedString.Key(kCTFontAttributeName as String): CTFontCreateWithName(style.fontName as CFString, style.size, nil),
             NSAttributedString.Key(kCTForegroundColorAttributeName as String): color,
-            NSAttributedString.Key(kCTParagraphStyleAttributeName as String): paragraph,
-            NSAttributedString.Key(kCTStrokeColorAttributeName as String): CGColor(gray: 0, alpha: 1),
-            // Core Text uses percent of font size; negative means both fill and outline.
-            NSAttributedString.Key(kCTStrokeWidthAttributeName as String): -100 * style.outlineWidth / style.size
+            NSAttributedString.Key(kCTParagraphStyleAttributeName as String): paragraph
         ]
-        let text = NSAttributedString(string: cues[index].text, attributes: attributes)
-        let setter = CTFramesetterCreateWithAttributedString(text)
         let path = CGPath(rect: CGRect(x: 6 + padding, y: 6 + padding, width: textWidth - 12, height: textHeight - 12), transform: nil)
+        func draw(_ attributes: [NSAttributedString.Key: Any]) {
+            let text = NSAttributedString(string: cues[index].text, attributes: attributes)
+            let setter = CTFramesetterCreateWithAttributedString(text)
+            CTFrameDraw(CTFramesetterCreateFrame(setter, CFRange(location: 0, length: text.length), path, nil), bitmap)
+        }
         if style.shadow { bitmap.setShadow(offset: CGSize(width: 0, height: -2), blur: 3, color: CGColor(gray: 0, alpha: 1)) }
-        CTFrameDraw(CTFramesetterCreateFrame(setter, CFRange(location: 0, length: text.length), path, nil), bitmap)
+        if style.outlineWidth > 0 {
+            // Draw the border underneath, then restore the full original fill.
+            // A single fill-and-stroke pass can cover narrow stems at wider settings.
+            attributes[NSAttributedString.Key(kCTStrokeColorAttributeName as String)] = CGColor(gray: 0, alpha: 1)
+            attributes[NSAttributedString.Key(kCTStrokeWidthAttributeName as String)] = 200 * style.outlineWidth / style.size
+            draw(attributes)
+            attributes[NSAttributedString.Key(kCTStrokeWidthAttributeName as String)] = 0
+            bitmap.setShadow(offset: .zero, blur: 0, color: nil)
+        }
+        draw(attributes)
         guard let raster = bitmap.makeImage() else { throw StudioError("字幕图像生成失败。") }
         cachedIndex = index
         cachedImage = CIImage(cgImage: raster).transformed(by: CGAffineTransform(translationX: size.width * 0.06 - padding, y: size.height * style.verticalPosition - padding))

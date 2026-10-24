@@ -316,7 +316,7 @@ import Combine
                 if (0..<3).allSatisfy({ pixels[pixel + $0] > 220 }),
                    (0..<3).contains(where: { abs(Int(pixels[pixel + $0]) - Int(baseline[pixel + $0])) > 48 }) { visibleFill += 1 }
             }
-            guard darkened > 20, visibleFill > 20 else { throw StudioError("Outline lacks a dark edge or retained fill at \(seconds)s") }
+            guard darkened > 20, visibleFill > 20 else { throw StudioError("Outline lacks a dark edge or retained fill at \(seconds)s: edge=\(darkened), fill=\(visibleFill)") }
             darkenedPixels.append(darkened)
         }
         let cacheDirectories = [clean.cacheDirectory, subtitled.cacheDirectory]
