@@ -18,6 +18,8 @@
 
 `ffa7639` 保护未结束录制日志，防止新 Take 覆盖，并检查异步启动取消；38 项核心测试和双架构编译通过，实际取消/采集交互仍待设备验证，见[日志与启动验证](docs/validation/2026-10-24-capture-start/README.md)。
 
+`37e6ba4` 隔离单工程坏索引，提供校验上一版后创建独立恢复副本、逐文件另存及外部包恢复；44 项核心测试和双架构编译通过。原坏目录保留，未知尾段不伪造 Take；见[坏索引恢复验证](docs/validation/2026-10-24-library-recovery/README.md)。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：
