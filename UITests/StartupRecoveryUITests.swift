@@ -66,7 +66,8 @@ import UIKit
         element.tap()
     }
     private func capture(_ app: XCUIApplication, _ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
+        // Application-region screenshots were cropped in iPad landscape; keep the full display.
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
 }

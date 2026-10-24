@@ -60,9 +60,9 @@ struct PracticePanel: View {
             }
             Section {
                 LyricsDisplay(lyrics: project?.arrangement?.lyrics ?? Lyrics(), position: playback.position)
-                Button("编辑歌词 / 标记时间点") { lyrics = true }
+                Button("编辑歌词 / 标记时间点") { lyrics = true }.disabled(recording.isBusy)
             } header: { Text("歌词") }
-            Section("练习录音") {
+            Section(recording.isBusy ? "当前录制会话" : "练习录音") {
                 if recording.isBusy {
                     Text(recording.route).font(.footnote)
                     if recording.state == .ready || recording.state == .interrupted {
@@ -74,8 +74,16 @@ struct PracticePanel: View {
                         Button("取消准备 / 稍后继续") { Task { await recording.leavePreparedSession() } }
                     }
                     if let countdown = recording.countdown { Text("\(countdown)").font(.largeTitle).monospacedDigit() }
-                    if recording.state == .recording { Text("正在录制练习人声…").foregroundStyle(.red) }
-                    Button("结束并保存") { Task { await recording.finish() } }.disabled(recording.state == .finalizing)
+                    if recording.state == .recording {
+                        Text("正在录制…").foregroundStyle(.red)
+                        Text("长按停止并保存").font(.headline).foregroundStyle(.white).frame(maxWidth: .infinity, minHeight: 54)
+                            .background(.red, in: Capsule()).contentShape(Capsule())
+                            .onLongPressGesture(minimumDuration: 1) { Task { await recording.finish() } }
+                            .accessibilityAddTraits(.isButton)
+                            .accessibilityAction { Task { await recording.finish() } }
+                    } else {
+                        Button("结束并保存") { Task { await recording.finish() } }.disabled(recording.state == .finalizing)
+                    }
                 } else {
                     Button { looping = false; Task { await recording.preflight(practice: true) } } label: { Label("准备练习录音", systemImage: "mic") }
                 }
@@ -83,7 +91,7 @@ struct PracticePanel: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(take.name).font(.headline)
                         HStack {
-                            Button("回听原声") { Task { await listen(take) } }
+                            Button("回听原声") { Task { await listen(take) } }.disabled(recording.isBusy)
                             Spacer()
                             Button(take.promotedTakeID == nil ? "转为正式 Audio Take" : "打开正式 Take") {
                                 Task { do { try await store.promote(take.id) } catch { store.report(error) } }
@@ -104,10 +112,11 @@ struct PracticePanel: View {
         playback.loop = project.loopStart...project.loopEnd
     }
     func listen(_ take: Take) async {
-        guard var project else { return }; project.edit = EditGraph(); project.edit.selectedTakeID = take.id
+        guard !recording.isBusy, var project else { return }; project.edit = EditGraph(); project.edit.selectedTakeID = take.id
         playback.stop(keepPosition: true)
         do {
             let (composition, _) = try await VideoComposer.composition(project: project, root: store.repository.directory(project.id), mix: nil, raw: true)
+            guard !recording.isBusy else { return }
             preview = AVPlayer(playerItem: AVPlayerItem(asset: composition)); showPreview = true
         } catch { store.report(error) }
     }
