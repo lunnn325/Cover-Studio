@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """One manually selected native startup/recovery UI workflow, without media checks."""
 from pathlib import Path
+import argparse
 import hashlib
 import json
 import platform
@@ -10,19 +11,26 @@ from simulator_snapshots import command
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--family", choices=["iPhone", "iPad"], default="iPhone")
+    args = parser.parse_args()
     if platform.system() != "Darwin":
-        raise SystemExit("Requires macOS, Xcode and an iPhone simulator.")
+        raise SystemExit("Requires macOS, Xcode and an iOS/iPadOS simulator.")
     output = Path("build/startup-ui-evidence")
     output.mkdir(parents=True, exist_ok=True)
     bundle = Path("build/StartupUI.xcresult")
-    report = {"scope": "One native iPhone simulator UI workflow using isolated generated metadata/raw bytes. No playable media, hardware capture, AirPods, real-device recovery or cloud/provider validation.",
+    report = {"scope": "One native " + args.family + " simulator UI workflow using isolated generated metadata/raw bytes. No playable media, hardware capture, AirPods, real-device recovery or cloud/provider validation.",
               "passed": False, "errors": []}
     inventory = json.loads(command("xcrun", "simctl", "list", "devices", "available", "--json", capture=True))
     choices = [item for runtime, group in inventory["devices"].items() if ".iOS-" in runtime
-               for item in group if item["name"].startswith("iPhone")]
+               for item in group if item["name"].startswith(args.family)]
     if not choices:
-        raise SystemExit("No available iPhone simulator.")
-    device = max(choices, key=lambda item: (item["name"] == "iPhone 17 Pro", "Pro" in item["name"], item["name"]))
+        raise SystemExit("No available " + args.family + " simulator.")
+    if args.family == "iPad":
+        device = max(choices, key=lambda item: ("13-inch" in item["name"] or "12.9-inch" in item["name"], "Pro" in item["name"], item["name"]))
+    else:
+        device = max(choices, key=lambda item: (item["name"] == "iPhone 17 Pro", "Pro" in item["name"], item["name"]))
+    report["family"] = args.family
     report["device"] = device["name"]
     report["testArchitecture"] = platform.machine()
     device_id, was_booted = device["udid"], device["state"] == "Booted"

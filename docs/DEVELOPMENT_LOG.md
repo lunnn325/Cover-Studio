@@ -121,3 +121,9 @@ Debug simulator 使用独立临时 fixture 根目录，Release/设备不含 fixt
 `136103c` / Actions `40075596762` 全部成功：50 项核心 XCTest、双架构编译和 1 条原生 UI test。实际点击完成六个页面，原件哈希/坏索引、保留日志和副本数量独立核对通过；六张截图已人工查看。iPhone 17 Pro Simulator / iOS 26.4.1，原始日志、摘要与 PNG 保存在 `docs/validation/2026-10-24-startup-ui/`。未测试 Files 提供者、iPad/深色/大字号或任何实际录制；不重跑已通过的媒体管线。此后为证据/文档提交，不再构建。
 
 继续起点：用合法签名与实际 iPhone/iPad 执行 QUALITY_GATES 的 30–60 秒伴奏导入/录制/取消/接唱、AirPods 路由/中断/同步及 Files→iPad 编辑/导出迁移。当前模拟器 UI 结果只覆盖上述恢复流程，不能代替设备 gate 或未开放的 P1 能力。
+
+## 2026-10-24：iPad 宽窗口恢复流程
+
+上一轮为实际进展：修复原件入口并通过 iPhone 原生 UI 与字节核对。本轮核对本地工具，Windows 中没有 xcodebuild/swift/xcrun 或可用 iOS 设备命令；真实签名和设备 gate 仍无执行条件。继续补规格要求的 iPad 宽窗口证据，复用同一 UI 用例，只手动选择一个 iPad Simulator 横屏运行，不重跑 iPhone 或媒体。
+
+检查脚本支持选择单个 family；用例在 iPad 要求实际窗口宽大于高，标签定位兼容系统顶栏/底栏。仍使用隔离临时 fixture，无可播放音视频，不改录制或产品流程。当前待集中编译及 iPad 原生结果。

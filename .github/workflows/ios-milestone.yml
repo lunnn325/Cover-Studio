@@ -19,6 +19,11 @@ on:
         description: One isolated native startup/recovery UI workflow with screenshots
         type: boolean
         default: false
+      startup_ui_family:
+        description: Single simulator family for the optional startup UI check
+        type: choice
+        options: [iPhone, iPad]
+        default: iPhone
   pull_request:
     types: [opened, ready_for_review]
 
@@ -68,7 +73,9 @@ jobs:
       - name: Native startup and recovery UI check
         if: github.event_name == 'workflow_dispatch' && inputs.startup_ui_check
         timeout-minutes: 15
-        run: python3 scripts/startup_ui_check.py
+        env:
+          STARTUP_UI_FAMILY: ${{ inputs.startup_ui_family || 'iPhone' }}
+        run: python3 scripts/startup_ui_check.py --family "$STARTUP_UI_FAMILY"
       - name: Report scope
         if: always()
         run: |

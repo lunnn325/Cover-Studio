@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 /// One manually requested workflow on an isolated Debug simulator library.
 @MainActor final class StartupRecoveryUITests: XCTestCase {
@@ -7,15 +8,19 @@ import XCTest
         throw XCTSkip("This isolated UI check is simulator-only; never launch against a device library.")
         #endif
         continueAfterFailure = false
+        let widePad = UIDevice.current.userInterfaceIdiom == .pad
+        if widePad { XCUIDevice.shared.orientation = .landscapeLeft }
+        defer { if widePad { XCUIDevice.shared.orientation = .portrait } }
         let app = XCUIApplication(bundleIdentifier: "studio.mycover.app")
         app.launchArguments = ["--startup-ui-fixture", "-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
         app.launch()
         XCTAssertTrue(app.staticTexts["本地作品库未能打开"].waitForExistence(timeout: 30))
+        if widePad { XCTAssertGreaterThan(app.windows.firstMatch.frame.width, app.windows.firstMatch.frame.height) }
         capture(app, "01-startup-failure")
         tap(app.buttons["保留事务日志并重新打开…"], in: app)
         tap(app.buttons["保留日志，重试打开作品库"], in: app)
         dismissNotice(app)
-        let library = app.tabBars.buttons["作品库"]
+        let library = app.buttons["作品库"].firstMatch
         XCTAssertTrue(library.waitForExistence(timeout: 20)); library.tap()
         XCTAssertTrue(app.staticTexts["启动验证 · 保留作品"].firstMatch.waitForExistence(timeout: 15))
         capture(app, "02-library-with-damaged-index")
