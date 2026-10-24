@@ -8,6 +8,8 @@
 
 `b3bfcdf` 已通过 23 项核心测试、双架构无签名编译及两秒真实离线导出/字幕/工程包恢复检查。实际报告和输出帧见 [验证记录](docs/validation/2026-10-24/README.md)。
 
+`f569647` 补齐编辑页导出前的画面/字幕预览，通过独立的裁剪、镜像、字幕帧及缓存/数据保护检查；见 [预览验证](docs/validation/2026-10-24-preview/README.md)。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：

@@ -12,6 +12,7 @@
 - `feefa40` 暴露新增存储页 SwiftUI 类型检查超时，已拆分表达式修正；`795f2f2` 编译通过，但媒体进程在字幕阶段退出。随后改为 Core Image 逐帧字幕，双视频和音频实际生成。
 - `690af59` 的独立频谱检查捕获变调音频实际采样率错误（240.417 Hz，而非预期 261.626 Hz），已修正 effect 两侧格式及 offline 构图时机，未放宽阈值。
 - **[run 40042964676](https://github.com/lunnn325/Cover-Studio/actions/runs/40042964676)，`b3bfcdf`：全部成功。** 23 项核心 XCTest、arm64/x86_64 无签名编译、五种两秒真实导出、中英文字幕帧和工程包恢复通过；独立 FFT 得到 261.658 Hz，时长两秒，干声仍 440 Hz。[保留的小报告与输出帧](validation/2026-10-24/README.md)。只验证隔离合成素材离线路径，不代表硬件采集或真人听感。
+- **[run 40044401370](https://github.com/lunnn325/Cover-Studio/actions/runs/40044401370)，`f569647`：编辑预览增量检查成功。** 23 项核心测试及双架构编译通过；1.5 秒方形裁剪/镜像、中英文预览帧、源哈希、原队列不变与缓存释放通过。[预览证据](validation/2026-10-24-preview/README.md)。复用上述成品/工程恢复结果，未重复运行；原生交互播放器与设备听感仍待验。
 - 后续补丁和每次实际结果见 DEVELOPMENT_LOG.md；具体 commit 的通过结果不能自动推广到未测试改动。
 
 ## P0 核心
@@ -25,7 +26,7 @@
 | P0-03 倒计时/原始素材/同步 | IMPLEMENTED_UNVERIFIED | 3 秒倒计时、独立干声/视频、共同 host 时间基准与 firstPTS/路由信息。实际声学偏移需试听校准 |
 | P0-04 路由变化 | IMPLEMENTED_UNVERIFIED | 通知时停伴奏/耳返并保存片段；恢复需确认输出，不自动继续。代码审查不能证明硬件零外放瞬态 |
 | P0-05 多 Take/立即预览 | IMPLEMENTED_UNVERIFIED | UUID 素材、逐段提交、原始干声/画面预览、练习转正式保留原件、记忆选中 Take |
-| P0-06 混音/字幕 | IMPLEMENTED_UNVERIFIED | 音量、EQ、高通降噪、混响、固定偏移、字幕样式/范围、镜像/裁剪和会话撤销；合成中英文逐句字幕输出已运行检查。高通不是完整环境降噪 |
+| P0-06 混音/字幕 | IMPLEMENTED_UNVERIFIED | 音量、EQ、高通降噪、混响、固定偏移、字幕样式/范围、镜像/裁剪和会话撤销；新增导出前画面/字幕预览，合成帧与缓存/数据保护检查通过。高通不是完整环境降噪 |
 | P0-07 1080p 输出 | IMPLEMENTED_UNVERIFIED | 双视频顺序导出，M4A/WAV 混音/干声/伴奏、歌词、分项重试、App 内成品播放，照片或独立补拍。两秒 MP4/WAV 路径已通过；仍需真实听看验收 |
 | P0-08 中断/低空间 | IMPLEMENTED_UNVERIFIED | 约 8 秒片段 + MOV fragment、journal、空间/热保护和后台暂停。最后未封装片段可能无法恢复 |
 | P0-09 完整工程迁移 | IMPLEMENTED_UNVERIFIED | 字节/哈希/依赖/版本纯逻辑测试已过；真实 Files→另一台 iPad 编辑/导出尚未测试 |

@@ -1,0 +1,31 @@
+{
+  "archiveRestored" : false,
+  "errors" : [
+
+  ],
+  "finishedAt" : "2026-10-24T00:23:51Z",
+  "outputs" : [
+
+  ],
+  "passed" : true,
+  "preview" : {
+    "cacheReleased" : true,
+    "duration" : 1.5,
+    "exportQueueUnchanged" : true,
+    "renderHeight" : 1080,
+    "renderWidth" : 1080,
+    "sourceHashesUnchanged" : true,
+    "subtitleChangedPixels" : [
+      669,
+      491
+    ]
+  },
+  "runtime" : "Version 26.2 (Build 23C54)",
+  "scope" : "Synthetic edited-preview only: generated sine WAVs and geometric JPEG, real AVPlayerItem compositions and frame extraction. No hardware capture, interactive player, AirPods, listening quality, acoustic sync, archive migration or cloud validation.",
+  "stage" : "finished",
+  "startedAt" : "2026-10-24T00:23:39Z",
+  "subtitleChangedPixels" : [
+
+  ],
+  "temporaryRoot" : "\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/600A45A3-B3A0-4A39-8A9C-5D051F9FDA9C\/data\/Containers\/Data\/Application\/FAD1DC9C-E8F7-4855-B444-07275038FE39\/tmp\/MediaSmoke-BE3E54A7-91D8-4931-8023-A23068A95F13"
+}
