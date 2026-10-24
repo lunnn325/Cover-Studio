@@ -170,3 +170,6 @@ Debug simulator 使用独立临时 fixture 根目录，Release/设备不含 fixt
 
 
 `37303a9` / Actions `40098408591` 在新增测试编译阶段失败：异构数字字面量数组中的 `-.infinity` 无法推断具体浮点类型；产品核心源已编译，未执行测试或设备构建。修正为明确 `-Double.infinity`，不删测试或放宽断言，然后进行必要复验。
+
+
+`a5028d2` / Actions `40098683960` 编译并运行 60 项核心测试，59 项通过；TXT Unicode 用例失败。发现 Foundation controlCharacters 同时包含 emoji ZWJ 等格式字符，原二进制过滤过严。改为仅拒绝 Unicode Cc 控制码（保留正常空白），继续拒绝二进制且接受合法组合 emoji；保留原测试复验。前两次均在轻量测试阶段停止，未运行大构建。

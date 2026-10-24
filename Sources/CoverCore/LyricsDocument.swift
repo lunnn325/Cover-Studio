@@ -22,7 +22,9 @@ public enum LyricsDocument {
 
     public static func validate(_ text: String) throws -> String {
         guard text.utf8.count <= maximumBytes else { throw StudioError("歌词超过 2 MB，请减少文字。") }
-        guard !text.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) && !CharacterSet.whitespacesAndNewlines.contains($0) }) else {
+        // Foundation's controlCharacters also includes format scalars such as the ZWJ
+        // inside emoji. Reject binary control codes, not valid Unicode lyric text.
+        guard !text.unicodeScalars.contains(where: { $0.properties.generalCategory == .control && !CharacterSet.whitespacesAndNewlines.contains($0) }) else {
             throw StudioError("文件包含非文本内容，请选择纯文本 TXT 或 LRC。")
         }
         return text
