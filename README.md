@@ -6,6 +6,8 @@
 
 **构建成功不代表 AirPods、相机、同步、Files 云备份或真实设备迁移已经通过。** 当前逐项证据与缺口见 [交付状态](docs/DELIVERY_STATUS.md)。没有签名材料或已验证可安装 IPA。
 
+`b3bfcdf` 已通过 23 项核心测试、双架构无签名编译及两秒真实离线导出/字幕/工程包恢复检查。实际报告和输出帧见 [验证记录](docs/validation/2026-10-24/README.md)。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：

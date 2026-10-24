@@ -1,0 +1,66 @@
+{
+  "archiveRestored" : true,
+  "errors" : [
+
+  ],
+  "finishedAt" : "2026-10-24T00:08:31Z",
+  "outputs" : [
+    {
+      "audioTracks" : 1,
+      "bytes" : 78394,
+      "duration" : 2,
+      "file" : "\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/582B068E-2ACA-440E-8D01-417AEDF26981\/data\/Containers\/Data\/Application\/2D1B0FD7-BC79-4C62-A3C9-B70A4F753F21\/tmp\/MediaSmoke-13A3C9EB-C10B-4567-8D0A-85AB92EC8C5A\/fixture\/exports\/A3C11BC4-C12D-4812-946F-68A519A1B0AB-subtitledVideo.mp4",
+      "variant" : "subtitledVideo",
+      "videoTracks" : 1
+    },
+    {
+      "audioTracks" : 1,
+      "bytes" : 57389,
+      "duration" : 2,
+      "file" : "\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/582B068E-2ACA-440E-8D01-417AEDF26981\/data\/Containers\/Data\/Application\/2D1B0FD7-BC79-4C62-A3C9-B70A4F753F21\/tmp\/MediaSmoke-13A3C9EB-C10B-4567-8D0A-85AB92EC8C5A\/fixture\/exports\/954B5F01-E1DE-4AB7-A1A8-2D9D51C58430-cleanVideo.mp4",
+      "variant" : "cleanVideo",
+      "videoTracks" : 1
+    },
+    {
+      "audioTracks" : 1,
+      "bytes" : 772096,
+      "duration" : 2,
+      "file" : "\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/582B068E-2ACA-440E-8D01-417AEDF26981\/data\/Containers\/Data\/Application\/2D1B0FD7-BC79-4C62-A3C9-B70A4F753F21\/tmp\/MediaSmoke-13A3C9EB-C10B-4567-8D0A-85AB92EC8C5A\/fixture\/exports\/AE023C23-8D1D-476F-9F4C-CDF3C6632D72-mixAudio.wav",
+      "peak" : 0.16522568,
+      "variant" : "mixAudio",
+      "videoTracks" : 0
+    },
+    {
+      "audioTracks" : 1,
+      "bytes" : 772096,
+      "duration" : 2,
+      "estimatedHz" : 440,
+      "file" : "\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/582B068E-2ACA-440E-8D01-417AEDF26981\/data\/Containers\/Data\/Application\/2D1B0FD7-BC79-4C62-A3C9-B70A4F753F21\/tmp\/MediaSmoke-13A3C9EB-C10B-4567-8D0A-85AB92EC8C5A\/fixture\/exports\/656CF1AF-7DD4-4EDB-8F34-9FF0AFD03489-dryVocal.wav",
+      "peak" : 0.1,
+      "variant" : "dryVocal",
+      "videoTracks" : 0,
+      "zeroCrossingHz" : 440
+    },
+    {
+      "audioTracks" : 1,
+      "bytes" : 772096,
+      "duration" : 2,
+      "estimatedHz" : 261.5,
+      "file" : "\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/582B068E-2ACA-440E-8D01-417AEDF26981\/data\/Containers\/Data\/Application\/2D1B0FD7-BC79-4C62-A3C9-B70A4F753F21\/tmp\/MediaSmoke-13A3C9EB-C10B-4567-8D0A-85AB92EC8C5A\/fixture\/exports\/A8FFE87B-1442-4BE5-8E4B-92B1E4595839-backing.wav",
+      "peak" : 0.09370533,
+      "variant" : "backing",
+      "videoTracks" : 0,
+      "zeroCrossingHz" : 261.6666666666667
+    }
+  ],
+  "passed" : true,
+  "runtime" : "Version 26.2 (Build 23C54)",
+  "scope" : "Synthetic offline only: generated two-second sine WAVs and geometric JPEG; real export\/archive APIs. Does not validate microphone, camera, AirPods, acoustic sync, listening quality, subtitle appearance, cloud upload, or real-device performance.",
+  "stage" : "finished",
+  "startedAt" : "2026-10-24T00:07:53Z",
+  "subtitleChangedPixels" : [
+    692,
+    529
+  ],
+  "temporaryRoot" : "\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/582B068E-2ACA-440E-8D01-417AEDF26981\/data\/Containers\/Data\/Application\/2D1B0FD7-BC79-4C62-A3C9-B70A4F753F21\/tmp\/MediaSmoke-13A3C9EB-C10B-4567-8D0A-85AB92EC8C5A"
+}

@@ -30,6 +30,8 @@
 
 决策：编辑图保存音量、EQ、高通、混响、固定偏移、首尾裁剪、镜像、构图、字幕和切点。Take 固定绑定录制时的 Arrangement 与整数半音。播放和离线混音均使用 TimePitch pitch=半音×100、rate=1；不把它用于自动修音。
 
+TimePitch 输入/输出均显式使用源文件 processingFormat，由 mixer 转到输出格式；offline mode 在构图前开启，避免默认硬件 44.1kHz 格式改变 48kHz 源播放时钟。运行时检查 effect 两侧格式，拒绝不匹配输出。实际合成检查从错误版本 240.417 Hz 修复为 261.658 Hz（220 Hz 升三半音，预期 261.626 Hz），时长保持两秒。此证据不代替真人音乐听感或实机播放验收。
+
 AVAudioEngine offline 渲染混音；AVMutableComposition/VideoComposition 组合画面。字幕使用 CoreText 栅格与 Core Image 按帧时间戳叠加，仅缓存当前一句的小图。先合成可复用的无字幕基础画面，带字幕版本再烧录；无字幕成品直接复制基础文件，不重复编码。选中的照片通过真实视频帧生成静态背景。补拍只捕获相机，不读取麦克风，参考成品或伴奏，保存为独立 visual asset；不替换正式人声。
 
 运行依据：`795f2f2` 的模拟器报告已越过离线混音和照片生成，在带字幕视频阶段进程退出，未拿到有效崩溃栈，不能断言具体系统根因。原 Core Animation 路径改为可逐帧检查的 Core Image 路径，并增加阶段、进程/系统诊断和中英文输出帧验证。Apple 提供[按帧 Core Image composition](https://developer.apple.com/documentation/avfoundation/avmutablevideocomposition/videocomposition(with:applyingcifilterswithhandler:completionhandler:))；[CIContext 文档](https://developer.apple.com/documentation/coreimage/cicontext)说明可跨线程共享 context/image。代价是字幕版增加一次基础文件读取/编码，空间预算涵盖临时画面；不改变双版本、原件和手工时间轴需求。
@@ -51,6 +53,8 @@ AVAudioEngine offline 渲染混音；AVMutableComposition/VideoComposition 组�
 ## ADR 005：备份证据与删除边界
 
 决策：准备包、Files 接收、外部包恢复验证各自记录，不称云端上传成功。备份记录不推进工程内容 revision；只有内容修改才推进。释放空间要求当前 revision 已交给 Files 或验证恢复。UI 展示包类型和排除的 Take，用户两次确认后才移除本工程源素材。精简包排除的旧 Take 在释放后无法从该包恢复，必须在确认中明确告知。
+
+待恢复录制 journal 存在时拒绝释放源素材，先完成恢复/结束录制并重新备份；损坏 journal 也不能绕过保护。恢复的已登记导出成品与再次扫描到的同路径文件只登记一次，避免重新备份产生重复引用错误。
 
 所有素材为工程私有路径；不同工程复制时复制素材，避免跨工程删除共享文件。Take 删除检查其他 Take、编辑、伴奏和照片引用，共享片段保留。操作不自动删除原始素材。安全副本/失败恢复暂存不自动清理；存储页允许校验导出有完整索引的副本，再从外部包恢复。删除所选副本必须两次确认，且有未完成恢复事务时禁止操作。
 

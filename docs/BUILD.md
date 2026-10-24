@@ -39,7 +39,7 @@ python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/De
 
 截图和 `scope.json` 是空状态启动/外观证据，需人工查看；不代表录制页、横屏、整条交互、真实相机、AirPods、声音、同步或备份恢复通过。截图失败会使已选择的步骤明确失败。CI 日志和截图保留 7 天。当前是否真正运行成功应以该次 Actions 记录和交付报告为准，不能由这些脚本存在推定。
 
-同一步骤还会在手机 Simulator 使用 DEBUG 启动参数 `--media-smoke` 执行一次两秒合成自有素材检查，经真实离线混音、照片、字幕双 MP4、WAV 和工程包代码路径产生 `Documents/MediaSmokeReport.json`。正常启动不运行此检查。脚本最多等报告 120 秒，只复制 JSON 进入 evidence，不上传合成媒体大文件；`passed` 不为 `true` 或超时都会明确失败，同时继续收集 iPad 空状态截图。这项轻量集成检查不能证明真实录制、AirPods、真人音质、设备同步或外部云端恢复通过。
+同一步骤还会在手机 Simulator 使用 DEBUG 启动参数 `--media-smoke` 执行一次两秒合成自有素材检查，经真实离线混音、照片、字幕双 MP4、WAV 和工程包代码路径产生 `Documents/MediaSmokeReport.json`。正常启动不运行此检查。脚本最多等报告 120 秒，复制报告、两秒合成伴奏 WAV、小字幕帧与诊断，不上传用户内容或大视频。检查保留频谱与过零两个读数；220 Hz 升三半音应接近 261.63 Hz，时长仍为两秒。`passed` 不为 `true` 或超时都会明确失败；完整截图模式继续收集 iPad 空状态。这项轻量集成检查不能证明真实录制、AirPods、真人音质、设备同步或外部云端恢复通过。已通过的实际结果见 [保留证据](validation/2026-10-24/README.md)。
 
 ## 真机签名与安装
 
