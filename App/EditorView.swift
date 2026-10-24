@@ -26,17 +26,26 @@ struct EditorPanel: View {
     @State private var selectedMovie: PhotosPickerItem?
     @State private var player: AVPlayer?
     @State private var dubbing = false
+    @State private var editedPreview: StudioPreview?
+    @State private var previewSubtitles = true
+    @State private var previewTask: Task<Void, Never>?
+    @State private var preparingPicture = false
     var project: StudioProject? { store.selected }
+    var hasPicture: Bool { project?.edit.visualAssetID != nil || project?.selectedTake?.segments.contains(where: { $0.videoAssetID != nil }) == true }
+    var hasTimedLyrics: Bool {
+        guard let project, let take = project.selectedTake else { return false }
+        return project.arrangement(for: take)?.lyrics.isTimed == true
+    }
     var body: some View {
         GeometryReader { geometry in
             if geometry.size.width >= 850 {
                 HStack(spacing: 0) {
                     VStack(spacing: 16) { previewControls; Spacer() }.padding().frame(width: geometry.size.width * 0.42)
                     Divider()
-                    List { controls }
+                    List { controls }.disabled(exports.working || preparingPicture)
                 }
             } else {
-                List { Section { previewControls }; controls }
+                List { Section { previewControls }; controls.disabled(exports.working || preparingPicture) }
             }
         }
         .disabled(store.recording.isBusy)
@@ -44,6 +53,9 @@ struct EditorPanel: View {
         .sheet(isPresented: $lyricsSheet) { NavigationStack { LyricsEditor(forTake: true) } }
         .sheet(isPresented: $rawPreview) { NavigationStack { TakePreviewView(takeID: project?.edit.selectedTakeID) } }
         .sheet(isPresented: $previewSheet) { if let player { PlayerSheet(title: "后期混音试听", player: player) } }
+        .sheet(item: $editedPreview) { preview in
+            PlayerSheet(title: preview.title, player: preview.player).onDisappear { preview.close() }
+        }
         .sheet(isPresented: $dubbing) { NavigationStack { DubbingView() } }
         .fileImporter(isPresented: $mediaPicker, allowedContentTypes: [.image, .movie]) { result in
             Task {
@@ -73,24 +85,50 @@ struct EditorPanel: View {
                 } catch { store.report(error) }
             }
         }
+        .onDisappear { previewTask?.cancel() }
     }
     @ViewBuilder var previewControls: some View {
         if let take = project?.selectedTake {
             Image(systemName: take.kind == .video ? "video" : "waveform").font(.largeTitle).foregroundStyle(.secondary).frame(height: 70)
             Text(take.name).font(.title2.weight(.semibold))
             Text("\(take.segments.count) 个片段 · 录制变调 \(take.semitones) 半音").font(.subheadline).foregroundStyle(.secondary)
-            Button("播放原始 Take") { rawPreview = true }.buttonStyle(.bordered)
+            Button("播放原始 Take") { rawPreview = true }.buttonStyle(.bordered).disabled(exports.working || preparingPicture)
             Button {
                 guard let project else { return }
                 Task {
                     do { try await store.flush(); let url = try await exports.previewMix(project: project, root: store.repository.directory(project.id)); player = AVPlayer(url: url); previewSheet = true }
                     catch { store.report(error) }
                 }
-            } label: { Label("试听当前混音", systemImage: "headphones") }.buttonStyle(.borderedProminent).disabled(exports.working)
+            } label: { Label("试听当前混音", systemImage: "headphones") }.buttonStyle(.borderedProminent).disabled(exports.working || preparingPicture)
+            if hasPicture {
+                Toggle("预览包含字幕", isOn: Binding(get: { hasTimedLyrics && previewSubtitles }, set: { previewSubtitles = $0 }))
+                    .disabled(!hasTimedLyrics || exports.working || preparingPicture)
+                Button { preparePicturePreview() } label: { Label("预览当前画面", systemImage: "play.rectangle") }
+                    .buttonStyle(.bordered).disabled(exports.working || preparingPicture)
+                if !hasTimedLyrics { Text("歌词尚未逐句标记，本次预览不含字幕。").font(.footnote).foregroundStyle(.secondary) }
+            } else {
+                Text("选择照片或补拍视频后，可预览画面、混音和字幕。").font(.footnote).foregroundStyle(.secondary)
+            }
             if exports.working { ProgressView(exports.stage) }
-            Button("选择输出与导出") { exportSheet = true }.buttonStyle(.bordered).disabled(exports.working)
+            Button("选择输出与导出") { exportSheet = true }.buttonStyle(.bordered).disabled(exports.working || preparingPicture)
         } else {
             ContentUnavailableView("还没有正式 Take", systemImage: "waveform", description: Text("先录制，或把满意的练习录音转为 Audio Take。"))
+        }
+    }
+    func preparePicturePreview() {
+        guard let project, !exports.working, !preparingPicture else { return }
+        preparingPicture = true
+        let subtitles = previewSubtitles && hasTimedLyrics
+        store.playback.suspendEngine()
+        previewTask?.cancel()
+        previewTask = Task {
+            defer { preparingPicture = false }
+            do {
+                try await store.flush()
+                let prepared = try await exports.prepareVideoPreview(project: project, root: store.repository.directory(project.id), subtitles: subtitles)
+                guard !Task.isCancelled else { prepared.close(); return }
+                editedPreview = prepared
+            } catch is CancellationError {} catch { store.report(error) }
         }
     }
     @ViewBuilder var controls: some View {

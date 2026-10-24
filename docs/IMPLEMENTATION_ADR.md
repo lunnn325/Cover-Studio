@@ -69,3 +69,13 @@ AISeparationProvider、LyricsAlignmentProvider、PitchCorrectionProvider 提供�
 GitHub Actions 仅 workflow_dispatch 或 PR opened/ready_for_review 里程碑运行，不在普通 push/synchronize 上运行。macOS 单一构建任务执行纯逻辑测试及无签名通用模拟器构建；首次 PR 可同时采集 iPhone/iPad 空状态的浅色/深色与大字号截图。媒体路径修复可选 media_smoke_only，只冷启动一个模拟器而不重复截图。没有大型 E2E 矩阵，不生成未签名假 IPA。
 
 Apple 签名材料未提供；没有真实设备时所有媒体/文件提供者/恢复的实机 gate 保持未验证。已运行证据单列 DELIVERY_STATUS.md。
+
+## ADR 008：编辑页画面预览
+
+问题：已有原始 Take 播放与后期混音试听，但用户必须先导出才能检查字幕、裁切与补拍组合，无法充分校准 Studio Cover。
+
+决策：新增编辑页画面预览，冻结当前参数快照，复用真实混音、VideoComposer 和逐帧字幕管线。无字幕时 AVPlayerItem 直接播放编辑 composition；带字幕时先准备基础画面，再由原生播放器按时间戳叠加同一个字幕 renderer。预览不调用成品队列，不改导出预设、已完成成品或工程版本。
+
+每次预览只持有自身 `cache/preview-UUID`；关闭时先释放播放器，再删除自身可重建缓存。失败/取消也清理该目录，进程意外终止时余下缓存可从存储页清理。空间按时长和画面处理预算预先检查。生成时禁用冲突的编辑/切换/导入/恢复/录制入口，防止同一操作混用两个工程状态。
+
+验证策略：复用已经通过的五种导出和工程恢复证据，本次单独检查新的 AVPlayerItem 路径：1.5 秒方形裁剪、镜像、两个真实字幕帧、音视频轨、源文件哈希、原导出队列不变及关闭后缓存释放。帧生成不等于交互播放器和真实听感通过；设备验收仍独立保留。

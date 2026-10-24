@@ -14,13 +14,13 @@ def command(*args, capture=False, timeout=180):
     return subprocess.run(args, check=True, text=True, capture_output=capture, timeout=timeout).stdout
 
 
-def media_smoke(device_id, output):
+def media_smoke(device_id, output, preview_only=False):
     container = Path(command("xcrun", "simctl", "get_app_container", device_id, "studio.mycover.app", "data", capture=True).strip())
     source = container / "Documents/MediaSmokeReport.json"
     launched_at = time.time()
     console = (output / "media-smoke-console.log").open("w", encoding="utf-8")
     launcher = subprocess.Popen(["xcrun", "simctl", "launch", "--terminate-running-process", "--console", device_id,
-                                 "studio.mycover.app", "--media-smoke"], stdin=subprocess.DEVNULL, stdout=console, stderr=subprocess.STDOUT)
+                                 "studio.mycover.app", "--preview-smoke" if preview_only else "--media-smoke"], stdin=subprocess.DEVNULL, stdout=console, stderr=subprocess.STDOUT)
     deadline = time.monotonic() + 120
     try:
         while time.monotonic() < deadline:
@@ -31,7 +31,8 @@ def media_smoke(device_id, output):
                     if result.get("finishedAt"):
                         if result.get("passed") is not True:
                             raise RuntimeError("Synthetic media smoke failed: " + json.dumps(result.get("errors", []), ensure_ascii=False)[:2000])
-                        print("Synthetic media smoke passed; this does not validate camera capture or real-device audio.")
+                        label = "edited-preview" if preview_only else "export/archive"
+                        print(f"Synthetic {label} smoke passed; this does not validate camera capture or real-device audio.")
                         return
                 if launcher.poll() is not None:
                     raise RuntimeError(f"Media smoke launcher exited ({launcher.returncode}) before its final report; see console and diagnostic logs.")
@@ -80,6 +81,7 @@ def main():
     parser.add_argument("--app", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=Path("build/simulator-evidence"))
     parser.add_argument("--media-only", action="store_true", help="Check offline export on one simulator without repeating layout captures.")
+    parser.add_argument("--preview-only", action="store_true", help="Check the new edited-preview path instead of repeating full export/archive checks.")
     args = parser.parse_args()
     if platform.system() != "Darwin":
         raise SystemExit("Requires macOS, Xcode and available iOS simulator runtimes.")
@@ -90,6 +92,8 @@ def main():
     devices = [device for runtime, group in inventory["devices"].items() if ".iOS-" in runtime for device in group]
     report = {"scope": "Simulator empty-state launch plus synthetic 2-second media pipeline only; no capture, AirPods, real-device recovery or cloud verification.",
               "xcode": command("xcodebuild", "-version", capture=True), "captures": []}
+    if args.preview_only:
+        report["scope"] = "Synthetic edited-preview composition/frame check only; no hardware capture, interactive playback, archive migration or cloud verification."
     smoke_error = None
     for family in (["iPhone"] if args.media_only else ["iPhone", "iPad"]):
         choices = [device for device in devices if device["name"].startswith(family)]
@@ -121,7 +125,7 @@ def main():
                                            "contentSize": content_size, "image": image.name})
             if family == "iPhone":
                 try:
-                    media_smoke(device_id, args.output)
+                    media_smoke(device_id, args.output, preview_only=args.preview_only)
                     report["mediaSmoke"] = {"passed": True, "report": "MediaSmokeReport.json"}
                 except (RuntimeError, subprocess.SubprocessError) as error:
                     # Still collect iPad layout evidence before failing the chosen check.

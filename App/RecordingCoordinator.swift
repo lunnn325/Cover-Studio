@@ -142,6 +142,7 @@ import CoverCore
     }
     func preflight(practice: Bool = false, recovering: UUID? = nil) async {
         guard !isCapturing, state != .finalizing, let store, let project = store.selected, !project.archived else { return }
+        guard !store.exports.working, !store.busy, !store.auxiliaryRecording else { store.error = "请先结束预览、导出或其他文件操作。"; return }
         do {
             let previous = recovering.flatMap { id in project.takes.first { $0.id == id } }
             if recovering != nil && previous == nil { throw StudioError("待恢复 Take 不在当前工程，原素材未修改。") }

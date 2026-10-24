@@ -61,7 +61,7 @@ struct PendingRecording: Identifiable {
         }
     }
     func resumeRecording(_ pending: PendingRecording) async {
-        guard !recording.isBusy, !auxiliaryRecording, !busy else { error = "请先结束当前操作。"; return }
+        guard !recording.isBusy, !auxiliaryRecording, !busy, !exports.working else { error = "请先结束当前操作。"; return }
         await select(pending.projectID)
         guard selectedID == pending.projectID else { return }
         await recording.preflight(recovering: pending.takeID)
@@ -88,7 +88,7 @@ struct PendingRecording: Identifiable {
         }
     }
     func undoEdit() {
-        guard !recording.isBusy, !auxiliaryRecording, let id = selectedID,
+        guard !recording.isBusy, !auxiliaryRecording, !exports.working, let id = selectedID,
               let index = projects.firstIndex(where: { $0.id == id }) else { return }
         while let previous = undoEdits[id]?.popLast() {
             var candidate = projects[index]; candidate.edit = previous
@@ -104,7 +104,7 @@ struct PendingRecording: Identifiable {
         if let selected { try await repository.save(selected) }
     }
     func select(_ id: UUID) async {
-        guard !recording.isBusy, !busy, !auxiliaryRecording else { error = "请等待当前录制、补拍或文件操作结束再切换工程。"; return }
+        guard !recording.isBusy, !busy, !auxiliaryRecording, !exports.working else { error = "请等待当前录制、补拍、预览或文件操作结束再切换工程。"; return }
         do { try await flush(); playback.suspendEngine(); playback.loop = nil; loadedArrangement = nil; selectedID = id; recording.video = selected?.recordVideo ?? true }
         catch { report(error) }
     }
@@ -121,7 +121,7 @@ struct PendingRecording: Identifiable {
         } else { playback.semitones = take?.semitones ?? arrangement.semitones }
     }
     func importAudio(_ url: URL, isBacking: Bool, newArrangement: Bool, title: String, artist: String) async throws {
-        guard !recording.isBusy, !busy, !auxiliaryRecording else { throw StudioError("请等待当前录制、补拍或文件操作结束。") }
+        guard !recording.isBusy, !busy, !auxiliaryRecording, !exports.working else { throw StudioError("请等待当前录制、补拍、预览或文件操作结束。") }
         if newArrangement && (selected == nil || selected?.archived == true) { throw StudioError("归档工程需要先恢复源素材；也可取消新版本选项，新建独立工程。") }
         busy = true; defer { busy = false }
         playback.suspendEngine(); playback.loop = nil
@@ -153,7 +153,7 @@ struct PendingRecording: Identifiable {
         if !isBacking { notice = "原曲已保留。AI 分离尚未开放；请导入准备好的伴奏作为新版本。" }
     }
     func importVisual(_ url: URL, image: Bool) async throws {
-        guard let project = selected, !project.archived, !recording.isBusy, !busy, !auxiliaryRecording else { throw StudioError("请先打开本地工程，并结束录制、补拍或其他文件操作。") }
+        guard let project = selected, !project.archived, !recording.isBusy, !busy, !auxiliaryRecording, !exports.working else { throw StudioError("请先打开本地工程，并结束录制、补拍、预览或其他文件操作。") }
         busy = true; defer { busy = false }
         let access = url.startAccessingSecurityScopedResource(); defer { if access { url.stopAccessingSecurityScopedResource() } }
         let duration: Double
@@ -183,7 +183,7 @@ struct PendingRecording: Identifiable {
         try await flush()
     }
     func restore(_ url: URL, keepBoth: Bool) async throws {
-        guard !recording.isBusy, !busy, !auxiliaryRecording else { throw StudioError("请等待当前录制、补拍或文件操作结束。") }
+        guard !recording.isBusy, !busy, !auxiliaryRecording, !exports.working else { throw StudioError("请等待当前录制、补拍、预览或文件操作结束。") }
         busy = true; defer { busy = false }
         playback.suspendEngine(); playback.loop = nil
         let access = url.startAccessingSecurityScopedResource(); defer { if access { url.stopAccessingSecurityScopedResource() } }
@@ -193,7 +193,7 @@ struct PendingRecording: Identifiable {
         notice = "工程已恢复并通过哈希和依赖校验。云端永久保留情况无法验证。"
     }
     func duplicate() async throws {
-        guard let project = selected, !project.archived, !recording.isBusy, !busy, !auxiliaryRecording else { throw StudioError("请先打开本地工程，并结束当前操作。") }
+        guard let project = selected, !project.archived, !recording.isBusy, !busy, !auxiliaryRecording, !exports.working else { throw StudioError("请先打开本地工程，并结束当前操作。") }
         busy = true; defer { busy = false }
         playback.suspendEngine(); playback.loop = nil
         try await flush()
@@ -210,7 +210,7 @@ struct PendingRecording: Identifiable {
         try await repository.save(projects[index])
     }
     func releaseSelected() async throws {
-        guard let project = selected else { return }
+        guard let project = selected, !recording.isBusy, !busy, !auxiliaryRecording, !exports.working else { throw StudioError("请先结束当前录制、预览或文件操作。") }
         saveTask?.cancel()
         if let coverID = project.song.coverAssetID, let cover = project.asset(coverID) {
             try writeThumbnail(from: repository.directory(project.id).appendingPathComponent(cover.path), projectID: project.id)

@@ -30,10 +30,21 @@ import Combine
         var outputs: [Output] = []
         var archiveRestored = false
         var subtitleChangedPixels: [Int] = []
+        var preview: PreviewEvidence?
+    }
+    private struct PreviewEvidence: Codable {
+        var duration: Double
+        var renderWidth: Int
+        var renderHeight: Int
+        var subtitleChangedPixels: [Int]
+        var exportQueueUnchanged: Bool
+        var sourceHashesUnchanged: Bool
+        var cacheReleased: Bool
     }
 
     static func runIfRequested() async {
-        guard ProcessInfo.processInfo.arguments.contains("--media-smoke"), !didRun else { return }
+        let previewOnly = ProcessInfo.processInfo.arguments.contains("--preview-smoke")
+        guard (ProcessInfo.processInfo.arguments.contains("--media-smoke") || previewOnly), !didRun else { return }
         didRun = true
         let files = FileManager.default
         let temporaryRoot = files.temporaryDirectory.appendingPathComponent("MediaSmoke-" + UUID().uuidString, isDirectory: true)
@@ -82,64 +93,70 @@ import Combine
                 try? write(report, to: reportURL)
             }
             defer { observation.cancel() }
-            await exports.run(project: project, root: root)
-            report.stage = "inspect outputs"; try write(report, to: reportURL)
-            if let failure = exports.failure { report.errors.append("Export service: " + failure) }
-            for variant in ExportVariant.allCases where expected.contains(variant) {
+            if previewOnly {
+                report.scope = "Synthetic edited-preview only: generated sine WAVs and geometric JPEG, real AVPlayerItem compositions and frame extraction. No hardware capture, interactive player, AirPods, listening quality, acoustic sync, archive migration or cloud validation."
+                report.preview = try await inspectPreviews(project: project, root: root, documents: documents, service: exports)
+                report.passed = true
+            } else {
+                await exports.run(project: project, root: root)
+                report.stage = "inspect outputs"; try write(report, to: reportURL)
+                if let failure = exports.failure { report.errors.append("Export service: " + failure) }
+                for variant in ExportVariant.allCases where expected.contains(variant) {
+                    do {
+                        guard let job = exports.jobs.first(where: { $0.variant == variant }), job.status == "完成", let path = job.path else {
+                            throw StudioError(exports.jobs.first(where: { $0.variant == variant })?.error ?? "No completed output")
+                        }
+                        if variant == .backing {
+                            let diagnostic = documents.appendingPathComponent("MediaSmokeAudio", isDirectory: true)
+                            try files.createDirectory(at: diagnostic, withIntermediateDirectories: true)
+                            let copy = diagnostic.appendingPathComponent("backing.wav")
+                            if files.fileExists(atPath: copy.path) { try files.removeItem(at: copy) }
+                            try files.copyItem(at: root.appendingPathComponent(path), to: copy)
+                        }
+                        let output = try await inspect(root.appendingPathComponent(path), variant: variant)
+                        report.outputs.append(output)
+                    } catch { report.errors.append(variant.rawValue + ": " + error.localizedDescription) }
+                }
                 do {
-                    guard let job = exports.jobs.first(where: { $0.variant == variant }), job.status == "完成", let path = job.path else {
-                        throw StudioError(exports.jobs.first(where: { $0.variant == variant })?.error ?? "No completed output")
+                    report.stage = "inspect subtitle frames"; try write(report, to: reportURL)
+                    guard let clean = exports.jobs.first(where: { $0.variant == .cleanVideo && $0.status == "完成" })?.path,
+                          let subtitled = exports.jobs.first(where: { $0.variant == .subtitledVideo && $0.status == "完成" })?.path else {
+                        throw StudioError("Both video variants are required for subtitle frame inspection")
                     }
-                    if variant == .backing {
-                        let diagnostic = documents.appendingPathComponent("MediaSmokeAudio", isDirectory: true)
-                        try files.createDirectory(at: diagnostic, withIntermediateDirectories: true)
-                        let copy = diagnostic.appendingPathComponent("backing.wav")
-                        if files.fileExists(atPath: copy.path) { try files.removeItem(at: copy) }
-                        try files.copyItem(at: root.appendingPathComponent(path), to: copy)
+                    let frames = documents.appendingPathComponent("MediaSmokeFrames", isDirectory: true)
+                    try files.createDirectory(at: frames, withIntermediateDirectories: true)
+                    let baseline = try await snapshot(root.appendingPathComponent(clean), seconds: 0.25, to: frames.appendingPathComponent("clean.png"))
+                    for (index, seconds) in [0.25, 1.25].enumerated() {
+                        let pixels = try await snapshot(root.appendingPathComponent(subtitled), seconds: seconds, to: frames.appendingPathComponent("subtitle-\(index + 1).png"))
+                        var changed = 0
+                        for pixel in stride(from: 0, to: baseline.count, by: 4) {
+                            if (0..<3).contains(where: { abs(Int(pixels[pixel + $0]) - Int(baseline[pixel + $0])) > 48 }) { changed += 1 }
+                        }
+                        report.subtitleChangedPixels.append(changed)
+                        guard changed > 40 else { throw StudioError("Subtitle frame lacks visible overlay pixels at \(seconds)s") }
                     }
-                    let output = try await inspect(root.appendingPathComponent(path), variant: variant)
-                    report.outputs.append(output)
-                } catch { report.errors.append(variant.rawValue + ": " + error.localizedDescription) }
+                } catch { report.errors.append("Subtitle frames: " + error.localizedDescription) }
+                // The source-only full archive is restored into a new, isolated repository, never the user's library.
+                do {
+                    report.stage = "archive roundtrip"; try write(report, to: reportURL)
+                    let archive = temporaryRoot.appendingPathComponent("fixture.coverproject")
+                    try ProjectArchive.create(project: project, root: root, destination: archive, mode: .full)
+                    let restoredRepository = try ProjectRepository(root: temporaryRoot.appendingPathComponent("restored-library"))
+                    let restored = try await restoredRepository.restore(archive: archive)
+                    guard restored.assets.count == project.assets.count, restored.takes == project.takes,
+                          restored.arrangement?.lyrics == project.arrangement?.lyrics, restored.edit == project.edit else {
+                        throw StudioError("Restored project metadata differs")
+                    }
+                    for asset in restored.assets {
+                        let url = restoredRepository.directory(restored.id).appendingPathComponent(asset.path)
+                        guard try FileIntegrity.size(url) == asset.bytes, try FileIntegrity.sha256(url) == asset.sha256 else {
+                            throw StudioError("Restored source bytes differ")
+                        }
+                    }
+                    report.archiveRestored = true
+                } catch { report.errors.append("Archive roundtrip: " + error.localizedDescription) }
+                report.passed = report.errors.isEmpty && report.outputs.count == expected.count && report.archiveRestored
             }
-            do {
-                report.stage = "inspect subtitle frames"; try write(report, to: reportURL)
-                guard let clean = exports.jobs.first(where: { $0.variant == .cleanVideo && $0.status == "完成" })?.path,
-                      let subtitled = exports.jobs.first(where: { $0.variant == .subtitledVideo && $0.status == "完成" })?.path else {
-                    throw StudioError("Both video variants are required for subtitle frame inspection")
-                }
-                let frames = documents.appendingPathComponent("MediaSmokeFrames", isDirectory: true)
-                try files.createDirectory(at: frames, withIntermediateDirectories: true)
-                let baseline = try await snapshot(root.appendingPathComponent(clean), seconds: 0.25, to: frames.appendingPathComponent("clean.png"))
-                for (index, seconds) in [0.25, 1.25].enumerated() {
-                    let pixels = try await snapshot(root.appendingPathComponent(subtitled), seconds: seconds, to: frames.appendingPathComponent("subtitle-\(index + 1).png"))
-                    var changed = 0
-                    for pixel in stride(from: 0, to: baseline.count, by: 4) {
-                        if (0..<3).contains(where: { abs(Int(pixels[pixel + $0]) - Int(baseline[pixel + $0])) > 48 }) { changed += 1 }
-                    }
-                    report.subtitleChangedPixels.append(changed)
-                    guard changed > 40 else { throw StudioError("Subtitle frame lacks visible overlay pixels at \(seconds)s") }
-                }
-            } catch { report.errors.append("Subtitle frames: " + error.localizedDescription) }
-            // The source-only full archive is restored into a new, isolated repository, never the user's library.
-            do {
-                report.stage = "archive roundtrip"; try write(report, to: reportURL)
-                let archive = temporaryRoot.appendingPathComponent("fixture.coverproject")
-                try ProjectArchive.create(project: project, root: root, destination: archive, mode: .full)
-                let restoredRepository = try ProjectRepository(root: temporaryRoot.appendingPathComponent("restored-library"))
-                let restored = try await restoredRepository.restore(archive: archive)
-                guard restored.assets.count == project.assets.count, restored.takes == project.takes,
-                      restored.arrangement?.lyrics == project.arrangement?.lyrics, restored.edit == project.edit else {
-                    throw StudioError("Restored project metadata differs")
-                }
-                for asset in restored.assets {
-                    let url = restoredRepository.directory(restored.id).appendingPathComponent(asset.path)
-                    guard try FileIntegrity.size(url) == asset.bytes, try FileIntegrity.sha256(url) == asset.sha256 else {
-                        throw StudioError("Restored source bytes differ")
-                    }
-                }
-                report.archiveRestored = true
-            } catch { report.errors.append("Archive roundtrip: " + error.localizedDescription) }
-            report.passed = report.errors.isEmpty && report.outputs.count == expected.count && report.archiveRestored
         } catch { report.errors.append("Fixture/setup: " + error.localizedDescription) }
         report.finishedAt = Date()
         report.stage = "finished"
@@ -241,15 +258,70 @@ import Combine
         }
         return peakFrequency
     }
+    private static func inspectPreviews(project: StudioProject, root: URL, documents: URL, service: ExportService) async throws -> PreviewEvidence {
+        let files = FileManager.default
+        let outputDirectory = root.appendingPathComponent("exports", isDirectory: true)
+        try files.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
+        let queue = outputDirectory.appendingPathComponent("queue.json")
+        let savedJobs = [ExportJob(variant: .mixAudio, status: "待处理")]
+        let queueBefore = try FileIntegrity.encoder().encode(savedJobs)
+        try queueBefore.write(to: queue)
+        service.load(root: root, projectID: project.id)
+        var candidate = project
+        candidate.edit.trimStart = 0.25; candidate.edit.trimEnd = 1.75
+        candidate.edit.aspect = 1; candidate.edit.mirrorExport = true
+        let clean = try await service.prepareVideoPreview(project: candidate, root: root, subtitles: false)
+        defer { clean.close() }
+        guard let cleanItem = clean.player.currentItem, let cleanVideo = cleanItem.videoComposition,
+              cleanVideo.renderSize == CGSize(width: 1080, height: 1080) else { throw StudioError("Clean preview is missing square video composition") }
+        let duration = try await cleanItem.asset.load(.duration).seconds
+        let audio = try await cleanItem.asset.loadTracks(withMediaType: .audio)
+        let video = try await cleanItem.asset.loadTracks(withMediaType: .video)
+        guard abs(duration - 1.5) < 0.02, !audio.isEmpty, !video.isEmpty else { throw StudioError("Edited preview trim or tracks differ") }
+        let frames = documents.appendingPathComponent("MediaSmokeFrames", isDirectory: true)
+        try files.createDirectory(at: frames, withIntermediateDirectories: true)
+        let size = CGSize(width: 360, height: 360)
+        let baseline = try await snapshot(cleanItem.asset, video: cleanVideo, seconds: 0.1, to: frames.appendingPathComponent("preview-clean.png"), size: size)
+        let subtitled = try await service.prepareVideoPreview(project: candidate, root: root, subtitles: true)
+        defer { subtitled.close() }
+        guard let item = subtitled.player.currentItem, let composition = item.videoComposition,
+              composition.renderSize == cleanVideo.renderSize else { throw StudioError("Subtitle preview changed the render size") }
+        var changedPixels: [Int] = []
+        for (index, seconds) in [0.1, 1.1].enumerated() {
+            let pixels = try await snapshot(item.asset, video: composition, seconds: seconds,
+                                           to: frames.appendingPathComponent("preview-subtitle-\(index + 1).png"), size: size)
+            var changed = 0
+            for pixel in stride(from: 0, to: pixels.count, by: 4) {
+                if (0..<3).contains(where: { abs(Int(pixels[pixel + $0]) - Int(baseline[pixel + $0])) > 48 }) { changed += 1 }
+            }
+            guard changed > 40 else { throw StudioError("Edited preview subtitle frame is missing at \(seconds)s") }
+            changedPixels.append(changed)
+        }
+        let cacheDirectories = [clean.cacheDirectory, subtitled.cacheDirectory]
+        clean.close(); subtitled.close()
+        guard cacheDirectories.allSatisfy({ !files.fileExists(atPath: $0.path) }) else { throw StudioError("Preview close did not release its owned cache") }
+        guard try Data(contentsOf: queue) == queueBefore, service.jobs.map(\.id) == savedJobs.map(\.id), service.shareURLs.isEmpty else {
+            throw StudioError("Preview changed the existing export queue")
+        }
+        for asset in project.assets {
+            guard try FileIntegrity.sha256(root.appendingPathComponent(asset.path)) == asset.sha256 else { throw StudioError("Preview modified a source asset") }
+        }
+        return PreviewEvidence(duration: duration, renderWidth: 1080, renderHeight: 1080, subtitleChangedPixels: changedPixels,
+                               exportQueueUnchanged: true, sourceHashesUnchanged: true, cacheReleased: true)
+    }
     private static func snapshot(_ url: URL, seconds: Double, to output: URL) async throws -> [UInt8] {
-        let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url)); generator.appliesPreferredTrackTransform = true
-        generator.maximumSize = CGSize(width: 640, height: 360)
+        try await snapshot(AVURLAsset(url: url), video: nil, seconds: seconds, to: output, size: CGSize(width: 640, height: 360))
+    }
+    private static func snapshot(_ asset: AVAsset, video: AVVideoComposition?, seconds: Double, to output: URL, size: CGSize) async throws -> [UInt8] {
+        let generator = AVAssetImageGenerator(asset: asset); generator.appliesPreferredTrackTransform = true
+        generator.videoComposition = video; generator.maximumSize = size
         let frame = try await generator.image(at: CMTime(seconds: seconds, preferredTimescale: 600)).image
-        var pixels = [UInt8](repeating: 0, count: 640 * 360 * 4)
+        let width = Int(size.width), height = Int(size.height)
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
         try pixels.withUnsafeMutableBytes { bytes in
-            guard let bitmap = CGContext(data: bytes.baseAddress, width: 640, height: 360, bitsPerComponent: 8, bytesPerRow: 640 * 4,
+            guard let bitmap = CGContext(data: bytes.baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
                     space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { throw StudioError("Frame inspection buffer unavailable") }
-            bitmap.draw(frame, in: CGRect(x: 0, y: 0, width: 640, height: 360))
+            bitmap.draw(frame, in: CGRect(origin: .zero, size: size))
             guard let image = bitmap.makeImage(), let png = UIImage(cgImage: image).pngData() else { throw StudioError("Frame evidence unavailable") }
             try png.write(to: output)
         }

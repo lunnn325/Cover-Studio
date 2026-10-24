@@ -55,6 +55,7 @@ struct StudioRoot: View {
     @State private var importing = false
     @State private var settings = false
     @State private var tab = 0
+    @State private var processing = false
     var body: some View {
         TabView(selection: $tab) {
             NavigationStack { PracticeView().navigationTitle("练习").toolbar { commonToolbar } }
@@ -67,6 +68,7 @@ struct StudioRoot: View {
                 .tabItem { Label("作品库", systemImage: "square.stack") }.tag(3)
         }
         .tint(.indigo)
+        .onReceive(store.exports.$working) { processing = $0 }
         .disabled(store.busy)
         .sheet(isPresented: $importing) { ImportSongView() }
         .sheet(isPresented: $settings) { NavigationStack { SettingsView() } }
@@ -84,10 +86,10 @@ struct StudioRoot: View {
                     Button(project.song.title) { Task { await store.select(project.id) } }
                 }
             } label: { Label(store.selected?.song.title ?? "My Cover Studio", systemImage: "music.note") }
-                .disabled(store.recording.isBusy || store.projects.isEmpty || store.busy)
+                .disabled(store.recording.isBusy || store.projects.isEmpty || store.busy || processing)
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
-            Button { importing = true } label: { Label("导入伴奏", systemImage: "plus") }.disabled(store.recording.isBusy)
+            Button { importing = true } label: { Label("导入伴奏", systemImage: "plus") }.disabled(store.recording.isBusy || processing)
             Button { settings = true } label: { Label("设置", systemImage: "gearshape") }
         }
     }

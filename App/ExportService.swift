@@ -149,6 +149,57 @@ struct ExportJob: Identifiable, Codable {
         try await Task.detached(priority: .userInitiated) { try MixRenderer.render(project: project, root: root, to: url) }.value
         return url
     }
+    func prepareVideoPreview(project: StudioProject, root: URL, subtitles: Bool) async throws -> StudioPreview {
+        guard !working else { throw StudioError("请等待当前处理完成。") }
+        guard let take = project.selectedTake else { throw StudioError("请先选择 Take。") }
+        let hasVideo = project.edit.visualAssetID != nil || take.segments.contains { $0.videoAssetID != nil }
+        var preset = ExportPreset(); preset.variants = [subtitles ? .subtitledVideo : .cleanVideo]
+        try preset.validate(lyrics: project.arrangement(for: take)?.lyrics ?? Lyrics(), hasVideo: hasVideo)
+        let range = try Timeline.range(take: take, edit: project.edit), duration = range.upperBound - range.lowerBound
+        let estimate = duration * (12_000_000 + 48000 * 2 * 4) + 64 * 1024 * 1024
+        guard estimate.isFinite, estimate < Double(Int64.max), try FileIntegrity.available(root) > Int64(estimate) else {
+            throw StudioError("空间不足以生成画面预览，请缩短裁剪区间或先处理存储。源素材未修改。")
+        }
+        working = true; stage = "正在准备画面预览"; defer { working = false; stage = "" }
+        let cache = root.appendingPathComponent("cache/preview-" + UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
+        do {
+            try Task.checkCancellation()
+            let mix = cache.appendingPathComponent("mix.caf")
+            stage = "正在生成预览混音"
+            try await Task.detached(priority: .userInitiated) { try MixRenderer.render(project: project, root: root, to: mix) }.value
+            try Task.checkCancellation()
+            var background: URL?
+            if let id = project.edit.visualAssetID, let visual = project.asset(id), visual.role == .image {
+                stage = "正在准备照片画面"
+                let photo = cache.appendingPathComponent("photo.mov")
+                try await StillVideoRenderer.make(imageURL: root.appendingPathComponent(visual.path), duration: duration,
+                                                  landscape: project.edit.aspect >= 1, to: photo)
+                background = photo
+            }
+            try Task.checkCancellation()
+            let (composition, video) = try await VideoComposer.composition(project: project, root: root, mix: mix, backgroundVideo: background)
+            guard let video else { throw StudioError("没有可预览的画面，请先选择照片或补拍。") }
+            let item: AVPlayerItem
+            if subtitles {
+                stage = "正在准备字幕预览"
+                let base = cache.appendingPathComponent("picture.mp4")
+                try await exportVideo(asset: composition, video: video, to: base, duration: duration)
+                try Task.checkCancellation()
+                let asset = AVURLAsset(url: base)
+                let renderer = try SubtitleFrameRenderer(project: project, size: video.renderSize, duration: duration)
+                item = AVPlayerItem(asset: asset); item.videoComposition = renderer.composition(asset: asset)
+            } else {
+                // The native player can apply crop/mirror instructions directly.
+                item = AVPlayerItem(asset: composition); item.videoComposition = video
+            }
+            try Task.checkCancellation()
+            return StudioPreview(title: take.name + (subtitles ? " · 字幕画面预览" : " · 无字幕画面预览"), item: item, cacheDirectory: cache)
+        } catch {
+            try? FileManager.default.removeItem(at: cache)
+            throw error
+        }
+    }
     private func exportAudio(source: URL, output: URL, format: AudioExportFormat) async throws {
         if format == .wav {
             try await Task.detached(priority: .userInitiated) {
