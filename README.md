@@ -16,6 +16,8 @@
 
 `ab45992` 补齐独立字幕描边与旧工程兼容，通过 34 项核心测试、双架构编译和中英文描边/填充帧检查；见[描边证据与失败修复](docs/validation/2026-10-24-outline/README.md)。
 
+`ffa7639` 保护未结束录制日志，防止新 Take 覆盖，并检查异步启动取消；38 项核心测试和双架构编译通过，实际取消/采集交互仍待设备验证，见[日志与启动验证](docs/validation/2026-10-24-capture-start/README.md)。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：
