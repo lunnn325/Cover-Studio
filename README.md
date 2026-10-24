@@ -28,6 +28,8 @@
 
 `94c89a9` 修复练习回听可能停止正式录制伴奏、跨页单击停止绕过长按的问题，50 项核心测试与双架构应用编译通过；[检查范围](docs/validation/2026-10-24-recording-controls/README.md)。真实录制手势和设备路由仍待验证。
 
+已沿用 William Lecture 的 GitHub macOS 流程生成 `dist/MyCoverStudio-V1-unsigned.ipa`：Release arm64、版本 1.0/build 1、最低 iOS/iPadOS 17，支持 iPhone/iPad。50 项核心测试与设备编译通过，下载后 ZIP/设备平台/哈希复核一致；安装前仍需本地签名。[IPA 交付记录](docs/validation/2026-10-24-device-ipa/README.md)。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：

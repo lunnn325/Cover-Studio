@@ -146,3 +146,6 @@ Debug simulator 使用独立临时 fixture 根目录，Release/设备不含 fixt
 `94c89a9` / Actions `40089913582` 全部成功：50 项核心 XCTest 与双架构无签名应用编译；没有运行媒体或 UI。原始日志及限制保存在 `docs/validation/2026-10-24-recording-controls/`。这不是录制锁/跨页/长按的运行证明；全屏截图修改也不在普通应用构建内编译。iPad 成功原生用例及首次失败录像的独立来源见 `docs/validation/2026-10-24-ipad-ui/`；未将有裁剪的截图计为完整排版通过。并行复核确认报告没有扩大为硬件/Files/迁移结论。
 
 当前进入证据/文档交付，不再触发 Actions。下一步需要 macOS Xcode 26+、真实 Apple Team 与 iPhone/iPad：以 30–60 秒自有素材验证录制/取消/接唱、未锁切页回听保护、锁/长按停止、电平、AirPods 路由与同步、中断/空间保护，再做真实 Files→另一台 iPad 编辑导出。P0 gate 维持 IMPLEMENTED_UNVERIFIED，P1 按现有明确降级，V1 不标记完成。
+
+
+`0b078d1` / Actions `40090776593` 成功：50 项核心测试、Release iphoneos arm64 编译、unsigned IPA 打包与上传。已下载 `dist/MyCoverStudio-V1-unsigned.ipa`（1,435,900 字节），独立 ZIP/平台/元数据/SHA-256 复核通过，报告及原始日志保存在 `docs/validation/2026-10-24-device-ipa/`。与 WL 一样需用户本地签名安装，未使用签名凭据；真实设备 gate 仍未通过。后续仅记录/PR 更新，不为文档重复构建。

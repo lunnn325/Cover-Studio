@@ -1,0 +1,1197 @@
+Command line invocation:
+    /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration Release -sdk iphoneos -destination generic/platform=iOS -derivedDataPath build/DeviceDerivedData ARCHS=arm64 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+
+Build settings from command line:
+    ARCHS = arm64
+    CODE_SIGNING_ALLOWED = NO
+    CODE_SIGNING_REQUIRED = NO
+    SDKROOT = iphoneos26.5
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  CoverCore: /Users/runner/work/Cover-Studio/Cover-Studio @ local
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (3 targets)
+    Target 'MyCoverStudio' in project 'MyCoverStudio'
+        ➜ Explicit dependency on target 'CoverCore' in project 'CoverCore'
+    Target 'CoverCore' in project 'CoverCore'
+        ➜ Explicit dependency on target 'CoverCore' in project 'CoverCore'
+    Target 'CoverCore' in project 'CoverCore' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/runner/work/Cover-Studio/Cover-Studio/App/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+Build description signature: 484c6c5ae271ab33e77650a946e834cd
+Build description path: /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/XCBuildData/484c6c5ae271ab33e77650a946e834cd.xcbuilddata
+ClangStatCache /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/SDKStatCaches.noindex/iphoneos26.5-23F81a-688ef53f1462e2c8f657fdc38a81448fee66e23052a0157c865c76b268046726.sdkstatcache
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -o /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/SDKStatCaches.noindex/iphoneos26.5-23F81a-688ef53f1462e2c8f657fdc38a81448fee66e23052a0157c865c76b268046726.sdkstatcache
+
+CreateBuildDirectory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products
+
+CreateBuildDirectory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio-fe75a8cd3b3103e60f5ab5d54676b153-VFS-iphoneos/all-product-headers.yaml
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio-fe75a8cd3b3103e60f5ab5d54676b153-VFS-iphoneos/all-product-headers.yaml
+
+CreateBuildDirectory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos
+
+CreateBuildDirectory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/PackageFrameworks
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/PackageFrameworks
+
+CreateBuildDirectory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio_const_extract_protocols.json (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.SwiftFileList (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.SwiftFileList
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.SwiftConstValuesFileList (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.LinkFileList (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.LinkFileList
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-OutputFileMap.json (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-OutputFileMap.json
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio.hmap (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio.DependencyStaticMetadataFileList (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio.DependencyMetadataFileList (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio.DependencyMetadataFileList
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-project-headers.hmap (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-project-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-own-target-headers.hmap (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-own-target-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-generated-files.hmap (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-generated-files.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-all-target-headers.hmap (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-all-target-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-all-non-framework-target-headers.hmap (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore_const_extract_protocols.json (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.SwiftFileList (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.SwiftFileList
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.SwiftConstValuesFileList (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.LinkFileList (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.LinkFileList
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-OutputFileMap.json (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-OutputFileMap.json
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/CoverCore.modulemap (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/CoverCore.modulemap
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/CoverCore.DependencyStaticMetadataFileList (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/CoverCore.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/CoverCore.DependencyMetadataFileList (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    write-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/CoverCore.DependencyMetadataFileList
+
+Copy /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos/CoverCore.modulemap /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/CoverCore.modulemap (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/CoverCore.modulemap /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos
+
+MkDir /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /bin/mkdir -p /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app
+
+SwiftDriver CoverCore normal arm64 com.apple.xcode.tools.swift.compiler (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    builtin-SwiftDriver -- /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name CoverCore -O -whole-module-optimization @/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.SwiftFileList -DSWIFT_PACKAGE -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -suppress-warnings -swift-version 5 -I /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -Isystem /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -F /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/Developer/Library/Frameworks -c -num-threads 3 -Xcc -ivfsstatcache -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/SDKStatCaches.noindex/iphoneos26.5-23F81a-688ef53f1462e2c8f657fdc38a81448fee66e23052a0157c865c76b268046726.sdkstatcache -output-file-map /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Session.modulevalidation -package-name cover_studio -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore_const_extract_protocols.json -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/include -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/DerivedSources -Xcc -DSWIFT_PACKAGE -emit-objc-header -emit-objc-header-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-Swift.h -working-directory /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj -no-emit-module-separately-wmo
+
+SwiftDriver\ Compilation CoverCore normal arm64 com.apple.xcode.tools.swift.compiler (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    builtin-Swift-Compilation -- /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name CoverCore -O -whole-module-optimization @/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.SwiftFileList -DSWIFT_PACKAGE -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -suppress-warnings -swift-version 5 -I /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -Isystem /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -F /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/Developer/Library/Frameworks -c -num-threads 3 -Xcc -ivfsstatcache -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/SDKStatCaches.noindex/iphoneos26.5-23F81a-688ef53f1462e2c8f657fdc38a81448fee66e23052a0157c865c76b268046726.sdkstatcache -output-file-map /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Session.modulevalidation -package-name cover_studio -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore_const_extract_protocols.json -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/include -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/DerivedSources -Xcc -DSWIFT_PACKAGE -emit-objc-header -emit-objc-header-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-Swift.h -working-directory /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj -no-emit-module-separately-wmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stdbool-2U7AHNOHPHAJXGPBUEMXBP83Z.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_float-F3N8XUE6T3DAVY94L95ANN1XA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ptrcheck-D24S7G5F1OSD6F3A255Q6FFFA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stddef-8KGGGEGAW2130H975IJ5EB4OG.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stdarg-AQPU5KGTAUS8P0C643105EGNF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_SwiftConcurrencyShims-BV3JNDAMZM106Q1TJQ2RCJNQV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/SwiftShims-CX78T373NNULEQA6QII5Z8738.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ptrauth-4CT1ELVRQ6DW9FCIVJPWD28EO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_AvailabilityInternal-A1WSBE19DZQ83YO7ZB3BB600C.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_DarwinFoundation1-2AWU7T3XKG18YCVAB2EHQNBIN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_limits-CW4R510UORA5556X58FA6K1YQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_DarwinFoundation2-ABE27ZOE9U4T6V4T4FG7YB42C.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/sys_types-1V8M8B9JH5IC70KWLKKFA65E3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stdint-5LL6DUIPZY5XGCBEK5PQA4HEC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_DarwinFoundation3-4ROXOMF3W4S9LI0RE16GDF6U8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_inttypes-B4DA1YT9RFWEIEKCD1N1OFPXW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Darwin-GEF978O23OZXWCDCALK4O7KN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ObjectiveC-1TRP92OJSPF9S2LRISMPW0WJE.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/os_object-B2VRFH8HZD4J3OBNU4RH7SSGR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/os_workgroup-CXFQ9PMEGCY0MP77OMKS557GZ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Dispatch-5PEJEFV0T3J84CV0JEYI656WT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreFoundation-9G8P2ZFVD3GF46G04V3ZUDFG3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/XPC-4P653B8JL3CRCEMYRIXMSDY2O.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CFNetwork-C7BXCMQ43M61FQRUBEJMRU5YB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Security-6S1XD3LREGCXDQ2KM1AZN3KJ1.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Foundation-3UPCPABGQNJXP085AP6YG3T3E.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/LocalAuthentication-F27A2OJ3HEEQ928CHQ6EV1PNI.pcm
+
+SwiftCompile normal arm64 Compiling\ Archive.swift,\ ExportCatalog.swift,\ LibraryRecovery.swift,\ Models.swift,\ ProjectFiles.swift,\ ProjectRepository.swift,\ RepositoryStartup.swift,\ Rules.swift,\ Timeline.swift /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CoverCore/Archive.swift /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CoverCore/ExportCatalog.swift /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CoverCore/LibraryRecovery.swift /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CoverCore/Models.swift /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CoverCore/ProjectFiles.swift /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CoverCore/ProjectRepository.swift /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CoverCore/RepositoryStartup.swift /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CoverCore/Rules.swift /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CoverCore/Timeline.swift /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Observation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/XPC.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_Concurrency.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreFoundation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_DarwinFoundation2.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Foundation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Dispatch.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_StringProcessing.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_Builtin_float.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/System.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/LocalAuthentication.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_DarwinFoundation1.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Swift.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/ObjectiveC.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Combine.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_DarwinFoundation3.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Darwin.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CryptoKit.swiftmodule/arm64e-apple-ios.swiftmodule /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_limits-CW4R510UORA5556X58FA6K1YQ.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/XPC-4P653B8JL3CRCEMYRIXMSDY2O.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Foundation-3UPCPABGQNJXP085AP6YG3T3E.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stdbool-2U7AHNOHPHAJXGPBUEMXBP83Z.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Dispatch-5PEJEFV0T3J84CV0JEYI656WT.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Security-6S1XD3LREGCXDQ2KM1AZN3KJ1.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ptrcheck-D24S7G5F1OSD6F3A255Q6FFFA.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/os_workgroup-CXFQ9PMEGCY0MP77OMKS557GZ.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/LocalAuthentication-F27A2OJ3HEEQ928CHQ6EV1PNI.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Darwin-GEF978O23OZXWCDCALK4O7KN.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/os_object-B2VRFH8HZD4J3OBNU4RH7SSGR.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_DarwinFoundation2-ABE27ZOE9U4T6V4T4FG7YB42C.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_DarwinFoundation1-2AWU7T3XKG18YCVAB2EHQNBIN.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stdarg-AQPU5KGTAUS8P0C643105EGNF.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_inttypes-B4DA1YT9RFWEIEKCD1N1OFPXW.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_SwiftConcurrencyShims-BV3JNDAMZM106Q1TJQ2RCJNQV.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_float-F3N8XUE6T3DAVY94L95ANN1XA.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/SwiftShims-CX78T373NNULEQA6QII5Z8738.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/sys_types-1V8M8B9JH5IC70KWLKKFA65E3.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stdint-5LL6DUIPZY5XGCBEK5PQA4HEC.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ObjectiveC-1TRP92OJSPF9S2LRISMPW0WJE.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_DarwinFoundation3-4ROXOMF3W4S9LI0RE16GDF6U8.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreFoundation-9G8P2ZFVD3GF46G04V3ZUDFG3.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stddef-8KGGGEGAW2130H975IJ5EB4OG.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_AvailabilityInternal-A1WSBE19DZQ83YO7ZB3BB600C.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CFNetwork-C7BXCMQ43M61FQRUBEJMRU5YB.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ptrauth-4CT1ELVRQ6DW9FCIVJPWD28EO.pcm /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-dependencies-1.json (in target 'CoverCore' from project 'CoverCore')
+
+CompileSwift normal arm64 (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling Archive.swift, ExportCatalog.swift, LibraryRecovery.swift, Models.swift, ProjectFiles.swift, ProjectRepository.swift, RepositoryStartup.swift, Rules.swift, Timeline.swift (in target 'CoverCore' from project 'CoverCore')
+
+SwiftDriver\ Compilation\ Requirements CoverCore normal arm64 com.apple.xcode.tools.swift.compiler (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name CoverCore -O -whole-module-optimization @/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.SwiftFileList -DSWIFT_PACKAGE -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -suppress-warnings -swift-version 5 -I /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -Isystem /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -F /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/Developer/Library/Frameworks -c -num-threads 3 -Xcc -ivfsstatcache -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/SDKStatCaches.noindex/iphoneos26.5-23F81a-688ef53f1462e2c8f657fdc38a81448fee66e23052a0157c865c76b268046726.sdkstatcache -output-file-map /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Session.modulevalidation -package-name cover_studio -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore_const_extract_protocols.json -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/include -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/DerivedSources -Xcc -DSWIFT_PACKAGE -emit-objc-header -emit-objc-header-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-Swift.h -working-directory /Users/runner/work/Cover-Studio/Cover-Studio/MyCoverStudio.xcodeproj -no-emit-module-separately-wmo
+
+SwiftMergeGeneratedHeaders /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos/CoverCore-Swift.h /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-Swift.h (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-swiftHeaderTool -arch arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-Swift.h -o /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos/CoverCore-Swift.h
+
+Copy /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.swiftmodule/arm64-apple-ios.swiftmodule /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftmodule (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftmodule /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.swiftmodule/arm64-apple-ios.swiftdoc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftdoc (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftdoc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.swiftmodule/arm64-apple-ios.abi.json /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.abi.json (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.abi.json /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftsourceinfo (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftsourceinfo /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+Ld /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.o normal (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -r -isysroot /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -Os -w -F/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos -F/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -iframework /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -iframework /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/Developer/Library/Frameworks -filelist /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.LinkFileList -nostdlib -Xlinker -object_path_lto -Xlinker /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore_lto.o -Xlinker -dependency_info -Xlinker /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftmodule @/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-linker-args.resp -o /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.o
+
+MkDir /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_output/unthinned (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /bin/mkdir -p /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_output/unthinned
+
+MkDir /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_output/thinned (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /bin/mkdir -p /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_output/thinned
+
+GenerateAssetSymbols /Users/runner/work/Cover-Studio/Cover-Studio/App/Assets.xcassets (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/actool /Users/runner/work/Cover-Studio/Cover-Studio/App/Assets.xcassets --compile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app --output-format human-readable-text --notices --warnings --export-dependency-info /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_dependencies --output-partial-info-plist /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_generated_info.plist --app-icon AppIcon --compress-pngs --enable-on-demand-resources YES --development-region zh-Hans --target-device iphone --target-device ipad --minimum-deployment-target 17.0 --platform iphoneos --bundle-identifier studio.mycover.app --generate-swift-asset-symbols /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/GeneratedAssetSymbols.swift --generate-objc-asset-symbols /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/GeneratedAssetSymbols.h --generate-asset-symbol-index /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/* com.apple.actool.compilation-results */
+/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/GeneratedAssetSymbols.h
+/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/GeneratedAssetSymbols.swift
+
+
+CompileAssetCatalogVariant thinned /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app /Users/runner/work/Cover-Studio/Cover-Studio/App/Assets.xcassets (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/actool /Users/runner/work/Cover-Studio/Cover-Studio/App/Assets.xcassets --compile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_dependencies_thinned --output-partial-info-plist /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --compress-pngs --enable-on-demand-resources YES --development-region zh-Hans --target-device iphone --target-device ipad --minimum-deployment-target 17.0 --platform iphoneos
+/* com.apple.actool.compilation-results */
+/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_generated_info.plist_thinned
+/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_output/thinned/AppIcon60x60@2x.png
+/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_output/thinned/AppIcon76x76@2x~ipad.png
+/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_output/thinned/Assets.car
+
+
+SwiftDriver MyCoverStudio normal arm64 com.apple.xcode.tools.swift.compiler (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-SwiftDriver -- /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MyCoverStudio -O @/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.SwiftFileList -strict-concurrency\=targeted -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -swift-version 5 -I /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -F /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/PackageFrameworks -F /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -emit-localized-strings -emit-localized-strings-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64 -c -j3 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/SDKStatCaches.noindex/iphoneos26.5-23F81a-688ef53f1462e2c8f657fdc38a81448fee66e23052a0157c865c76b268046726.sdkstatcache -output-file-map /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio_const_extract_protocols.json -Xcc -iquote -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-generated-files.hmap -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-own-target-headers.hmap -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio-fe75a8cd3b3103e60f5ab5d54676b153-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-project-headers.hmap -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/include -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources -emit-objc-header -emit-objc-header-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-Swift.h -working-directory /Users/runner/work/Cover-Studio/Cover-Studio -experimental-emit-module-separately -disable-cmo
+
+ExtractAppIntentsMetadata (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.vjRvCJ/Metal.xctoolchain --module-name CoverCore --sdk-root /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk --xcode-version 17F113 --platform-family iOS --deployment-target 17.0 --bundle-identifier cover-studio.CoverCore --output /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.appintents --target-triple arm64-apple-ios17.0 --binary-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.o --dependency-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore_dependency_info.dat --stringsdata-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.SwiftFileList --metadata-file-list /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/CoverCore.DependencyMetadataFileList --static-metadata-file-list /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/CoverCore.DependencyStaticMetadataFileList --swift-const-vals-list /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.SwiftConstValuesFileList --force --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-10-24 11:41:10.866 appintentsmetadataprocessor[4024:16751] Starting appintentsmetadataprocessor export
+2026-10-24 11:41:10.924 appintentsmetadataprocessor[4024:16751] Extracted no relevant App Intents symbols, skipping writing output
+
+RegisterExecutionPolicyException /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.o (in target 'CoverCore' from project 'CoverCore')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-RegisterExecutionPolicyException /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/CoverCore.o
+
+CpResource /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/PrivacyInfo.xcprivacy /Users/runner/work/Cover-Studio/Cover-Studio/App/PrivacyInfo.xcprivacy (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks /Users/runner/work/Cover-Studio/Cover-Studio/App/PrivacyInfo.xcprivacy /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/DeveloperToolsSupport-E02H2V8Y5X6VN60PUFKIJKXOI.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ptrcheck-3DET1TZGQB3RKG1KCTNX2YPLA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stdbool-8YG01E9TYHOPAXAATCQ08FBZQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_SwiftConcurrencyShims-1DXYQMGEDWU5Y3V9RL16WQTMW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stdarg-5PB9GV34HY1WZXW6Q77GOCJ1K.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ptrauth-5M0TZAFO2X5VU28DUJI6VTPKR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_float-6M3S95CF6D419F4MJMNB7B9FN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_AvailabilityInternal-9KMMWM7C2RR7M5836YBBM2S8Z.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stddef-B1DR6JWDLP0KMIBMAGEWBU233.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/SwiftShims-6K5QD0A2ZVKAL0D9ZKD2ELEIU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_DarwinFoundation1-9RVOD8SFLLXK76NOBZE9J3LBX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_DarwinFoundation2-2365WHFAVHMZXTS8SQ8FLQ0Y0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_limits-90B34BWZNS218KLVC0XLFDQWN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ExtensionFoundation-799UHJHPT08NEBDS4VH4JBSLQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/sys_types-GED54EL5WOX4EWH78ISHJRKU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stdint-4IWLDDSDA96TIP1PUR6UTASS1.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_tgmath-9OEU18T91GFY4IYX4B2ZM5AR7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_DarwinFoundation3-W8VWRKWOQXNBFSEPW7ZPQVQI.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_stdatomic-ADBVJNVS2PK8SGX3KTQ9QZN06.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_intrinsics-13NITBES6EDKRJY5J8GQAM2JB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_Builtin_inttypes-8TKB4GIO608CRDNDFSKLE90DJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Darwin-7X6QQC6U7I6M1BH3OJ8PAR7Z7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/simd-60VYLD6B3BOIAGDIUETNDDRBC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/MachO-1YZHX9RZUIAN62WANG5WBCMB6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ObjectiveC-7M9JLK7URWW7V25LAIJKJMN41.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/os_object-D0K58TY2S91KDSTAPFPXK074F.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/os_workgroup-66UWRK3WYDUYAB6CTI6UNO6MF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Dispatch-3LGV0KZ4E1T2J4AO39W7593PT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Spatial-1LRTK9PYAGPFJYKD5YVP3UCER.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreFoundation-96DFCM55P1YZ65M3K62U0PVGT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/dnssd-W7IUNWXYWNAFLYXZVYEYPHPM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/XPC-1FU4MBTQZ66NWZU3IYIGLS0AV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Security-35A0UNZIHD3KDC4IO5IAGECIB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CFNetwork-12MGYTBMOFP8NEJ3BQ53KROL7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreAudioTypes-DIXHUON54YJ0P6FNLURUHAF6W.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreGraphics-3JIAH3HFZT6DW4YJVTG55EA7S.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Foundation-7JXKF7CJ6Z1UNR95VGRI74F0M.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreAudio-6RQZF031GGXFXMA2WAKY7OR2Z.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreText-4TLKNVHJRIILXCAHJ0BJ63M5Q.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/ImageIO-C467Z6459O9D8OA9DNE9IXLBP.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/os-1Q2LFWA3CZ0GDD6IWB1XB27J6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/UserNotifications-D5U71HZUWLYQ1UILH565U6CAB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/DataDetection-5OM5S6WALZ9D7XP76X33N6UGH.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/LocalAuthentication-F4080L33KBBLEVZYACRXQUGRD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Symbols-66UZ9GT7UFSPJYAQ6LMV8BHQ4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/_LocationEssentials-1WS8JMCT9MH6SD35CUY6E9YMV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreTransferable-67O5VY7C0ARBM1JJO2T6KIAKN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreData-DDAZL3LKDC2A5R52AE4F3DVO4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/OSLog-31EBQY7Z9B7B1HJCSSQ1H0KB0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/FileProvider-ELTCGTA6KI4EALBKBAC1MA8OW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/UniformTypeIdentifiers-CLPT1H93X8P7F3LJNAQNMV8GY.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/IOSurface-DOFLYNZIZ4D3DBE6EYW5QEDTH.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreLocation-1QW4P5R1FKTPJNKP81Z8UIV70.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Accessibility-6LO56L4FWWKGC1OOVHZDD7ARU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Metal-B02IIH5MPUANHYP4KAZSYKEP6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/MediaAccessibility-7L29RAHWLA0YZ2BKB66AXCX0Q.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/OpenGLES-C1N99GQMXGF0GHHH9VSRYSTB2.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreMIDI-G5V50ZMJZXZV2O7AWA6PBAR6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/UIUtilities-4RGNHTF94N81W36M84IP84WSW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreVideo-CKU59VLWZGPP59AAQ3ZGOGFBY.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Network-ENECCHYVDZQB3B4KXQLG4R7NJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/AudioToolbox-DPD7XGD5BL2GSCESQT6LL1LUB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreMedia-166C0IBBJJZCE49BS94E5IDVU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/AVRouting-9RB1WEL4NE6BUOCDSYUCGQKYS.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/CoreImage-4ZJPE7JB6AINN1QPJGE3ZRTEJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/QuartzCore-5TD1BSKT0C38UQ7TSZMKC33Q5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/AVFAudio-61VDVE7TT6F3H6G1K97RE7NE6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/MediaToolbox-9J2KGNNIVDQB6RA06OAKEJ9F.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/UIKit-8HNHMK2GVHOOANK58Q7KRLN3C.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/SwiftUICore-D83KOLVMM87JN833Q5JRXLVEP.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/AVFoundation-BJPNM7O2KCBL630CBOUGNGMNN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Photos-C0UCTGSSC7C21R99GSDO67TCD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/SwiftUI-6HBE52FG1M5V1K5WMPMR7QL7I.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/PhotosUI-CIJGJZL7GZXD04L0CADAZ08N4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/AVKit-BBBY4NERK90UP6YRDI2P93SB4.pcm
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ MyCoverStudio (in target 'MyCoverStudio' from project 'MyCoverStudio')
+
+EmitSwiftModule normal arm64 (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+
+SwiftCompile normal arm64 Compiling\ ArchiveView.swift,\ CapturePipeline.swift,\ DamagedProjectView.swift,\ DubbingView.swift,\ EditorView.swift,\ ExportService.swift,\ ExportView.swift,\ LibraryView.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/ArchiveView.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/DamagedProjectView.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/EditorView.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/ExportService.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/ExportView.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/LibraryView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/ArchiveView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:140:31: warning: 'masterClock' was deprecated in iOS 15.4
+            let pts = session.masterClock.map { CMSyncConvertTime(originalPTS, from: $0, to: CMClockGetHostTimeClock()) } ?? originalPTS
+                              ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:160:70: warning: 'masterClock' was deprecated in iOS 15.4
+            if timing.decodeTimeStamp.isNumeric, let clock = session.masterClock {
+                                                                     ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:140:31: warning: 'masterClock' was deprecated in iOS 15.4
+            let pts = session.masterClock.map { CMSyncConvertTime(originalPTS, from: $0, to: CMClockGetHostTimeClock()) } ?? originalPTS
+                              ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:160:70: warning: 'masterClock' was deprecated in iOS 15.4
+            if timing.decodeTimeStamp.isNumeric, let clock = session.masterClock {
+                                                                     ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/DamagedProjectView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:140:31: warning: 'masterClock' was deprecated in iOS 15.4
+            let pts = session.masterClock.map { CMSyncConvertTime(originalPTS, from: $0, to: CMClockGetHostTimeClock()) } ?? originalPTS
+                              ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:160:70: warning: 'masterClock' was deprecated in iOS 15.4
+            if timing.decodeTimeStamp.isNumeric, let clock = session.masterClock {
+                                                                     ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:140:31: warning: 'masterClock' was deprecated in iOS 15.4
+            let pts = session.masterClock.map { CMSyncConvertTime(originalPTS, from: $0, to: CMClockGetHostTimeClock()) } ?? originalPTS
+                              ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:160:70: warning: 'masterClock' was deprecated in iOS 15.4
+            if timing.decodeTimeStamp.isNumeric, let clock = session.masterClock {
+                                                                     ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:40:29: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    if self.session.isRunning { self.session.stopRunning() }
+                            ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:40:54: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    if self.session.isRunning { self.session.stopRunning() }
+                                                     ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:41:26: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    self.session.beginConfiguration(); self.session.automaticallyConfiguresApplicationAudioSession = false
+                         ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:41:61: warning: main actor-isolated property 'session' can not be mutated from a Sendable closure
+                    self.session.beginConfiguration(); self.session.automaticallyConfiguresApplicationAudioSession = false
+                                                            ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: mutation of this property is only permitted within the actor
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:42:26: warning: main actor-isolated property 'session' can not be mutated from a Sendable closure
+                    self.session.sessionPreset = .hd1920x1080
+                         ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: mutation of this property is only permitted within the actor
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:43:26: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    self.session.inputs.forEach { self.session.removeInput($0) }; self.session.outputs.forEach { self.session.removeOutput($0) }
+                         ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:43:56: warning: main actor-isolated property 'session' can not be referenced from a nonisolated context
+                    self.session.inputs.forEach { self.session.removeInput($0) }; self.session.outputs.forEach { self.session.removeOutput($0) }
+                                                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:43:88: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    self.session.inputs.forEach { self.session.removeInput($0) }; self.session.outputs.forEach { self.session.removeOutput($0) }
+                                                                                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:43:119: warning: main actor-isolated property 'session' can not be referenced from a nonisolated context
+                    self.session.inputs.forEach { self.session.removeInput($0) }; self.session.outputs.forEach { self.session.removeOutput($0) }
+                                                                                                                      ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:46:32: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    guard self.session.canAddInput(input), self.session.canAddOutput(self.output) else { throw StudioError("补拍视频会话不可用。") }
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:46:65: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    guard self.session.canAddInput(input), self.session.canAddOutput(self.output) else { throw StudioError("补拍视频会话不可用。") }
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:46:91: warning: main actor-isolated property 'output' can not be referenced from a Sendable closure
+                    guard self.session.canAddInput(input), self.session.canAddOutput(self.output) else { throw StudioError("补拍视频会话不可用。") }
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:7:17: note: property declared here
+    private let output = AVCaptureMovieFileOutput()
+                ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:47:26: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    self.session.addInput(input); self.session.addOutput(self.output)
+                         ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:47:56: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    self.session.addInput(input); self.session.addOutput(self.output)
+                                                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:47:79: warning: main actor-isolated property 'output' can not be referenced from a Sendable closure
+                    self.session.addInput(input); self.session.addOutput(self.output)
+                                                                              ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:7:17: note: property declared here
+    private let output = AVCaptureMovieFileOutput()
+                ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:48:26: warning: main actor-isolated property 'output' can not be mutated from a Sendable closure
+                    self.output.movieFragmentInterval = CMTime(seconds: 2, preferredTimescale: 600)
+                         ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:7:17: note: mutation of this property is only permitted within the actor
+    private let output = AVCaptureMovieFileOutput()
+                ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:49:46: warning: main actor-isolated property 'output' can not be referenced from a Sendable closure
+                    if let connection = self.output.connection(with: .video) {
+                                             ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:7:17: note: property declared here
+    private let output = AVCaptureMovieFileOutput()
+                ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:53:26: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    self.session.commitConfiguration(); self.session.startRunning(); continuation.resume()
+                         ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:53:62: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                    self.session.commitConfiguration(); self.session.startRunning(); continuation.resume()
+                                                             ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:54:32: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+                } catch { self.session.commitConfiguration(); continuation.resume(throwing: error) }
+                               ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:68:28: warning: capture of 'budget' with non-Sendable type 'DiskBudget' in a '@Sendable' closure
+                    if try budget.shouldStop(available: FileIntegrity.available(url.deletingLastPathComponent())) || ProcessInfo.processInfo.thermalState == .critical {
+                           ^
+CoverCore.DiskBudget:1:15: note: struct 'DiskBudget' does not conform to the 'Sendable' protocol
+public struct DiskBudget : Equatable {
+              ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:3:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'CoverCore'
+import CoverCore
+^
+@preconcurrency 
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:85:39: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+        stop(); queue.async { if self.session.isRunning { self.session.stopRunning() } }
+                                      ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:85:64: warning: main actor-isolated property 'session' can not be referenced from a Sendable closure
+        stop(); queue.async { if self.session.isRunning { self.session.stopRunning() } }
+                                                               ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/DubbingView.swift:6:9: note: property declared here
+    let session = AVCaptureSession()
+        ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/EditorView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:140:31: warning: 'masterClock' was deprecated in iOS 15.4
+            let pts = session.masterClock.map { CMSyncConvertTime(originalPTS, from: $0, to: CMClockGetHostTimeClock()) } ?? originalPTS
+                              ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:160:70: warning: 'masterClock' was deprecated in iOS 15.4
+            if timing.decodeTimeStamp.isNumeric, let clock = session.masterClock {
+                                                                     ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/ExportService.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:140:31: warning: 'masterClock' was deprecated in iOS 15.4
+            let pts = session.masterClock.map { CMSyncConvertTime(originalPTS, from: $0, to: CMClockGetHostTimeClock()) } ?? originalPTS
+                              ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:160:70: warning: 'masterClock' was deprecated in iOS 15.4
+            if timing.decodeTimeStamp.isNumeric, let clock = session.masterClock {
+                                                                     ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/ExportView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:140:31: warning: 'masterClock' was deprecated in iOS 15.4
+            let pts = session.masterClock.map { CMSyncConvertTime(originalPTS, from: $0, to: CMClockGetHostTimeClock()) } ?? originalPTS
+                              ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:160:70: warning: 'masterClock' was deprecated in iOS 15.4
+            if timing.decodeTimeStamp.isNumeric, let clock = session.masterClock {
+                                                                     ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/LibraryView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:140:31: warning: 'masterClock' was deprecated in iOS 15.4
+            let pts = session.masterClock.map { CMSyncConvertTime(originalPTS, from: $0, to: CMClockGetHostTimeClock()) } ?? originalPTS
+                              ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/CapturePipeline.swift:160:70: warning: 'masterClock' was deprecated in iOS 15.4
+            if timing.decodeTimeStamp.isNumeric, let clock = session.masterClock {
+                                                                     ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/LibraryView.swift:330:184: warning: expression of type 'ArchiveManifest' is unused
+            try await Task.detached(priority: .userInitiated) { try ProjectArchive.create(project: project, root: directory, destination: output, mode: .full, includeExports: true) }.value
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
+
+SwiftCompile normal arm64 Compiling\ MediaRecoveryView.swift,\ MediaRendering.swift,\ MediaSmokeCheck.swift,\ OutputLibraryView.swift,\ PlaybackEngine.swift,\ PracticeView.swift,\ RecordView.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRecoveryView.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/MediaSmokeCheck.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/OutputLibraryView.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/PlaybackEngine.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/PracticeView.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/RecordView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRecoveryView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:23: warning: capture of 'input' with non-Sendable type 'AVAssetWriterInput' in a '@Sendable' closure
+                while input.isReadyForMoreMediaData && frame < total {
+                      ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:39:12: note: class 'AVAssetWriterInput' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInput : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:27: warning: capture of 'adaptor' with non-Sendable type 'AVAssetWriterInputPixelBufferAdaptor' in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                          ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:554:12: note: class 'AVAssetWriterInputPixelBufferAdaptor' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInputPixelBufferAdaptor : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:42: warning: capture of 'pixel' with non-Sendable type 'CVPixelBuffer' (aka 'CVBuffer') in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                         ^
+CoreVideo.CVBuffer:1:14: note: class 'CVBuffer' does not conform to the 'Sendable' protocol
+public class CVBuffer : _CFObject {
+             ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:42: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:313:24: warning: reference to captured var 'finished' in concurrently-executing code
+                guard !finished else { return }
+                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:56: warning: reference to captured var 'frame' in concurrently-executing code; this is an error in the Swift 6 language mode
+                while input.isReadyForMoreMediaData && frame < total {
+                                                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:85: warning: reference to captured var 'frame' in concurrently-executing code
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                                                                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:25: warning: mutation of captured var 'finished' in concurrently-executing code
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:318:21: warning: mutation of captured var 'frame' in concurrently-executing code
+                    frame += 1
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:320:20: warning: reference to captured var 'frame' in concurrently-executing code
+                if frame >= total {
+                   ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:321:21: warning: mutation of captured var 'finished' in concurrently-executing code
+                    finished = true; input.markAsFinished()
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:323:28: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        if writer.status == .completed { continuation.resume() }
+                           ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:23: warning: capture of 'input' with non-Sendable type 'AVAssetWriterInput' in a '@Sendable' closure
+                while input.isReadyForMoreMediaData && frame < total {
+                      ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:39:12: note: class 'AVAssetWriterInput' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInput : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:27: warning: capture of 'adaptor' with non-Sendable type 'AVAssetWriterInputPixelBufferAdaptor' in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                          ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:554:12: note: class 'AVAssetWriterInputPixelBufferAdaptor' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInputPixelBufferAdaptor : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:42: warning: capture of 'pixel' with non-Sendable type 'CVPixelBuffer' (aka 'CVBuffer') in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                         ^
+CoreVideo.CVBuffer:1:14: note: class 'CVBuffer' does not conform to the 'Sendable' protocol
+public class CVBuffer : _CFObject {
+             ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:42: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:313:24: warning: reference to captured var 'finished' in concurrently-executing code
+                guard !finished else { return }
+                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:56: warning: reference to captured var 'frame' in concurrently-executing code; this is an error in the Swift 6 language mode
+                while input.isReadyForMoreMediaData && frame < total {
+                                                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:85: warning: reference to captured var 'frame' in concurrently-executing code
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                                                                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:25: warning: mutation of captured var 'finished' in concurrently-executing code
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:318:21: warning: mutation of captured var 'frame' in concurrently-executing code
+                    frame += 1
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:320:20: warning: reference to captured var 'frame' in concurrently-executing code
+                if frame >= total {
+                   ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:321:21: warning: mutation of captured var 'finished' in concurrently-executing code
+                    finished = true; input.markAsFinished()
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:323:28: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        if writer.status == .completed { continuation.resume() }
+                           ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/MediaSmokeCheck.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:23: warning: capture of 'input' with non-Sendable type 'AVAssetWriterInput' in a '@Sendable' closure
+                while input.isReadyForMoreMediaData && frame < total {
+                      ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:39:12: note: class 'AVAssetWriterInput' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInput : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:27: warning: capture of 'adaptor' with non-Sendable type 'AVAssetWriterInputPixelBufferAdaptor' in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                          ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:554:12: note: class 'AVAssetWriterInputPixelBufferAdaptor' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInputPixelBufferAdaptor : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:42: warning: capture of 'pixel' with non-Sendable type 'CVPixelBuffer' (aka 'CVBuffer') in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                         ^
+CoreVideo.CVBuffer:1:14: note: class 'CVBuffer' does not conform to the 'Sendable' protocol
+public class CVBuffer : _CFObject {
+             ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:42: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:313:24: warning: reference to captured var 'finished' in concurrently-executing code
+                guard !finished else { return }
+                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:56: warning: reference to captured var 'frame' in concurrently-executing code; this is an error in the Swift 6 language mode
+                while input.isReadyForMoreMediaData && frame < total {
+                                                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:85: warning: reference to captured var 'frame' in concurrently-executing code
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                                                                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:25: warning: mutation of captured var 'finished' in concurrently-executing code
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:318:21: warning: mutation of captured var 'frame' in concurrently-executing code
+                    frame += 1
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:320:20: warning: reference to captured var 'frame' in concurrently-executing code
+                if frame >= total {
+                   ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:321:21: warning: mutation of captured var 'finished' in concurrently-executing code
+                    finished = true; input.markAsFinished()
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:323:28: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        if writer.status == .completed { continuation.resume() }
+                           ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/OutputLibraryView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:23: warning: capture of 'input' with non-Sendable type 'AVAssetWriterInput' in a '@Sendable' closure
+                while input.isReadyForMoreMediaData && frame < total {
+                      ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:39:12: note: class 'AVAssetWriterInput' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInput : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:27: warning: capture of 'adaptor' with non-Sendable type 'AVAssetWriterInputPixelBufferAdaptor' in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                          ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:554:12: note: class 'AVAssetWriterInputPixelBufferAdaptor' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInputPixelBufferAdaptor : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:42: warning: capture of 'pixel' with non-Sendable type 'CVPixelBuffer' (aka 'CVBuffer') in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                         ^
+CoreVideo.CVBuffer:1:14: note: class 'CVBuffer' does not conform to the 'Sendable' protocol
+public class CVBuffer : _CFObject {
+             ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:42: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:313:24: warning: reference to captured var 'finished' in concurrently-executing code
+                guard !finished else { return }
+                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:56: warning: reference to captured var 'frame' in concurrently-executing code; this is an error in the Swift 6 language mode
+                while input.isReadyForMoreMediaData && frame < total {
+                                                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:85: warning: reference to captured var 'frame' in concurrently-executing code
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                                                                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:25: warning: mutation of captured var 'finished' in concurrently-executing code
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:318:21: warning: mutation of captured var 'frame' in concurrently-executing code
+                    frame += 1
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:320:20: warning: reference to captured var 'frame' in concurrently-executing code
+                if frame >= total {
+                   ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:321:21: warning: mutation of captured var 'finished' in concurrently-executing code
+                    finished = true; input.markAsFinished()
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:323:28: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        if writer.status == .completed { continuation.resume() }
+                           ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/PlaybackEngine.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:23: warning: capture of 'input' with non-Sendable type 'AVAssetWriterInput' in a '@Sendable' closure
+                while input.isReadyForMoreMediaData && frame < total {
+                      ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:39:12: note: class 'AVAssetWriterInput' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInput : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:27: warning: capture of 'adaptor' with non-Sendable type 'AVAssetWriterInputPixelBufferAdaptor' in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                          ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:554:12: note: class 'AVAssetWriterInputPixelBufferAdaptor' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInputPixelBufferAdaptor : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:42: warning: capture of 'pixel' with non-Sendable type 'CVPixelBuffer' (aka 'CVBuffer') in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                         ^
+CoreVideo.CVBuffer:1:14: note: class 'CVBuffer' does not conform to the 'Sendable' protocol
+public class CVBuffer : _CFObject {
+             ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:42: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:313:24: warning: reference to captured var 'finished' in concurrently-executing code
+                guard !finished else { return }
+                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:56: warning: reference to captured var 'frame' in concurrently-executing code; this is an error in the Swift 6 language mode
+                while input.isReadyForMoreMediaData && frame < total {
+                                                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:85: warning: reference to captured var 'frame' in concurrently-executing code
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                                                                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:25: warning: mutation of captured var 'finished' in concurrently-executing code
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:318:21: warning: mutation of captured var 'frame' in concurrently-executing code
+                    frame += 1
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:320:20: warning: reference to captured var 'frame' in concurrently-executing code
+                if frame >= total {
+                   ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:321:21: warning: mutation of captured var 'finished' in concurrently-executing code
+                    finished = true; input.markAsFinished()
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:323:28: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        if writer.status == .completed { continuation.resume() }
+                           ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/PracticeView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:23: warning: capture of 'input' with non-Sendable type 'AVAssetWriterInput' in a '@Sendable' closure
+                while input.isReadyForMoreMediaData && frame < total {
+                      ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:39:12: note: class 'AVAssetWriterInput' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInput : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:27: warning: capture of 'adaptor' with non-Sendable type 'AVAssetWriterInputPixelBufferAdaptor' in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                          ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:554:12: note: class 'AVAssetWriterInputPixelBufferAdaptor' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInputPixelBufferAdaptor : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:42: warning: capture of 'pixel' with non-Sendable type 'CVPixelBuffer' (aka 'CVBuffer') in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                         ^
+CoreVideo.CVBuffer:1:14: note: class 'CVBuffer' does not conform to the 'Sendable' protocol
+public class CVBuffer : _CFObject {
+             ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:42: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:313:24: warning: reference to captured var 'finished' in concurrently-executing code
+                guard !finished else { return }
+                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:56: warning: reference to captured var 'frame' in concurrently-executing code; this is an error in the Swift 6 language mode
+                while input.isReadyForMoreMediaData && frame < total {
+                                                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:85: warning: reference to captured var 'frame' in concurrently-executing code
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                                                                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:25: warning: mutation of captured var 'finished' in concurrently-executing code
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:318:21: warning: mutation of captured var 'frame' in concurrently-executing code
+                    frame += 1
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:320:20: warning: reference to captured var 'frame' in concurrently-executing code
+                if frame >= total {
+                   ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:321:21: warning: mutation of captured var 'finished' in concurrently-executing code
+                    finished = true; input.markAsFinished()
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:323:28: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        if writer.status == .completed { continuation.resume() }
+                           ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/RecordView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:23: warning: capture of 'input' with non-Sendable type 'AVAssetWriterInput' in a '@Sendable' closure
+                while input.isReadyForMoreMediaData && frame < total {
+                      ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:39:12: note: class 'AVAssetWriterInput' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInput : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:27: warning: capture of 'adaptor' with non-Sendable type 'AVAssetWriterInputPixelBufferAdaptor' in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                          ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriterInput.h:554:12: note: class 'AVAssetWriterInputPixelBufferAdaptor' does not conform to the 'Sendable' protocol
+@interface AVAssetWriterInputPixelBufferAdaptor : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:42: warning: capture of 'pixel' with non-Sendable type 'CVPixelBuffer' (aka 'CVBuffer') in a '@Sendable' closure
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                         ^
+CoreVideo.CVBuffer:1:14: note: class 'CVBuffer' does not conform to the 'Sendable' protocol
+public class CVBuffer : _CFObject {
+             ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:42: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:313:24: warning: reference to captured var 'finished' in concurrently-executing code
+                guard !finished else { return }
+                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:314:56: warning: reference to captured var 'frame' in concurrently-executing code; this is an error in the Swift 6 language mode
+                while input.isReadyForMoreMediaData && frame < total {
+                                                       ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:315:85: warning: reference to captured var 'frame' in concurrently-executing code
+                    guard adaptor.append(pixel, withPresentationTime: CMTime(value: frame, timescale: 30)) else {
+                                                                                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:316:25: warning: mutation of captured var 'finished' in concurrently-executing code
+                        finished = true; writer.cancelWriting(); continuation.resume(throwing: writer.error ?? StudioError("照片视频编码失败。")); return
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:318:21: warning: mutation of captured var 'frame' in concurrently-executing code
+                    frame += 1
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:320:20: warning: reference to captured var 'frame' in concurrently-executing code
+                if frame >= total {
+                   ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:321:21: warning: mutation of captured var 'finished' in concurrently-executing code
+                    finished = true; input.markAsFinished()
+                    ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/MediaRendering.swift:323:28: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+                        if writer.status == .completed { continuation.resume() }
+                           ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/AVFoundation.framework/Headers/AVAssetWriter.h:66:12: note: class 'AVAssetWriter' does not conform to the 'Sendable' protocol
+@interface AVAssetWriter : NSObject
+           ^
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for MyCoverStudio (in target 'MyCoverStudio' from project 'MyCoverStudio')
+
+SwiftDriver\ Compilation\ Requirements MyCoverStudio normal arm64 com.apple.xcode.tools.swift.compiler (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MyCoverStudio -O @/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.SwiftFileList -strict-concurrency\=targeted -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -swift-version 5 -I /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -F /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/PackageFrameworks -F /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -emit-localized-strings -emit-localized-strings-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64 -c -j3 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/SDKStatCaches.noindex/iphoneos26.5-23F81a-688ef53f1462e2c8f657fdc38a81448fee66e23052a0157c865c76b268046726.sdkstatcache -output-file-map /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio_const_extract_protocols.json -Xcc -iquote -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-generated-files.hmap -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-own-target-headers.hmap -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio-fe75a8cd3b3103e60f5ab5d54676b153-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-project-headers.hmap -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/include -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources -emit-objc-header -emit-objc-header-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-Swift.h -working-directory /Users/runner/work/Cover-Studio/Cover-Studio -experimental-emit-module-separately -disable-cmo
+
+LinkAssetCatalog /Users/runner/work/Cover-Studio/Cover-Studio/App/Assets.xcassets (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-linkAssetCatalog --thinned /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_output/thinned --thinned-dependencies /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_generated_info.plist_thinned --unthinned /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_output/unthinned --unthinned-dependencies /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_generated_info.plist_unthinned --output /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app --plist-output /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_generated_info.plist
+note: Emplaced /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/Assets.car (in target 'MyCoverStudio' from project 'MyCoverStudio')
+note: Emplaced /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/AppIcon76x76@2x~ipad.png (in target 'MyCoverStudio' from project 'MyCoverStudio')
+note: Emplaced /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/AppIcon60x60@2x.png (in target 'MyCoverStudio' from project 'MyCoverStudio')
+
+SwiftCompile normal arm64 Compiling\ RecordingCoordinator.swift,\ StartupUITestFixture.swift,\ StudioApp.swift,\ StudioBootstrap.swift,\ StudioPreview.swift,\ StudioStore.swift,\ GeneratedAssetSymbols.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/RecordingCoordinator.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/StartupUITestFixture.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/StudioApp.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/StudioBootstrap.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/StudioPreview.swift /Users/runner/work/Cover-Studio/Cover-Studio/App/StudioStore.swift /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/RecordingCoordinator.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+/Users/runner/work/Cover-Studio/Cover-Studio/App/RecordingCoordinator.swift:176:61: warning: 'allowBluetooth' was deprecated in iOS 8.0: renamed to 'AVAudioSession.CategoryOptions.allowBluetoothHFP'
+            var options: AVAudioSession.CategoryOptions = [.allowBluetooth, .allowBluetoothA2DP]
+                                                            ^
+/Users/runner/work/Cover-Studio/Cover-Studio/App/RecordingCoordinator.swift:176:61: note: use 'AVAudioSession.CategoryOptions.allowBluetoothHFP' instead
+            var options: AVAudioSession.CategoryOptions = [.allowBluetooth, .allowBluetoothA2DP]
+                                                            ^~~~~~~~~~~~~~
+                                                            AVAudioSession.CategoryOptions.allowBluetoothHFP
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/StartupUITestFixture.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/StudioApp.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/StudioBootstrap.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/StudioPreview.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/App/StudioStore.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+
+SwiftCompile normal arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    
+
+SwiftMergeGeneratedHeaders /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/MyCoverStudio-Swift.h /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-Swift.h (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-swiftHeaderTool -arch arm64 /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-Swift.h -o /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/MyCoverStudio-Swift.h
+
+SwiftDriverJobDiscovery normal arm64 Compiling RecordingCoordinator.swift, StartupUITestFixture.swift, StudioApp.swift, StudioBootstrap.swift, StudioPreview.swift, StudioStore.swift, GeneratedAssetSymbols.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+
+Copy /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.swiftmodule/arm64-apple-ios.swiftmodule /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.swiftmodule (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.swiftmodule /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.swiftmodule/arm64-apple-ios.swiftdoc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.swiftdoc (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.swiftdoc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.swiftmodule/arm64-apple-ios.abi.json /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.abi.json (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.abi.json /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.swiftsourceinfo (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.swiftsourceinfo /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+ProcessInfoPlistFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/Info.plist /Users/runner/work/Cover-Studio/Cover-Studio/App/Info.plist (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-infoPlistUtility /Users/runner/work/Cover-Studio/Cover-Studio/App/Info.plist -producttype com.apple.product-type.application -genpkginfo /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/assetcatalog_generated_info.plist -requiredArchitecture arm64 -o /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/Info.plist
+
+SwiftDriverJobDiscovery normal arm64 Compiling MediaRecoveryView.swift, MediaRendering.swift, MediaSmokeCheck.swift, OutputLibraryView.swift, PlaybackEngine.swift, PracticeView.swift, RecordView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ArchiveView.swift, CapturePipeline.swift, DamagedProjectView.swift, DubbingView.swift, EditorView.swift, ExportService.swift, ExportView.swift, LibraryView.swift (in target 'MyCoverStudio' from project 'MyCoverStudio')
+
+SwiftDriver\ Compilation MyCoverStudio normal arm64 com.apple.xcode.tools.swift.compiler (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-Swift-Compilation -- /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MyCoverStudio -O @/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.SwiftFileList -strict-concurrency\=targeted -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -swift-version 5 -I /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -F /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/PackageFrameworks -F /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -emit-localized-strings -emit-localized-strings-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64 -c -j3 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/SDKStatCaches.noindex/iphoneos26.5-23F81a-688ef53f1462e2c8f657fdc38a81448fee66e23052a0157c865c76b268046726.sdkstatcache -output-file-map /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio_const_extract_protocols.json -Xcc -iquote -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-generated-files.hmap -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-own-target-headers.hmap -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio-fe75a8cd3b3103e60f5ab5d54676b153-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio-project-headers.hmap -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/include -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/DerivedSources -emit-objc-header -emit-objc-header-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-Swift.h -working-directory /Users/runner/work/Cover-Studio/Cover-Studio -experimental-emit-module-separately -disable-cmo
+
+Ld /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/MyCoverStudio normal (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -isysroot /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -Os -L/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos -L/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -F/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos -F/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/PackageFrameworks -F/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos -filelist /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio_lto.o -Xlinker -dependency_info -Xlinker /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.swiftmodule @/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio-linker-args.resp -Wl,-no_warn_duplicate_libraries -o /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/MyCoverStudio -Xlinker -add_ast_path -Xlinker /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore.swiftmodule @/Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/CoverCore.build/Release-iphoneos/CoverCore.build/Objects-normal/arm64/CoverCore-linker-args.resp
+
+CopySwiftLibs /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/MyCoverStudio --scan-folder /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/Frameworks --scan-folder /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/PlugIns --scan-folder /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/SystemExtensions --scan-folder /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/Extensions --platform iphoneos --toolchain /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.vjRvCJ/Metal.xctoolchain --toolchain /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.vjRvCJ/Metal.xctoolchain --module-name MyCoverStudio --sdk-root /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk --xcode-version 17F113 --platform-family iOS --deployment-target 17.0 --bundle-identifier studio.mycover.app --output /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app --target-triple arm64-apple-ios17.0 --binary-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/MyCoverStudio --dependency-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio_dependency_info.dat --stringsdata-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.SwiftFileList --metadata-file-list /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio.DependencyMetadataFileList --static-metadata-file-list /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio.DependencyStaticMetadataFileList --swift-const-vals-list /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/Objects-normal/arm64/MyCoverStudio.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-10-24 11:41:51.841 appintentsmetadataprocessor[5376:20103] Starting appintentsmetadataprocessor export
+2026-10-24 11:41:51.856 appintentsmetadataprocessor[5376:20103] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+GenerateDSYMFile /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app.dSYM /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/MyCoverStudio (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/MyCoverStudio -o /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app.dSYM
+
+AppIntentsSSUTraining (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/Info.plist --temp-dir-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/ssu --bundle-id studio.mycover.app --product-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app --extracted-metadata-path /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/Metadata.appintents --metadata-file-list /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Intermediates.noindex/MyCoverStudio.build/Release-iphoneos/MyCoverStudio.build/MyCoverStudio.DependencyMetadataFileList --source-file /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app/Info.plist --archive-ssu-assets
+2026-10-24 11:41:51.937 appintentsnltrainingprocessor[5393:20139] Parsing options for appintentsnltrainingprocessor
+2026-10-24 11:41:51.938 appintentsnltrainingprocessor[5393:20139] Starting AppIntents SSU YAML Generation
+2026-10-24 11:41:51.944 appintentsnltrainingprocessor[5393:20139] No AppShortcuts found - Skipping.
+
+RegisterExecutionPolicyException /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-RegisterExecutionPolicyException /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app
+
+Validate /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    builtin-validationUtility /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app -shallow-bundle -infoplist-subpath Info.plist
+
+Touch /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app (in target 'MyCoverStudio' from project 'MyCoverStudio')
+    cd /Users/runner/work/Cover-Studio/Cover-Studio
+    /usr/bin/touch -c /Users/runner/work/Cover-Studio/Cover-Studio/build/DeviceDerivedData/Build/Products/Release-iphoneos/MyCoverStudio.app
+
+** BUILD SUCCEEDED **
+
