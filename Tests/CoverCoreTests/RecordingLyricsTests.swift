@@ -52,7 +52,7 @@ final class RecordingLyricsTests: XCTestCase {
         XCTAssertEqual(try RecordingOrigin.session(practice: false, playbackPosition: 95, sectionStart: 24).position(duration: 180), 24)
         XCTAssertEqual(try RecordingOrigin.session(practice: false, playbackPosition: 95, sectionStart: 24, recoveringEnd: 40).position(duration: 180), 37)
         XCTAssertEqual(try RecordingOrigin.recovery(savedEnd: 2).position(duration: 180), 0)
-        for invalid in [Double.nan, -.infinity, -1, 180, 200] {
+        for invalid in [Double.nan, -Double.infinity, -1, 180, 200] {
             XCTAssertThrowsError(try RecordingOrigin.section(start: invalid).position(duration: 180))
         }
         XCTAssertThrowsError(try RecordingOrigin.fullTake.position(duration: 0))

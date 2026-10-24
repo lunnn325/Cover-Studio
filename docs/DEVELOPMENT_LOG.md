@@ -167,3 +167,6 @@ Debug simulator 使用独立临时 fixture 根目录，Release/设备不含 fixt
 按用户顺序先修两个 P0：正式新 Take 不能继承练习/上次位置，歌词文字保存不能依赖隐藏的「读取」步骤。新增 RecordingOrigin 与 LyricsDocument，真实播放器 seek 和共同 capture/playback songStart；歌词草稿按工程/伴奏身份落盘成功再关闭，录制页增加明确入口。随后集中改 iPad 横屏分区、常驻主操作、收纳高级路由信息及后期/作品库的歌曲/Take/时长层级。沿用当前分支，不创建子 Agent，不使用 impeccable，不改原素材和 schema。
 
 新增五项核心测试并扩展既有单条隔离原生 UI 用例，包含跨页歌词保存及 App 进程重开；此 fixture 只验证元数据与界面，不含可播放录音。计划一次集中 macOS 60 核心测试、必要编译、iPad 原生 UI 及 1.0.2/build 3 device IPA，结果待真实完成后记录。实机三次完整 Take、输入/输出/中断、音画同步和真实 Files 仍待 iPad 复测。
+
+
+`37303a9` / Actions `40098408591` 在新增测试编译阶段失败：异构数字字面量数组中的 `-.infinity` 无法推断具体浮点类型；产品核心源已编译，未执行测试或设备构建。修正为明确 `-Double.infinity`，不删测试或放宽断言，然后进行必要复验。
