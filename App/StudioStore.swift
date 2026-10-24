@@ -3,9 +3,9 @@ import AVFoundation
 import CoverCore
 
 struct PendingRecording: Identifiable {
-    var id: UUID { takeID }
+    var id: String { projectID.uuidString + ":" + (takeID?.uuidString ?? "unidentified") }
     var projectID: UUID
-    var takeID: UUID
+    var takeID: UUID?
     var name: String
     var savedSegments: Int
 }
@@ -55,16 +55,45 @@ struct PendingRecording: Identifiable {
     func refreshPendingRecordings() {
         pendingRecordings = projects.filter { !$0.archived }.compactMap { project in
             let url = repository.directory(project.id).appendingPathComponent("recording.json")
-            guard let data = try? Data(contentsOf: url), let journal = try? JSONDecoder().decode(Take.self, from: data),
-                  let take = project.takes.first(where: { $0.id == journal.id }) else { return nil }
+            guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+            guard let size = try? FileIntegrity.size(url), size <= 16 * 1024 * 1024,
+                  let data = try? Data(contentsOf: url), let journal = try? JSONDecoder().decode(Take.self, from: data),
+                  let take = project.takes.first(where: { $0.id == journal.id }) else {
+                return PendingRecording(projectID: project.id, takeID: nil, name: project.song.title + " · 无法关联的录制日志", savedSegments: 0)
+            }
             return PendingRecording(projectID: project.id, takeID: take.id, name: project.song.title + " · " + take.name, savedSegments: take.segments.count)
         }
     }
     func resumeRecording(_ pending: PendingRecording) async {
         guard !recording.isBusy, !auxiliaryRecording, !busy, !exports.working else { error = "请先结束当前操作。"; return }
+        guard let takeID = pending.takeID else { error = "此日志不能安全续录，可保留原件后结束恢复记录。"; return }
         await select(pending.projectID)
         guard selectedID == pending.projectID else { return }
-        await recording.preflight(recovering: pending.takeID)
+        await recording.preflight(recovering: takeID)
+    }
+    func closePending(_ pending: PendingRecording) async throws {
+        guard !recording.isBusy, !auxiliaryRecording, !busy, !exports.working else { throw StudioError("请先结束当前操作。") }
+        await select(pending.projectID)
+        guard let project = selected, project.id == pending.projectID else { throw StudioError("恢复工程已变化。") }
+        busy = true; defer { busy = false }
+        do {
+            try await flush()
+            let updated = try await repository.closePendingRecording(project, takeID: pending.takeID)
+            if let index = projects.firstIndex(where: { $0.id == updated.id }) { projects[index] = updated }
+            refreshPendingRecordings()
+            notice = "恢复记录已结束，已有 Take 与原件保留。额外原件没有可靠时长或同步信息，完整工程包可保留其字节，不代表已恢复为可播放录音。"
+        } catch { await load(); throw error }
+    }
+    func processUnclaimed(path: String, projectID: UUID, remove: Bool) async throws {
+        guard let project = selected, project.id == projectID, !recording.isBusy, !auxiliaryRecording, !busy, !exports.working else { throw StudioError("请先结束当前操作，并重新选择原件。") }
+        busy = true; defer { busy = false }
+        do {
+            try await flush()
+            let updated: StudioProject
+            if remove { updated = try await repository.removeUnclaimedMedia(project, path: path) }
+            else { updated = try await repository.adoptUnregistered(project, paths: [path]) }
+            if let index = projects.firstIndex(where: { $0.id == updated.id }) { projects[index] = updated }
+        } catch { await load(); throw error }
     }
     func update(_ mutate: (inout StudioProject) -> Void) {
         guard let id = selectedID, let index = projects.firstIndex(where: { $0.id == id }), !projects[index].archived else { return }

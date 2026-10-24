@@ -133,24 +133,85 @@ public actor ProjectRepository {
     public func duplicate(_ original: StudioProject) throws -> StudioProject {
         try ProjectRules.validate(original)
         guard !original.archived else { throw StudioError("请先恢复已归档工程，再创建副本。") }
+        try requireCurrent(original)
         var copy = original
         copy.originalProjectID = original.id; copy.id = UUID(); copy.branchID = UUID()
         copy.revision = 1; copy.song.title += "（副本）"; copy.backups = []; copy.modifiedAt = Date()
         let source = directory(original.id), destination = directory(copy.id)
         let staging = root.appendingPathComponent(".duplicate-" + UUID().uuidString)
-        var total: Int64 = 0
-        for asset in original.assets {
-            _ = try ProjectRules.mediaURL(asset.path, root: source)
-            let (next, overflow) = total.addingReportingOverflow(asset.bytes)
+        let payload = try FileIntegrity.encoder().encode(copy)
+        let inventory = try ProjectFiles.inventory(root: source, excluding: ["cache", "project.json", "project.previous.json"])
+        var total = Int64(payload.count) * 2
+        for entry in inventory {
+            let (next, overflow) = total.addingReportingOverflow(entry.bytes)
             guard !overflow else { throw StudioError("工程大小无效。") }
             total = next
         }
         guard total <= Int64.max - 32 * 1024 * 1024,
               try FileIntegrity.available(root) > total + 32 * 1024 * 1024 else { throw StudioError("空间不足以复制工程。") }
-        try files.copyItem(at: source, to: staging)
-        try FileIntegrity.encoder().encode(copy).write(to: staging.appendingPathComponent("project.json"), options: .atomic)
+        try files.createDirectory(at: staging, withIntermediateDirectories: true)
+        // Count and copy every owned file, including unindexed capture tails and
+        // historical exports. Rebuildable cache is intentionally excluded.
+        for entry in inventory {
+            let input = try ProjectFiles.url(entry.path, root: source), output = try ProjectFiles.url(entry.path, root: staging)
+            try files.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try files.copyItem(at: input, to: output)
+            guard try FileIntegrity.size(output) == entry.bytes else { throw StudioError("复制期间文件大小变化，失败暂存已保留。") }
+        }
+        for asset in original.assets {
+            let output = try ProjectRules.mediaURL(asset.path, root: staging)
+            guard try FileIntegrity.size(output) == asset.bytes, try FileIntegrity.sha256(output) == asset.sha256 else {
+                throw StudioError("副本源素材校验失败，原工程及复制暂存已保留。")
+            }
+        }
+        try payload.write(to: staging.appendingPathComponent("project.json"), options: .atomic)
+        try payload.write(to: staging.appendingPathComponent("project.previous.json"), options: .atomic)
         try files.moveItem(at: staging, to: destination)
         return copy
+    }
+    private func requireCurrent(_ project: StudioProject) throws {
+        let current = try JSONDecoder().decode(StudioProject.self, from: Data(contentsOf: directory(project.id).appendingPathComponent("project.json")))
+        guard current.id == project.id, current.revision == project.revision else { throw StudioError("工程已有更新，请重新打开后再执行此操作。") }
+    }
+    public func adoptUnregistered(_ project: StudioProject, paths: Set<String>) throws -> StudioProject {
+        guard !project.archived else { throw StudioError("请先恢复工程源素材，再登记原件。") }
+        try requireCurrent(project)
+        var result = try ProjectFiles.adoptingUnregistered(project, root: directory(project.id), paths: paths)
+        result.touch(); try save(result)
+        return result
+    }
+    public func closePendingRecording(_ project: StudioProject, takeID: UUID?) throws -> StudioProject {
+        guard !project.archived else { throw StudioError("请先恢复本地工程。") }
+        try requireCurrent(project)
+        let dir = directory(project.id), journal = try ProjectFiles.url("recording.json", root: dir)
+        guard try FileIntegrity.size(journal) <= 16 * 1024 * 1024 else { throw StudioError("录制日志过大，请保留原文件。") }
+        let take = try? JSONDecoder().decode(Take.self, from: Data(contentsOf: journal))
+        if let takeID {
+            guard take?.id == takeID, project.takes.contains(where: { $0.id == takeID }) else { throw StudioError("录制日志已变化，未结束其他录制。") }
+        } else if let take, project.takes.contains(where: { $0.id == take.id }) {
+            throw StudioError("录制日志可关联到 Take，请刷新后选择对应记录。")
+        }
+        let retained = try ProjectFiles.url("media/recovery-" + UUID().uuidString + ".json", root: dir)
+        try files.createDirectory(at: retained.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try files.copyItem(at: journal, to: retained)
+        var result = try ProjectFiles.adoptingUnregistered(project, root: dir)
+        result.touch(); try save(result)
+        // Commit the protected originals before clearing the pending marker.
+        try files.removeItem(at: journal)
+        return result
+    }
+    /// The UI must present the exact file and receive two confirmations first.
+    public func removeUnclaimedMedia(_ project: StudioProject, path: String) throws -> StudioProject {
+        try requireCurrent(project)
+        let dir = directory(project.id)
+        guard !files.fileExists(atPath: dir.appendingPathComponent("recording.json").path) else { throw StudioError("请先恢复或结束待恢复录制，再处理原件。") }
+        guard let entry = try ProjectFiles.unclaimedMedia(project: project, root: dir).first(where: { $0.path == path }) else {
+            throw StudioError("原件仍被工程引用或路径已变化，已阻止删除。")
+        }
+        var result = project
+        if let id = entry.assetID { result.assets.removeAll { $0.id == id }; result.touch(); try save(result) }
+        try files.removeItem(at: ProjectFiles.url(path, root: dir))
+        return result
     }
     public func backup(_ project: StudioProject, mode: BackupMode, selected: Set<UUID>, to destination: URL, includeExports: Bool = false,
                        selectedExportPaths: Set<String>? = nil) throws -> ArchiveManifest {

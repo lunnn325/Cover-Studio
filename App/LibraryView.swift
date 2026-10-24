@@ -11,6 +11,8 @@ struct LibraryView: View {
     @State private var recoverySheet = false
     @State private var recoveryPreview = false
     @State private var recoveryTakeID: UUID?
+    @State private var pendingClosure: PendingRecording?
+    @State private var closeRecovery = false
     var filtered: [StudioProject] {
         store.projects.filter { search.isEmpty || ($0.song.title + " " + $0.song.artist + " " + $0.song.group).localizedCaseInsensitiveContains(search) }
     }
@@ -28,16 +30,7 @@ struct LibraryView: View {
             }
             if !store.pendingRecordings.isEmpty {
                 Section("上次未完成的录制") {
-                    ForEach(store.pendingRecordings) { pending in
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text(pending.name).font(.headline)
-                            Text("已保存 \(pending.savedSegments) 个片段，未封装的尾段不能保证恢复。").font(.footnote).foregroundStyle(.secondary)
-                            if pending.savedSegments > 0 {
-                                Button("预览已保存片段") { Task { await store.select(pending.projectID); recoveryTakeID = pending.takeID; recoveryPreview = true } }
-                            }
-                            Button("检查设备后接唱") { Task { await store.resumeRecording(pending); if store.recording.isBusy { recoverySheet = true } } }
-                        }
-                    }
+                    ForEach(store.pendingRecordings) { pending in pendingRow(pending) }
                 }
             }
             if filtered.isEmpty { ContentUnavailableView(search.isEmpty ? "还没有作品" : "没有匹配的作品", systemImage: "square.stack", description: Text("导入伴奏开始录制，或从工程包恢复。")) }
@@ -86,12 +79,33 @@ struct LibraryView: View {
                     .interactiveDismissDisabled(store.recording.isBusy)
             }
             .sheet(isPresented: $recoveryPreview) { NavigationStack { TakePreviewView(takeID: recoveryTakeID) } }
+            .confirmationDialog("保留文件并结束此恢复记录？", isPresented: $closeRecovery, titleVisibility: .visible) {
+                Button("取消", role: .cancel) {}
+                Button("保留文件，结束接唱") {
+                    guard let pendingClosure else { return }
+                    Task { do { try await store.closePending(pendingClosure) } catch { store.report(error) } }
+                }
+            } message: { Text("不会重新打开麦克风。已有 Take 保留，未登记原件和日志纳入完整工程包，但不代表尾段已能播放或同步；精简包可能不含这些原件。") }
+            .overlay { if store.busy { ProgressView("正在处理本地文件…").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12)) } }
             .onAppear { store.refreshPendingRecordings() }
             .fileImporter(isPresented: $restorePicker, allowedContentTypes: [.coverProject, .data]) { result in
                 Task {
                     do { try await store.restore(try result.get(), keepBoth: true) } catch { store.report(error) }
                 }
             }
+    }
+    private func pendingRow(_ pending: PendingRecording) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(pending.name).font(.headline)
+            Text("已保存 \(pending.savedSegments) 个片段，未封装的尾段不能保证恢复。").font(.footnote).foregroundStyle(.secondary)
+            if pending.savedSegments > 0 {
+                Button("预览已保存片段") { Task { await store.select(pending.projectID); recoveryTakeID = pending.takeID; recoveryPreview = true } }
+            }
+            if pending.takeID != nil {
+                Button("检查设备后接唱") { Task { await store.resumeRecording(pending); if store.recording.isBusy { recoverySheet = true } } }
+            }
+            Button("保留文件并结束接唱") { pendingClosure = pending; closeRecovery = true }
+        }.disabled(store.exports.working || store.busy || store.auxiliaryRecording)
     }
     @ViewBuilder func cover(_ project: StudioProject) -> some View {
         if let id = project.song.coverAssetID, let asset = project.asset(id), let image = UIImage(contentsOfFile: store.repository.directory(project.id).appendingPathComponent(asset.path).path) {
@@ -141,6 +155,7 @@ struct StorageView: View {
     @State private var firstConfirm = false
     @State private var finalConfirm = false
     @State private var outputLibrary = false
+    @State private var mediaRecovery = false
     @State private var clearCache = false
     @State private var snapshots: [RetainedSnapshot] = []
     @State private var pendingSnapshot: RetainedSnapshot?
@@ -156,6 +171,7 @@ struct StorageView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
             .task { await refresh() }
             .sheet(isPresented: $outputLibrary, onDismiss: { Task { await refresh() } }) { NavigationStack { OutputLibraryView() } }
+            .sheet(isPresented: $mediaRecovery, onDismiss: { Task { await refresh() } }) { NavigationStack { MediaRecoveryView() } }
             .interactiveDismissDisabled(exportingSnapshot)
             .sheet(isPresented: $snapshotPicker) {
                 if let snapshotPackage { DocumentExportPicker(urls: [snapshotPackage]) { success in snapshotPicker = false; if success { store.notice = "安全副本已交给 Files，云上传仍未验证。可从作品库选择此包恢复。" } } }
@@ -205,6 +221,10 @@ struct StorageView: View {
                 }
             }
             if project != nil {
+                Section("未登记 / 未引用原件") {
+                    Button("检查并保留原件") { mediaRecovery = true }.disabled(store.exports.working)
+                    Text("可能包含中断尾段或导入未完成的原件；不会自动删除或伪造可播放状态。").font(.footnote).foregroundStyle(.secondary)
+                }
                 Section("导出成品") {
                     Button("浏览全部成品与未登记文件") { outputLibrary = true }.disabled(store.exports.working)
                     Text("历史成品按文件保留；未登记输出单独标明，可预览、分享或两次确认后删除。").font(.footnote).foregroundStyle(.secondary)
@@ -224,7 +244,7 @@ struct StorageView: View {
     private func snapshotRow(_ snapshot: RetainedSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             LabeledContent(snapshot.title, value: bytes(snapshot.bytes))
-            Text(snapshot.id.hasPrefix(".safety-") ? "替换前的旧工程，可能含独有录制。" : "失败恢复的暂存内容，尚不能视为完整工程。").font(.footnote).foregroundStyle(.secondary)
+            Text(snapshot.id.hasPrefix(".safety-") ? "替换前的旧工程，可能含独有录制。" : "失败复制 / 恢复的暂存内容，尚不能视为完整工程。").font(.footnote).foregroundStyle(.secondary)
             if snapshot.hasIndex { Button("校验并导出此副本为工程包") { Task { await exportSnapshot(snapshot) } }.disabled(exportingSnapshot) }
             Button("移除此副本…", role: .destructive) { pendingSnapshot = snapshot; snapshotFirst = true }.disabled(exportingSnapshot)
         }
@@ -247,7 +267,7 @@ struct StorageView: View {
             while let file = enumerator?.nextObject() as? URL {
                 guard let size = try? FileIntegrity.size(file) else { continue }
                 let relative = String(file.path.dropFirst(root.path.count))
-                if relative.contains("/.safety-") || relative.contains("/.replaced-") || relative.contains("/.restore-") { result.retained += size }
+                if relative.contains("/.safety-") || relative.contains("/.replaced-") || relative.contains("/.restore-") || relative.contains("/.duplicate-") { result.retained += size }
                 else if relative.contains("/media/") { result.source += size }
                 else if relative.contains("/exports/") { result.exports += size }
                 else if relative.contains("/cache/") { result.cache += size }
@@ -270,10 +290,7 @@ struct StorageView: View {
 
     }
     nonisolated static func validSnapshotName(_ name: String) -> Bool {
-        for prefix in [".safety-", ".restore-", ".replaced-"] where name.hasPrefix(prefix) {
-            return UUID(uuidString: String(name.dropFirst(prefix.count))) != nil
-        }
-        return false
+        ProjectFiles.isRetainedDirectory(name)
     }
     func snapshotDirectory(_ name: String) throws -> URL {
         let root = store.repository.root.resolvingSymlinksInPath()
@@ -287,7 +304,8 @@ struct StorageView: View {
         exportingSnapshot = true; store.busy = true; defer { exportingSnapshot = false; store.busy = false }
         do {
             let directory = try snapshotDirectory(snapshot.id)
-            let project = try JSONDecoder().decode(StudioProject.self, from: Data(contentsOf: directory.appendingPathComponent("project.json")))
+            let original = try JSONDecoder().decode(StudioProject.self, from: Data(contentsOf: directory.appendingPathComponent("project.json")))
+            let project = try await Task.detached { try ProjectFiles.adoptingUnregistered(original, root: directory) }.value
             let output = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".coverproject")
             try await Task.detached(priority: .userInitiated) { try ProjectArchive.create(project: project, root: directory, destination: output, mode: .full, includeExports: true) }.value
             snapshotPackage = output; snapshotPicker = true

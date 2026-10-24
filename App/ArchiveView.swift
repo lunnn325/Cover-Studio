@@ -203,6 +203,9 @@ struct ArchiveView: View {
             let excluded = project.takes.filter { !kept.contains($0.id) }.map(\.name)
             scopeNote = "\(mode.label)包包含 \(manifest.project.takes.count) 个 Take。" + (excluded.isEmpty ? "包含本地全部 Take。" : "未包含：" + excluded.joined(separator: "、") + "。释放本地素材后，这些 Take 无法从此包恢复。")
             scopeNote += " 已包含 \(manifest.project.assets.filter { $0.role == .export }.count) 个导出成品，未登记文件未包含。"
+            let keptAssets = Set(manifest.project.assets.map(\.id))
+            let excludedSources = project.assets.filter { $0.role != .export && !keptAssets.contains($0.id) }
+            if !excludedSources.isEmpty { scopeNote += " 未包含 \(excludedSources.count) 个源文件，释放后不能从此包恢复；未引用的待恢复原件请优先用完整包保留。" }
             try await store.recordBackup(.init(archiveID: manifest.archiveID, revision: project.revision, level: .archivePrepared, note: scopeNote + " 仅本地工程包已校验，尚未交给文件提供者。"), projectID: project.id)
         } catch { store.report(error) }
     }
