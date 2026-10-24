@@ -1,0 +1,14 @@
+{
+  "scope": "One native iPad simulator UI workflow using isolated generated metadata/raw bytes. No playable media, hardware capture, AirPods, real-device recovery or cloud/provider validation.",
+  "passed": true,
+  "errors": [],
+  "family": "iPad",
+  "device": "iPad Pro 13-inch (M5)",
+  "testArchitecture": "arm64",
+  "passedTests": 1,
+  "failedTests": 0,
+  "originalHashesUnchanged": true,
+  "retainedLogMatches": true,
+  "pendingMarkerCleared": true,
+  "recoveredProjectCount": 1
+}

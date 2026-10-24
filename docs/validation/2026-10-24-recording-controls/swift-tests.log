@@ -1,0 +1,80 @@
+Building for debugging...
+[0/7] Write sources
+[0/7] /Users/runner/work/Cover-Studio/Cover-Studio/.build/arm64-apple-macosx/debug/CoverCorePackageTests.derived/runner.swift
+[2/7] Write sources
+[4/7] Write swift-version-7974D3F7F03D5E95.txt
+[6/14] Emitting module CoverCore
+[7/17] Compiling CoverCore Models.swift
+[8/17] Compiling CoverCore ProjectFiles.swift
+[9/17] Compiling CoverCore ProjectRepository.swift
+[10/17] Compiling CoverCore RepositoryStartup.swift
+[11/17] Compiling CoverCore Rules.swift
+[12/17] Compiling CoverCore Timeline.swift
+[13/17] Compiling CoverCore Archive.swift
+[14/17] Compiling CoverCore ExportCatalog.swift
+[15/17] Compiling CoverCore LibraryRecovery.swift
+[16/22] Compiling CoverCoreTests CoverCoreTests.swift
+[17/22] Compiling CoverCoreTests ExportCatalogTests.swift
+[18/22] Compiling CoverCoreTests LibraryRecoveryTests.swift
+[19/22] Compiling CoverCoreTests RecoveryFilesTests.swift
+[20/22] Emitting module CoverCoreTests
+[21/23] Compiling CoverCoreTests RepositoryStartupTests.swift
+[22/25] Emitting module CoverCorePackageTests
+[23/25] Compiling CoverCorePackageTests runner.swift
+[23/25] Write Objects.LinkFileList
+[24/25] Linking CoverCorePackageTests
+Build complete! (34.93s)
+[1/50] Testing CoverCoreTests.CoverCoreTests/testArchiveRoundTripVerifiesEveryOriginalByte
+[2/50] Testing CoverCoreTests.CoverCoreTests/testArchiveRejectsIncompatibleVersionFeaturesBadPathsAndMissingDependency
+[3/50] Testing CoverCoreTests.CoverCoreTests/testArchiveRejectsManifestTamperMediaTamperTruncationAndTrailingBytes
+[4/50] Testing CoverCoreTests.CoverCoreTests/testCompleteBackupIncludesPracticeButExportsAreExplicit
+[5/50] Testing CoverCoreTests.CoverCoreTests/testCaptureOrderSurvivesHostClockResetAndOldPackages
+[6/50] Testing CoverCoreTests.CoverCoreTests/testExportPresetsGuardRealLyricsAndVisuals
+[7/50] Testing CoverCoreTests.CoverCoreTests/testLRCUnicodeMultipleTagsOffsetAndMetadata
+[8/50] Testing CoverCoreTests.CoverCoreTests/testInterruptedReplacementRecoversOldProjectBeforeLoadingLibrary
+[9/50] Testing CoverCoreTests.CoverCoreTests/testLRCRoundingCrossesMinuteBoundary
+[10/50] Testing CoverCoreTests.CoverCoreTests/testMalformedLRCDoesNotInventSynchronizedLyrics
+[11/50] Testing CoverCoreTests.CoverCoreTests/testMetadataCollisionCaseCollisionAndDirectoryCollisionRejected
+[12/50] Testing CoverCoreTests.CoverCoreTests/testPendingRecordingPreventsReleaseEvenWithVerifiedBackup
+[13/50] Testing CoverCoreTests.CoverCoreTests/testRecordingTransitionsAndDynamicDiskBudget
+[14/50] Testing CoverCoreTests.CoverCoreTests/testRestoreKeepBothPreservesExistingRevisionAndOriginalMedia
+[15/50] Testing CoverCoreTests.CoverCoreTests/testReplacementRetainsSafetyCopyAndDuplicateResetsRevision
+[16/50] Testing CoverCoreTests.CoverCoreTests/testSafePathsRejectTraversalAndUnsafeComponents
+[17/50] Testing CoverCoreTests.CoverCoreTests/testSlimAndCustomKeepReferencedOldTakesAndArrangementDependencies
+[18/50] Testing CoverCoreTests.CoverCoreTests/testSubtitleIntervalsRespectTrimOffsetAndExplicitDisplayRange
+[19/50] Testing CoverCoreTests.CoverCoreTests/testSubtitleOutlineKeepsLegacyAppearanceAndSurvivesArchive
+[20/50] Testing CoverCoreTests.CoverCoreTests/testTamperedRestoreCannotModifyAnExistingProject
+[21/50] Testing CoverCoreTests.CoverCoreTests/testSymbolicLinkCannotEscapeOrAliasMetadata
+[22/50] Testing CoverCoreTests.CoverCoreTests/testTimelineResumedOverlapAndTrimPreserveSourceOffset
+[23/50] Testing CoverCoreTests.CoverCoreTests/testUnrepresentableMediaTimeAndAudioPresetRoundTrip
+[24/50] Testing CoverCoreTests.CoverCoreTests/testUnexportedArchiveCannotAuthorizeRelease
+[25/50] Testing CoverCoreTests.ExportCatalogTests/testBackupCanIncludeEveryCompletedVersionAndRestoreWithoutCatalogSidecars
+[26/50] Testing CoverCoreTests.ExportCatalogTests/testCustomBackupSelectsOutputsButCannotDropAnOutputUsedAsBacking
+[27/50] Testing CoverCoreTests.ExportCatalogTests/testCompletedHistorySurvivesQueueReplacementAndDoesNotTrustUntrackedFiles
+[28/50] Testing CoverCoreTests.ExportCatalogTests/testRemovingOneHistoricalOutputPreservesSourcesOtherVersionsAndMetadataBoundaries
+[29/50] Testing CoverCoreTests.ExportCatalogTests/testRestoredOutputsAreKnownButCorruptOrAliasedCatalogCannotBeOverwritten
+[30/50] Testing CoverCoreTests.LibraryRecoveryTests/testBadAndMissingIndicesAreVisibleWithoutBlockingHealthyProjects
+[31/50] Testing CoverCoreTests.LibraryRecoveryTests/testChangedCandidateAndMissingOrTamperedMediaCannotPublishRecovery
+[32/50] Testing CoverCoreTests.LibraryRecoveryTests/testMissingCurrentIndexCanRecoverButHealthyCurrentIsNeverRolledBack
+[33/50] Testing CoverCoreTests.LibraryRecoveryTests/testExternalArchiveRestoreStillWorksBesideDamagedDirectory
+[34/50] Testing CoverCoreTests.LibraryRecoveryTests/testPreviousIndexRecoveryCopiesAllOriginalsWithoutInventingMissingTakes
+[35/50] Testing CoverCoreTests.LibraryRecoveryTests/testWrongIdentityAndSymlinkCannotBeReadAsRecoverySources
+[36/50] Testing CoverCoreTests.RecoveryFilesTests/testCopyHashFailureRetainsInspectableStagingAndNeverChangesOriginalIndex
+[37/50] Testing CoverCoreTests.RecoveryFilesTests/testDuplicatePreservesUnindexedFilesAndHistoryButOmitsRebuildableCache
+[38/50] Testing CoverCoreTests.RecoveryFilesTests/testFailedTakeIndexCommitRetainsLogAndPreviousSourceIndex
+[39/50] Testing CoverCoreTests.RecoveryFilesTests/testEndingPendingProtectsTailAndJournalInFullArchiveWithoutInventingTakeTiming
+[40/50] Testing CoverCoreTests.RecoveryFilesTests/testNewTakeJournalPersistsUntilOwnedNonemptyTakeIsCommitted
+[41/50] Testing CoverCoreTests.RecoveryFilesTests/testPendingJournalBlocksNewTakeAndRequiresItsOriginalOwner
+[42/50] Testing CoverCoreTests.RecoveryFilesTests/testRawManagementRejectsReferencesPendingDeletionAndSymlinkEscapes
+[43/50] Testing CoverCoreTests.RecoveryFilesTests/testTakeCreationRejectsStaleSnapshotAndJournalSymlinkWithoutChangingBytes
+[44/50] Testing CoverCoreTests.RecoveryFilesTests/testUnidentifiedJournalCanBePreservedButCannotCloseADifferentKnownTake
+[45/50] Testing CoverCoreTests.RepositoryStartupTests/testChangedLogAndSymlinkCannotBePreservedAsConfirmedMarker
+[46/50] Testing CoverCoreTests.RepositoryStartupTests/testCommittedTargetKeepsSafetyAndDamagedSafetyOriginalsCanBeExported
+[47/50] Testing CoverCoreTests.RepositoryStartupTests/testCorruptMarkerCanBeExplicitlyPreservedWithoutTouchingProjects
+[48/50] Testing CoverCoreTests.RepositoryStartupTests/testOccupiedOrIncompleteTargetRetainsTransactionAndSafetyDirectory
+[49/50] Testing CoverCoreTests.RepositoryStartupTests/testUnsafeTransactionCannotMoveExternalDirectory
+[50/50] Testing CoverCoreTests.RepositoryStartupTests/testRootFileAndOversizedLogFailWithoutReplacingExistingBytes
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

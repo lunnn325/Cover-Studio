@@ -41,11 +41,11 @@ python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/De
 
 描边增量在同一预览检查内复用已生成的干净画面，关闭阴影，比较中英文纯填充与 4 像素描边帧；`outlineDarkenedPixels` 分别记录变暗边缘数量，同时检查填充仍可见。只增加字幕帧提取，不重复生成混音/双版本输出；实际是否通过以对应报告为准。
 
-手动 `startup_ui_check` 只运行一条原生 iPhone Simulator UI 流程，不启动媒体检查或设备矩阵。`StartupUITests` 在设备跳过，应用 fixture 只编入 Debug Simulator，通过 `--startup-ui-fixture` 在独立 tmp 目录生成明确非媒体的测试字节；正常启动、Release 和设备不使用此路径。此模式实际点击启动保留确认、旧索引校验/创建副本、原件及日志页面，保存 XCTest 截图，并独立复核原件哈希、日志和副本数量。运行后仍需人工查看图片，不能推定 Files 提供者、摄像头、AirPods 或跨设备通过。
+手动 `startup_ui_check` 只运行一条原生 Simulator UI 流程，通过 `startup_ui_family` 单选 iPhone（默认）或 iPad；iPad 使用横屏并断言实际窗口宽大于高。不启动媒体检查或设备矩阵。`StartupUITests` 在设备跳过，应用 fixture 只编入 Debug Simulator，通过 `--startup-ui-fixture` 在独立 tmp 目录生成明确非媒体的测试字节；正常启动、Release 和设备不使用此路径。此模式实际点击启动保留确认、旧索引校验/创建副本、原件及日志页面，保存 XCTest 截图，并独立复核原件哈希、日志和副本数量。运行后仍需人工查看图片，不能推定 Files 提供者、摄像头、AirPods 或跨设备通过。
 
-可在 macOS 运行 `python3 scripts/startup_ui_check.py`；它复用当前 DerivedData 做一个指定 UI test，结果在 `build/startup-ui-evidence/`，只有手动选中时执行。主工程生成器同时维护单个 UI test target，常规 build 不运行它；不需要安装外部测试框架。实际是否成功以对应 Actions/原始日志为准。
+可在 macOS 运行 `python3 scripts/startup_ui_check.py --family iPad`（省略参数默认 iPhone）；它复用当前 DerivedData 做一个指定 UI test，结果在 `build/startup-ui-evidence/`，只有手动选中时执行。主工程生成器同时维护单个 UI test target，常规 build 不运行它；不需要安装外部测试框架。实际是否成功以对应 Actions/原始日志为准。
 
-截图和 `scope.json` 是空状态启动/外观证据，需人工查看；不代表录制页、横屏、整条交互、真实相机、AirPods、声音、同步或备份恢复通过。截图失败会使已选择的步骤明确失败。CI 日志和截图保留 7 天。当前是否真正运行成功应以该次 Actions 记录和交付报告为准，不能由这些脚本存在推定。
+`simulator_snapshots` 的截图和 `scope.json` 是空状态启动/外观证据，需人工查看；手动启动/恢复 UI 的独立 `startup-ui-evidence/scope.json` 则只描述该条实际交互/文件检查。空状态证据不代表录制页、横屏、整条交互、真实相机、AirPods、声音、同步或备份恢复通过。截图失败会使已选择的步骤明确失败。CI 日志和截图保留 7 天。当前是否真正运行成功应以该次 Actions 记录和交付报告为准，不能由这些脚本存在推定。
 
 同一步骤还会在手机 Simulator 使用 DEBUG 启动参数 `--media-smoke` 执行一次两秒合成自有素材检查，经真实离线混音、照片、字幕双 MP4、WAV 和工程包代码路径产生 `Documents/MediaSmokeReport.json`。正常启动不运行此检查。脚本最多等报告 120 秒，复制报告、两秒合成伴奏 WAV、小字幕帧与诊断，不上传用户内容或大视频。检查保留频谱与过零两个读数；220 Hz 升三半音应接近 261.63 Hz，时长仍为两秒。`passed` 不为 `true` 或超时都会明确失败；完整截图模式继续收集 iPad 空状态。这项轻量集成检查不能证明真实录制、AirPods、真人音质、设备同步或外部云端恢复通过。已通过的实际结果见 [保留证据](validation/2026-10-24/README.md)。
 

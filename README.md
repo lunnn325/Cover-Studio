@@ -24,6 +24,10 @@
 
 `136103c` 修复安全副本原件入口，在单个 iPhone Simulator 通过 1 条真实原生 UI 流程，50 项核心测试和双架构编译继续通过；六张截图、原件哈希核对与实际范围见[原生 UI 验证](docs/validation/2026-10-24-startup-ui/README.md)。这不代表录制、Files 或实机验收通过。
 
+`14fe7fa` 在单个 iPad 横屏 Simulator 也通过恢复交互、原件/日志/副本核对，50 项核心测试和双架构编译通过。截图裁剪限制及已有录像的有限观察见 [iPad 证据](docs/validation/2026-10-24-ipad-ui/README.md)。录制控制锁与固定停止栏已实现并编译，实际录制仍须真机验证。
+
+`94c89a9` 修复练习回听可能停止正式录制伴奏、跨页单击停止绕过长按的问题，50 项核心测试与双架构应用编译通过；[检查范围](docs/validation/2026-10-24-recording-controls/README.md)。真实录制手势和设备路由仍待验证。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：
