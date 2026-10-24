@@ -21,7 +21,8 @@ import CoverCore
             if let root { base = root }
             else {
                 #if DEBUG && targetEnvironment(simulator)
-                if ProcessInfo.processInfo.arguments.contains("--startup-ui-fixture") { base = try await StartupUITestFixture.makeLibrary() }
+                if ProcessInfo.processInfo.arguments.contains("--resume-startup-ui-fixture") { base = try StartupUITestFixture.reopenLibrary() }
+                else if ProcessInfo.processInfo.arguments.contains("--startup-ui-fixture") { base = try await StartupUITestFixture.makeLibrary() }
                 else { base = support.appendingPathComponent("MyCoverStudio/Projects", isDirectory: true) }
                 #else
                 base = support.appendingPathComponent("MyCoverStudio/Projects", isDirectory: true)

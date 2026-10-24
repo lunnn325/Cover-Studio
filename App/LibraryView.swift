@@ -44,7 +44,8 @@ struct LibraryView: View {
                                 cover(project)
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text(project.song.title).font(.headline).foregroundStyle(.primary)
-                                    Text(project.archived ? "已归档 · 从外部恢复源素材" : "\(project.arrangements.count) 个伴奏版本 · \(project.takes.filter { !$0.isPractice }.count) 个 Take").font(.subheadline).foregroundStyle(.secondary)
+                                    Text(project.archived ? "已归档 · 从外部恢复源素材" : takeSummary(project)).font(.subheadline).foregroundStyle(.secondary)
+                                    if !project.song.artist.isEmpty { Text(project.song.artist).font(.caption).foregroundStyle(.secondary) }
                                     Text(project.modifiedAt, style: .date).font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
@@ -60,6 +61,10 @@ struct LibraryView: View {
             }
             if let project = store.selected {
                 Section("当前工程") {
+                    if let take = project.selectedTake, !project.archived {
+                        Button("预览 " + take.name + " · " + clock(take.recordedDuration)) { recoveryTakeID = take.id; recoveryPreview = true }
+                        Button("进入后期编辑") { store.workspaceTab = 2 }
+                    }
                     Button("重命名与手动分组") { rename = true }.disabled(project.archived)
                     Button("复制工程尝试新版本") { Task { do { try await store.duplicate() } catch { store.report(error) } } }.disabled(project.archived)
                     Button("工程备份与恢复") { backup = true }
@@ -96,6 +101,11 @@ struct LibraryView: View {
                     do { try await store.restore(try result.get(), keepBoth: true) } catch { store.report(error) }
                 }
             }
+    }
+    private func takeSummary(_ project: StudioProject) -> String {
+        let takes = project.takes.filter { !$0.isPractice }
+        guard let take = project.selectedTake ?? takes.last else { return "尚未录制 · 打开歌曲开始" }
+        return take.name + " · " + clock(take.recordedDuration) + " · 共 \(takes.count) 个 Take"
     }
     @ViewBuilder private var issueSection: some View {
         if !store.libraryIssues.isEmpty {

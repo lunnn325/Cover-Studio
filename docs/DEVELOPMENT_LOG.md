@@ -160,3 +160,10 @@ Debug simulator 使用独立临时 fixture 根目录，Release/设备不含 fixt
 `05e51ce` / Actions `40094808859` 一次通过：55 项核心/实际音频解码测试、Release iphoneos arm64 编译与新版 IPA 打包。已取回 1.0.1/build 2，1,475,769 字节，本地 ZIP/平台/元数据/SHA-256 与 CI 一致，MIT 许可已随包，测试音频未随包。原始日志、样本哈希及限制在 `docs/validation/2026-10-24-audio-import/`。未运行模拟器/重复媒体导出；后续记录与 PR 更新不再触发构建。
 
 交付 `dist/MyCoverStudio-1.0.1-unsigned.ipa`，沿用同一应用 ID，用户按原签名账号/应用标识覆盖安装后可选实际 OGG/Vorbis 样本核验。OGG/Opus 等明确未开放；用户上一版安装反馈不计新版格式或硬件录制验收通过。
+
+
+## 2026-10-24：初版 iPad 反馈修复（单 Agent）
+
+按用户顺序先修两个 P0：正式新 Take 不能继承练习/上次位置，歌词文字保存不能依赖隐藏的「读取」步骤。新增 RecordingOrigin 与 LyricsDocument，真实播放器 seek 和共同 capture/playback songStart；歌词草稿按工程/伴奏身份落盘成功再关闭，录制页增加明确入口。随后集中改 iPad 横屏分区、常驻主操作、收纳高级路由信息及后期/作品库的歌曲/Take/时长层级。沿用当前分支，不创建子 Agent，不使用 impeccable，不改原素材和 schema。
+
+新增五项核心测试并扩展既有单条隔离原生 UI 用例，包含跨页歌词保存及 App 进程重开；此 fixture 只验证元数据与界面，不含可播放录音。计划一次集中 macOS 60 核心测试、必要编译、iPad 原生 UI 及 1.0.2/build 3 device IPA，结果待真实完成后记录。实机三次完整 Take、输入/输出/中断、音画同步和真实 Files 仍待 iPad 复测。

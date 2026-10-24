@@ -47,6 +47,37 @@ import UIKit
         XCTAssertTrue(app.navigationBars["启动恢复日志"].waitForExistence(timeout: 15))
         XCTAssertTrue(app.buttons["保存副本到 Files"].waitForExistence(timeout: 15))
         capture(app, "06-retained-startup-log")
+        tap(app.navigationBars["启动恢复日志"].buttons["完成"], in: app)
+        tap(app.navigationBars["设置"].buttons["完成"], in: app)
+        tap(app.buttons["录制"].firstMatch, in: app)
+        XCTAssertTrue(app.buttons["record-prepare"].waitForExistence(timeout: 15))
+        if widePad { XCTAssertTrue(app.otherElements["record-wide-layout"].firstMatch.exists) }
+        capture(app, "07-record-empty-lyrics")
+        tap(app.buttons["record-lyrics"], in: app)
+        let editor = app.textViews["lyrics-text"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 15)); editor.tap()
+        editor.typeText("[00:00.00]Saved first line\n[00:05.00]Saved second line")
+        tap(app.buttons["lyrics-save"], in: app)
+        XCTAssertTrue(app.staticTexts["Saved first line"].waitForExistence(timeout: 15))
+        capture(app, "08-record-saved-lrc")
+        tap(app.buttons["练习"].firstMatch, in: app)
+        let practiceList = app.collectionViews.firstMatch
+        tap(app.buttons["practice-lyrics"], in: app, scrolling: practiceList)
+        XCTAssertTrue(editor.waitForExistence(timeout: 15))
+        XCTAssertTrue((editor.value as? String ?? "").contains("Saved second line"))
+        editor.tap(); editor.typeText("\nRevised plain lyric\n")
+        tap(app.buttons["lyrics-save"], in: app)
+        // Reopen the actual saved project after process termination, not just the sheet draft.
+        app.terminate()
+        app.launchArguments = ["--resume-startup-ui-fixture", "-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launch(); dismissNotice(app)
+        tap(app.buttons["录制"].firstMatch, in: app)
+        XCTAssertTrue(app.staticTexts["Revised plain lyric"].waitForExistence(timeout: 15))
+        capture(app, "09-record-lyrics-after-relaunch")
+        tap(app.buttons["record-lyrics"], in: app)
+        XCTAssertTrue(editor.waitForExistence(timeout: 15))
+        XCTAssertTrue((editor.value as? String ?? "").contains("Revised plain lyric"))
+        capture(app, "10-reopened-lyrics-editor")
     }
     private func dismissNotice(_ app: XCUIApplication) {
         let notice = app.alerts["工程提示"]

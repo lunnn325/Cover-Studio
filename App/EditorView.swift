@@ -90,8 +90,8 @@ struct EditorPanel: View {
     @ViewBuilder var previewControls: some View {
         if let take = project?.selectedTake {
             Image(systemName: take.kind == .video ? "video" : "waveform").font(.largeTitle).foregroundStyle(.secondary).frame(height: 70)
-            Text(take.name).font(.title2.weight(.semibold))
-            Text("\(take.segments.count) 个片段 · 录制变调 \(take.semitones) 半音").font(.subheadline).foregroundStyle(.secondary)
+            Text(project?.song.title ?? "").font(.title2.weight(.semibold))
+            Text(take.name + " · " + clock(take.recordedDuration)).font(.headline).foregroundStyle(.secondary)
             Button("播放原始 Take") { rawPreview = true }.buttonStyle(.bordered).disabled(exports.working || preparingPicture)
             Button {
                 guard let project else { return }
@@ -111,6 +111,9 @@ struct EditorPanel: View {
             }
             if exports.working { ProgressView(exports.stage) }
             Button("选择输出与导出") { exportSheet = true }.buttonStyle(.bordered).disabled(exports.working || preparingPicture)
+            DisclosureGroup("录制详情") {
+                Text("\(take.segments.count) 个片段 · 录制变调 \(take.semitones) 半音").font(.footnote).foregroundStyle(.secondary)
+            }
         } else {
             ContentUnavailableView("还没有正式 Take", systemImage: "waveform", description: Text("先录制，或把满意的练习录音转为 Audio Take。"))
         }
@@ -143,6 +146,7 @@ struct EditorPanel: View {
                     HStack {
                         Label(take.name, systemImage: take.kind == .video ? "video" : "waveform")
                         Spacer()
+                        Text(clock(take.recordedDuration)).monospacedDigit().foregroundStyle(.secondary)
                         if take.favorite { Image(systemName: "star.fill").foregroundStyle(.yellow) }
                         if project?.edit.selectedTakeID == take.id { Image(systemName: "checkmark") }
                     }

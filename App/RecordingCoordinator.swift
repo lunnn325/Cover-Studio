@@ -18,6 +18,7 @@ import CoverCore
     @Published var savedTakeID: UUID?
     @Published var video = true
     @Published var resumePosition: Double = 0
+    @Published private(set) var lyricsScrollID = UUID()
     @Published var inputs: [AVAudioSessionPortDescription] = []
     @Published var selectedInputUID = ""
     @Published private(set) var level: Float?
@@ -44,10 +45,15 @@ import CoverCore
     private var monitoringConfigured = false
     var isBusy: Bool { [.preflight, .ready, .countdown, .recording, .interrupted, .finalizing].contains(state) }
     var isCapturing: Bool { state == .recording || state == .countdown }
+    var allowsLyricsEditing: Bool { !isBusy || (state == .ready && takeID == nil) }
+    var displayTakeName: String {
+        if let takeID, let take = store?.selected?.takes.first(where: { $0.id == takeID }), isBusy { return take.name }
+        return (practice && isBusy ? "练习 " : "Take ") + String((store?.selected?.takes.count ?? 0) + 1)
+    }
     func setControlsLocked(_ locked: Bool) { controlsLocked = state == .recording && locked }
     var currentLyrics: Lyrics {
         guard let project = store?.selected else { return Lyrics() }
-        if let takeID, let take = project.takes.first(where: { $0.id == takeID }) { return project.arrangement(for: take)?.lyrics ?? Lyrics() }
+        if isBusy, let takeID, let take = project.takes.first(where: { $0.id == takeID }) { return project.arrangement(for: take)?.lyrics ?? Lyrics() }
         return project.arrangement?.lyrics ?? Lyrics()
     }
     init(playback: PlaybackEngine, repository: ProjectRepository) {
@@ -146,7 +152,7 @@ import CoverCore
         guard state.canTransition(to: next) else { throw StudioError("当前录制状态不允许执行此操作。") }
         state = next
     }
-    func preflight(practice: Bool = false, recovering: UUID? = nil) async {
+    func preflight(practice: Bool = false, recovering: UUID? = nil, sectionStart: Double? = nil) async {
         guard !isCapturing, !preflightInFlight, state != .preflight, state != .finalizing, !stopping, !startInFlight,
               let store, let project = store.selected, !project.archived else { return }
         guard !store.exports.working, !store.busy, !store.auxiliaryRecording else { store.error = "请先结束预览、导出或其他文件操作。"; return }
@@ -197,7 +203,12 @@ import CoverCore
                 do { try playback.configureMonitoring(format: monitoringFormat); monitoringConfigured = true }
                 catch { monitoringConfigured = false; monitoringExplanation = error.localizedDescription }
             }
-            resumePosition = previous.map { max(0, $0.end - 3) } ?? playback.position
+            let origin = RecordingOrigin.session(practice: practice, playbackPosition: playback.position,
+                                                 sectionStart: sectionStart, recoveringEnd: previous?.end)
+            resumePosition = try origin.position(duration: playback.duration)
+            // Reset the real player, not only a label. Capture and lyrics use this same song clock.
+            try playback.seek(resumePosition)
+            lyricsScrollID = UUID()
             try transition(.ready)
             refreshMonitoringAvailability()
             UIDevice.current.isBatteryMonitoringEnabled = true
@@ -314,10 +325,11 @@ import CoverCore
                 let session = AVAudioSession.sharedInstance()
                 let savedSegments = store.selected?.takes.first(where: { $0.id == takeID })?.segments ?? []
                 let sequenceStart = (savedSegments.enumerated().map { $0.element.sequence ?? $0.offset }.max() ?? -1) + 1
-                try await pipeline.begin(directory: repository.directory(project.id), songStart: resumePosition, host: host,
+                let songStart = resumePosition
+                try await pipeline.begin(directory: repository.directory(project.id), songStart: songStart, host: host,
                        route: route, inputLatency: session.inputLatency, outputLatency: session.outputLatency, sequenceStart: sequenceStart)
                 try checkStarting()
-                try playback.play(from: resumePosition, hostTime: host)
+                try playback.play(from: songStart, hostTime: host)
                 try transition(.recording); refreshMonitoringAvailability(); UIApplication.shared.isIdleTimerDisabled = true
                 startMonitor()
             } catch is CancellationError {
@@ -360,9 +372,11 @@ import CoverCore
             try await store.flush()
             guard let project = store.selected, project.id == projectID else { throw StudioError("录制工程已变化，恢复日志仍保留。") }
             try await repository.completeRecordingTake(project, takeID: takeID)
-            state = .saved; savedTakeID = takeID
+            state = .saved
         } catch { state = .recoverableError; reason = error.localizedDescription; store?.report(error) }
         await pipeline.shutDown(); level = nil; stopping = false; UIApplication.shared.isIdleTimerDisabled = false
+        // Publish the preview only after shutdown so an immediate re-record can prepare safely.
+        if state == .saved { savedTakeID = takeID }
     }
     private func commit(_ chunk: CapturedChunk) async throws {
         guard let projectID, let takeID, let store, store.selectedID == projectID,

@@ -144,6 +144,7 @@ public struct Take: Identifiable, Codable, Equatable, Sendable {
     }
     public var assetIDs: Set<UUID> { segments.reduce(into: Set<UUID>()) { $0.formUnion($1.assetIDs) } }
     public var end: Double { segments.map { $0.songStart.seconds + $0.duration.seconds }.max() ?? 0 }
+    public var recordedDuration: Double { Timeline.regions(take: self, edit: EditGraph()).reduce(0) { $0 + $1.duration } }
 }
 
 public struct SubtitleStyle: Codable, Equatable, Sendable {

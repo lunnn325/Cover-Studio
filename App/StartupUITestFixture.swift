@@ -5,6 +5,19 @@ import CoverCore
 /// Isolated metadata/filesystem fixtures for one manually selected native UI check.
 /// Never compiled into Release or device builds. No recording or playable Take is fabricated.
 enum StartupUITestFixture {
+    static func reopenLibrary() throws -> URL {
+        let files = FileManager.default
+        let report = files.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent("StartupUIFixture.json")
+        let json = try JSONSerialization.jsonObject(with: Data(contentsOf: report)) as? [String: Any]
+        guard let path = json?["fixtureRoot"] as? String else { throw StudioError("Missing isolated UI fixture.") }
+        let root = URL(fileURLWithPath: path).standardizedFileURL.resolvingSymlinksInPath()
+        let temporary = files.temporaryDirectory.standardizedFileURL.resolvingSymlinksInPath()
+        guard root.deletingLastPathComponent() == temporary, root.lastPathComponent.hasPrefix("StartupUIFixture-"),
+              UUID(uuidString: String(root.lastPathComponent.dropFirst("StartupUIFixture-".count))) != nil else {
+            throw StudioError("Refusing to reopen a non-fixture library.")
+        }
+        return root
+    }
     static func makeLibrary() async throws -> URL {
         let files = FileManager.default
         let root = files.temporaryDirectory.appendingPathComponent("StartupUIFixture-" + UUID().uuidString)

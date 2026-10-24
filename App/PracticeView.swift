@@ -60,7 +60,8 @@ struct PracticePanel: View {
             }
             Section {
                 LyricsDisplay(lyrics: project?.arrangement?.lyrics ?? Lyrics(), position: playback.position)
-                Button("编辑歌词 / 标记时间点") { lyrics = true }.disabled(recording.isBusy)
+                Button { lyrics = true } label: { Label(project?.arrangement?.lyrics.lines.isEmpty == false ? "编辑歌词" : "添加歌词", systemImage: "text.badge.plus") }
+                    .accessibilityIdentifier("practice-lyrics").disabled(recording.isBusy)
             } header: { Text("歌词") }
             Section(recording.isBusy ? "当前录制会话" : "练习录音") {
                 if recording.isBusy {
@@ -130,23 +131,31 @@ func clock(_ seconds: Double) -> String {
 struct LyricsDisplay: View {
     let lyrics: Lyrics
     let position: Double
+    var maximumHeight: CGFloat = 260
     var body: some View {
         if lyrics.lines.isEmpty {
-            Text("添加 TXT 或 LRC 歌词，也可直接粘贴。").foregroundStyle(.secondary)
+            Text("导入 TXT / LRC，或直接粘贴歌词。").foregroundStyle(.secondary)
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 18) {
                         ForEach(Array(lyrics.lines.enumerated()), id: \.element.id) { index, line in
-                            Text(line.text).font(.title3).fontWeight(lyrics.activeIndex(at: position) == index ? .semibold : .regular)
-                                .foregroundStyle(lyrics.activeIndex(at: position) == index ? Color.primary : Color.secondary).id(index)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text(line.text).font(.title3)
+                                .fontWeight(lyrics.isTimed && lyrics.activeIndex(at: position) == index ? .semibold : .regular)
+                                .foregroundStyle(!lyrics.isTimed || lyrics.activeIndex(at: position) == index ? Color.primary : Color.secondary)
+                                .id(index).frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }.padding(.vertical, 8)
-                }.frame(minHeight: 160, maxHeight: 260)
-                    .onChange(of: lyrics.activeIndex(at: position)) { _, index in if let index { proxy.scrollTo(index, anchor: .center) } }
+                }.frame(minHeight: 120, maxHeight: maximumHeight)
+                    .onChange(of: lyrics.activeIndex(at: position)) { _, index in
+                        guard lyrics.isTimed else { return }
+                        proxy.scrollTo(index ?? 0, anchor: index == nil ? .top : .center)
+                    }
+                    .onChange(of: position) { old, new in
+                        if new < old && new == 0 { proxy.scrollTo(0, anchor: .top) }
+                    }
             }
-            if !lyrics.isTimed { Text("纯文本：手动滚动，尚无同步时间轴。").font(.caption).foregroundStyle(.secondary) }
+            if !lyrics.isTimed { Text("纯文本歌词 · 可手动滚动").font(.caption).foregroundStyle(.secondary) }
         }
     }
 }
@@ -163,73 +172,120 @@ struct LyricsEditorPanel: View {
     @Environment(\.dismiss) var dismiss
     let forTake: Bool
     @State private var text = ""
+    @State private var appliedText = ""
+    @State private var draft = Lyrics()
+    @State private var projectID: UUID?
+    @State private var arrangementID: UUID?
     @State private var picker = false
     @State private var warning = ""
+    @State private var problem: String?
+    @State private var saving = false
+    @State private var loaded = false
     var body: some View {
         List {
-            Section("试听与定位") {
+            Section {
+                TextEditor(text: $text).frame(minHeight: 190)
+                    .accessibilityLabel("歌词文本").accessibilityIdentifier("lyrics-text")
                 HStack {
-                    Button(playback.playing ? "暂停" : "播放伴奏") {
-                        do {
-                            if playback.playing { playback.stop(keepPosition: true) }
-                            else { try playback.activatePlaybackSession(); try store.preparePlayback(for: forTake ? store.selected?.selectedTake : nil); try playback.play() }
-                        } catch { store.report(error) }
+                    Button { picker = true } label: { Label("导入 TXT / LRC", systemImage: "doc.badge.plus") }
+                        .accessibilityIdentifier("lyrics-import")
+                    Spacer()
+                    PasteButton(payloadType: String.self) { strings in
+                        text = strings.joined(separator: "\n"); applyText()
+                    }.labelStyle(.titleOnly)
+                }.buttonStyle(.bordered)
+                Text("可直接在上方粘贴或修改。点右上角「保存」即可应用；练习与录制共用当前伴奏版本的歌词。").font(.footnote).foregroundStyle(.secondary)
+                if !warning.isEmpty { Label(warning, systemImage: "exclamationmark.triangle").font(.footnote).foregroundStyle(.orange) }
+            } header: { Text("歌词文字") }
+            Section {
+                Button("读取文字并预览时间点") { applyText() }
+                Label(draft.isTimed ? "已读取逐句时间轴" : "普通文本可直接保存并手动滚动", systemImage: draft.isTimed ? "checkmark.circle" : "text.alignleft")
+                    .font(.footnote).foregroundStyle(.secondary)
+                DisclosureGroup("试听与手动标记时间点") {
+                    HStack {
+                        Button(playback.playing ? "暂停" : "播放伴奏") {
+                            do {
+                                if playback.playing { playback.stop(keepPosition: true) }
+                                else { try playback.activatePlaybackSession(); try store.preparePlayback(for: forTake ? store.selected?.selectedTake : nil); try playback.play() }
+                            } catch { problem = error.localizedDescription }
+                        }.disabled(store.recording.isBusy)
+                        Spacer(); Text(clock(playback.position)).monospacedDigit()
                     }
-                    Spacer(); Text(clock(playback.position)).monospacedDigit()
-                }
-                Slider(value: Binding(get: { playback.position }, set: { value in do { try playback.seek(value) } catch { store.report(error) } }), in: 0...max(1, playback.duration)).accessibilityLabel("歌词标记位置")
-            }.disabled(store.recording.isBusy)
-            Section("粘贴 TXT / LRC") {
-                TextEditor(text: $text).frame(minHeight: 150).accessibilityLabel("歌词文本")
-                Button("读取文字并保留 LRC 时间点") {
-                    let result = LRCParser.parse(text); warning = result.warnings.joined(separator: "\n")
-                    store.arrangementBinding(\.lyrics, fallback: Lyrics(), forTake: forTake).wrappedValue = result.lyrics
-                }
-                Button("从文件导入") { picker = true }
-                if !warning.isEmpty { Text(warning).font(.footnote).foregroundStyle(.orange) }
-            }
-            Section("逐句时间点（歌曲时间）") {
-                Text("播放伴奏到这一句开始时，点「标记」。时间点需要按歌词顺序递增。只在全部句子完成标记后开放字幕导出。").font(.footnote).foregroundStyle(.secondary)
-                ForEach(current.lines) { line in
-                    VStack(alignment: .leading) {
-                        Text(line.text)
-                        HStack {
-                            TextField("秒", value: lineBinding(line.id), format: .number.precision(.fractionLength(2))).keyboardType(.decimalPad)
-                            Button("标记 \(clock(store.playback.position))") { set(line.id, time: store.playback.position) }
-                        }
+                    Slider(value: Binding(get: { playback.position }, set: { value in
+                        do { try playback.seek(value) } catch { problem = error.localizedDescription }
+                    }), in: 0...max(1, playback.duration)).accessibilityLabel("歌词标记位置").disabled(store.recording.isBusy)
+                    Text("修改文字后先点「读取文字」。播放到每句开始时标记，全部标记后可用于同步及字幕导出。").font(.footnote).foregroundStyle(.secondary)
+                    ForEach(draft.lines) { line in
+                        VStack(alignment: .leading) {
+                            Text(line.text)
+                            HStack {
+                                TextField("秒", value: lineBinding(line.id), format: .number.precision(.fractionLength(2))).keyboardType(.decimalPad)
+                                Button("标记 " + clock(playback.position)) { set(line.id, time: playback.position) }
+                            }
+                        }.disabled(text != appliedText)
                     }
+                    HStack {
+                        Text("整体偏移（秒）")
+                        TextField("偏移", value: Binding(get: { draft.offset }, set: { draft.offset = $0; refreshText() }), format: .number.precision(.fractionLength(2))).keyboardType(.numbersAndPunctuation)
+                    }.disabled(text != appliedText)
                 }
-                HStack {
-                    Text("整体偏移（秒）")
-                    TextField("偏移", value: offsetBinding, format: .number.precision(.fractionLength(2))).keyboardType(.numbersAndPunctuation)
-                }
-                Label(current.isTimed ? "逐句时间轴可用于字幕" : "仍需标记或修正时间点", systemImage: current.isTimed ? "checkmark.circle" : "clock")
+            } header: { Text("同步（可选）") }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .navigationTitle("编辑歌词").navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("取消", role: .cancel) { dismiss() }.disabled(saving) }
+            ToolbarItem(placement: .confirmationAction) {
+                Button(saving ? "保存中…" : "保存") { Task { await save() } }
+                    .accessibilityIdentifier("lyrics-save").disabled(saving || !loaded)
             }
         }
-        .navigationTitle("歌词时间轴").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { Task { do { try await store.flush(); dismiss() } catch { store.report(error) } } } } }
-        .onAppear { text = current.lrc() }
+        .disabled(saving).interactiveDismissDisabled(saving)
+        .onAppear { load() }
+        .alert("歌词未能保存或导入", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) {
+            Button("知道了", role: .cancel) { problem = nil }
+        } message: { Text(problem ?? "") }
+        // Some Files providers identify LRC as generic data. Validate extension and bytes ourselves.
         .fileImporter(isPresented: $picker, allowedContentTypes: [.plainText, .text, .data]) { result in
             do {
                 let url = try result.get(), access = url.startAccessingSecurityScopedResource()
                 defer { if access { url.stopAccessingSecurityScopedResource() } }
-                guard try FileIntegrity.size(url) < 2 * 1024 * 1024 else { throw StudioError("歌词文件超过 2 MB，请选择纯文本文件。") }
-                text = try String(contentsOf: url, encoding: .utf8)
-                let result = LRCParser.parse(text); warning = result.warnings.joined(separator: "\n")
-                store.arrangementBinding(\.lyrics, fallback: Lyrics(), forTake: forTake).wrappedValue = result.lyrics
-            } catch { store.report(error) }
+                text = try LyricsDocument.read(url); applyText()
+            } catch {
+                let failure = error as NSError
+                if failure.domain != NSCocoaErrorDomain || failure.code != CocoaError.Code.userCancelled.rawValue { problem = error.localizedDescription }
+            }
         }
     }
-    var current: Lyrics { store.arrangementBinding(\.lyrics, fallback: Lyrics(), forTake: forTake).wrappedValue }
-    var offsetBinding: Binding<Double> {
-        Binding(get: { current.offset }, set: { value in var lyrics = current; lyrics.offset = value; store.arrangementBinding(\.lyrics, fallback: Lyrics(), forTake: forTake).wrappedValue = lyrics })
+    private func load() {
+        guard !loaded, let project = store.selected else { return }
+        let id = forTake ? project.selectedTake?.arrangementID ?? project.arrangementID : project.arrangementID
+        guard let arrangement = project.arrangements.first(where: { $0.id == id }) else { problem = "找不到当前伴奏版本。"; return }
+        projectID = project.id; arrangementID = id; draft = arrangement.lyrics
+        refreshText(); loaded = true
     }
-    func lineBinding(_ id: UUID) -> Binding<Double?> {
-        Binding(get: { current.lines.first { $0.id == id }?.time }, set: { set(id, time: $0) })
+    private func refreshText() { text = LyricsDocument.editableText(draft); appliedText = text }
+    private func applyText() {
+        do {
+            let result = LRCParser.parse(try LyricsDocument.validate(text))
+            guard !result.lyrics.lines.isEmpty else { throw StudioError("没有读到歌词文字，请检查文件内容或粘贴文本。") }
+            draft = result.lyrics; appliedText = text; warning = result.warnings.joined(separator: "\n")
+        } catch { problem = error.localizedDescription }
     }
-    func set(_ id: UUID, time: Double?) {
-        var lyrics = current
-        if let index = lyrics.lines.firstIndex(where: { $0.id == id }) { lyrics.lines[index].time = time }
-        store.arrangementBinding(\.lyrics, fallback: Lyrics(), forTake: forTake).wrappedValue = lyrics
+    private func save() async {
+        guard let projectID, let arrangementID else { problem = "工程或伴奏版本不可用。"; return }
+        saving = true; defer { saving = false }
+        do {
+            // Save always consumes pasted/edited text; there is no hidden Apply prerequisite.
+            if text != appliedText { draft = LRCParser.parse(try LyricsDocument.validate(text)).lyrics }
+            try await store.saveLyrics(draft, projectID: projectID, arrangementID: arrangementID)
+            dismiss()
+        } catch { problem = error.localizedDescription }
+    }
+    private func lineBinding(_ id: UUID) -> Binding<Double?> {
+        Binding(get: { draft.lines.first { $0.id == id }?.time }, set: { set(id, time: $0) })
+    }
+    private func set(_ id: UUID, time: Double?) {
+        if let index = draft.lines.firstIndex(where: { $0.id == id }) { draft.lines[index].time = time; refreshText() }
     }
 }

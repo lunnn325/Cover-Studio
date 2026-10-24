@@ -19,7 +19,7 @@ def main():
     output = Path("build/startup-ui-evidence")
     output.mkdir(parents=True, exist_ok=True)
     bundle = Path("build/StartupUI.xcresult")
-    report = {"scope": "One native " + args.family + " simulator UI workflow using isolated generated metadata/raw bytes. No playable media, hardware capture, AirPods, real-device recovery or cloud/provider validation.",
+    report = {"scope": "One native " + args.family + " simulator UI workflow: recovery, recording layout, lyrics text Save, cross-tab edit and process relaunch on isolated metadata/raw bytes. No playable media, hardware capture, Files picker/provider, AirPods or real-device validation.",
               "passed": False, "errors": []}
     inventory = json.loads(command("xcrun", "simctl", "list", "devices", "available", "--json", capture=True))
     choices = [item for runtime, group in inventory["devices"].items() if ".iOS-" in runtime
@@ -71,6 +71,12 @@ def main():
         originals = {"11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"}
         recovered = [path for path in root.iterdir() if path.is_dir() and not path.name.startswith(".") and path.name not in originals]
         report["recoveredProjectCount"] = len(recovered)
+        if len(recovered) == 1:
+            saved = json.loads((recovered[0] / "project.json").read_text(encoding="utf-8"))
+            current = next(item for item in saved["arrangements"] if item["id"] == saved["arrangementID"])
+            report["lyricsPersistedAfterRelaunch"] = any("Revised plain lyric" in line["text"] for line in current["lyrics"]["lines"])
+            if not report["lyricsPersistedAfterRelaunch"]:
+                raise RuntimeError("UI-edited lyric did not persist in the recovered project's saved arrangement.")
         if not all(report[key] for key in ["originalHashesUnchanged", "retainedLogMatches", "pendingMarkerCleared"]) or len(recovered) != 1:
             raise RuntimeError("Post-UI original-byte preservation or recovery state differs.")
         report["passed"] = True

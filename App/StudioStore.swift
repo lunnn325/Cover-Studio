@@ -19,6 +19,7 @@ struct PendingRecording: Identifiable {
     @Published var notice: String?
     @Published var busy = false
     @Published var auxiliaryRecording = false
+    @Published var workspaceTab = 0
     @Published var pendingRecordings: [PendingRecording] = []
     @Published var libraryIssues: [LibraryIssue] = []
     let repository: ProjectRepository
@@ -56,6 +57,17 @@ struct PendingRecording: Identifiable {
         } catch { self.error = "作品库读取失败，原文件未修改。\(error.localizedDescription)"; return false }
     }
     func report(_ error: Error) { self.error = error.localizedDescription }
+    func saveLyrics(_ lyrics: Lyrics, projectID: UUID, arrangementID: UUID) async throws {
+        guard selectedID == projectID, recording.allowsLyricsEditing, !busy, !auxiliaryRecording, !exports.working else {
+            throw StudioError("请先结束当前操作，再保存歌词。草稿仍保留。")
+        }
+        busy = true; defer { busy = false }
+        try await flush()
+        guard let project = selected, project.id == projectID else { throw StudioError("工程已切换，歌词草稿未保存。") }
+        let candidate = try LyricsDocument.applying(lyrics, to: project, arrangementID: arrangementID)
+        try await repository.save(candidate)
+        if let index = projects.firstIndex(where: { $0.id == projectID }) { projects[index] = candidate }
+    }
     func refreshLibrary() async {
         guard !recording.isBusy, !busy, !auxiliaryRecording, !exports.working else { return }
         busy = true; defer { busy = false }

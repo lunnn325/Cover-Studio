@@ -78,10 +78,10 @@ def generate():
         target_settings = {
             "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
             "ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS": "YES",
-            "CODE_SIGN_STYLE": "Automatic", "CURRENT_PROJECT_VERSION": "2",
+            "CODE_SIGN_STYLE": "Automatic", "CURRENT_PROJECT_VERSION": "3",
             "GENERATE_INFOPLIST_FILE": "NO", "INFOPLIST_FILE": "App/Info.plist",
             "LD_RUNPATH_SEARCH_PATHS": '"$(inherited) @executable_path/Frameworks"',
-            "MARKETING_VERSION": "1.0.1", "PRODUCT_BUNDLE_IDENTIFIER": "studio.mycover.app",
+            "MARKETING_VERSION": "1.0.2", "PRODUCT_BUNDLE_IDENTIFIER": "studio.mycover.app",
             "PRODUCT_NAME": '"$(TARGET_NAME)"', "SUPPORTED_PLATFORMS": '"iphoneos iphonesimulator"',
             "SUPPORTS_MACCATALYST": "NO", "SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD": "NO",
             "TARGETED_DEVICE_FAMILY": '"1,2"', "SWIFT_EMIT_LOC_STRINGS": "YES",

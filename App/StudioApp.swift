@@ -44,11 +44,10 @@ struct StudioRoot: View {
     @EnvironmentObject var store: StudioStore
     @State private var importing = false
     @State private var settings = false
-    @State private var tab = 0
     @State private var processing = false
     @State private var recordingLocked = false
     var body: some View {
-        TabView(selection: Binding(get: { tab }, set: { if !recordingLocked { tab = $0 } })) {
+        TabView(selection: Binding(get: { store.workspaceTab }, set: { if !recordingLocked { store.workspaceTab = $0 } })) {
             NavigationStack { PracticeView().navigationTitle("练习").toolbar { commonToolbar } }
                 .tabItem { Label("练习", systemImage: "waveform") }.tag(0)
             NavigationStack { RecordView().navigationTitle("录制").toolbar { commonToolbar } }
@@ -91,7 +90,7 @@ struct EmptyProjectView: View {
     var archived = false
     var body: some View {
         ContentUnavailableView(archived ? "工程已归档" : "从一首伴奏开始", systemImage: archived ? "archivebox" : "music.note",
-                               description: Text(archived ? "从作品库选择外部工程包恢复。" : "点右上角 + 导入本地 MP3、M4A 或 WAV。\n一台设备即可练习、录制与编辑。"))
+                               description: Text(archived ? "从作品库选择外部工程包恢复。" : "点右上角 + 导入本地伴奏，支持 MP3、M4A、WAV、OGG 等。\n一台设备即可练习、录制与编辑。"))
     }
 }
 
