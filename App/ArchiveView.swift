@@ -11,6 +11,7 @@ struct ArchiveView: View {
     @State private var chosenOutputs = Set<String>()
     @State private var outputReadError: String?
     @State private var loadingOutputs = true
+    @State private var outputScopeID: UUID?
     @State private var packageURL: URL?
     @State private var archiveID: UUID?
     @State private var packageRevision: Int?
@@ -47,7 +48,7 @@ struct ArchiveView: View {
                         if includeOutputs && mode == .custom { outputChoices }
                         Text(mode == .full ? "完整：全部伴奏版本、Take、练习、歌词与编辑。默认省略可重新生成的导出成品。" : "精简 / 自定义：自动补齐当前编辑所需的 Take、旧片段、伴奏和照片，不能移除依赖素材。").font(.footnote).foregroundStyle(.secondary)
                         LabeledContent("源素材总计", value: bytes(project.assets.reduce(0) { $0 + $1.bytes }))
-                        Button("生成并校验工程包") { Task { await prepare() } }.disabled(preparing || (includeOutputs && mode == .custom && loadingOutputs))
+                        Button("生成并校验工程包") { Task { await prepare() } }.disabled(preparing || (includeOutputs && mode == .custom && (loadingOutputs || outputScopeID != project.id)))
                         if preparing { ProgressView("正在流式打包并重新读取校验…") }
                         if packageURL != nil {
                             Button("保存到 Files / Google Drive") { picker = true }.disabled(preparing || packageRevision != project.revision || packageProjectID != project.id)
@@ -133,11 +134,12 @@ struct ArchiveView: View {
     private func loadOutputs() async {
         guard let project else { return }
         loadingOutputs = true; defer { loadingOutputs = false }
+        outputScopeID = nil; knownOutputs = []; chosenOutputs = []
         let root = store.repository.directory(project.id)
         do {
             let outputs = try await Task.detached { try ExportCatalog.outputs(root: root, assets: project.assets).filter(\.completed) }.value
             guard !Task.isCancelled, self.project?.id == project.id else { return }
-            knownOutputs = outputs; chosenOutputs = Set(outputs.map(\.path)); outputReadError = nil
+            knownOutputs = outputs; chosenOutputs = Set(outputs.map(\.path)); outputScopeID = project.id; outputReadError = nil
         } catch { knownOutputs = []; chosenOutputs = []; outputReadError = "成品记录无法读取。可取消包含成品，先备份原始素材。" }
     }
     private func invalidatePackage() {
@@ -152,6 +154,9 @@ struct ArchiveView: View {
     }
     func prepare() async {
         guard var project else { return }
+        guard !(mode == .custom && includeOutputs) || (!loadingOutputs && outputScopeID == project.id) else {
+            store.error = "请等当前工程的成品目录读取完成，或取消包含成品后先备份原始素材。"; return
+        }
         preparing = true; store.busy = true; defer { preparing = false; store.busy = false }
         do {
             try await store.flush()

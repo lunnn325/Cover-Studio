@@ -83,24 +83,24 @@ public enum ExportCatalog {
         completed.formUnion(assets.filter { $0.role == .export && isOutputPath($0.path) }.map { key($0.path) })
         let directory = try metadataURL("queue.json", root: root).deletingLastPathComponent()
         guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
-        let properties: Set<URLResourceKey> = [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey, .contentModificationDateKey]
-        var enumerationError: Error?
-        guard let iterator = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: Array(properties),
-                options: [.skipsHiddenFiles, .skipsPackageDescendants], errorHandler: { _, error in enumerationError = error; return false }) else {
-            throw StudioError("导出目录无法读取，文件未修改。")
-        }
+        let properties: Set<URLResourceKey> = [.isRegularFileKey, .isDirectoryKey, .isSymbolicLinkKey, .fileSizeKey, .contentModificationDateKey]
         var result: [ExportedFile] = []
-        for case let url as URL in iterator {
-            let values = try url.resourceValues(forKeys: properties)
-            if values.isSymbolicLink == true { iterator.skipDescendants(); continue }
-            guard values.isRegularFile == true else { continue }
-            let path = "exports/" + String(url.path.dropFirst(directory.path.count + 1))
-            guard isOutputPath(path) else { continue }
-            _ = try ProjectRules.mediaURL(path, root: root)
-            result.append(ExportedFile(path: path, variant: variant(for: path), bytes: Int64(values.fileSize ?? 0),
-                                       modifiedAt: values.contentModificationDate, completed: completed.contains(key(path)) && (values.fileSize ?? 0) > 0))
+        func visit(_ folder: URL, relative: String) throws {
+            // Foundation can canonicalize /var and /private/var differently.
+            // Build paths from child names rather than slicing absolute strings.
+            let children = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: Array(properties), options: [.skipsHiddenFiles])
+            for url in children {
+                let values = try url.resourceValues(forKeys: properties)
+                guard values.isSymbolicLink != true else { continue }
+                let path = relative + "/" + url.lastPathComponent
+                if values.isDirectory == true { try visit(url, relative: path); continue }
+                guard values.isRegularFile == true, isOutputPath(path) else { continue }
+                _ = try ProjectRules.mediaURL(path, root: root)
+                result.append(ExportedFile(path: path, variant: variant(for: path), bytes: Int64(values.fileSize ?? 0),
+                                           modifiedAt: values.contentModificationDate, completed: completed.contains(key(path)) && (values.fileSize ?? 0) > 0))
+            }
         }
-        if let enumerationError { throw enumerationError }
+        try visit(directory, relative: "exports")
         return result.sorted {
             let left = $0.modifiedAt ?? .distantPast, right = $1.modifiedAt ?? .distantPast
             return left == right ? $0.path < $1.path : left > right
