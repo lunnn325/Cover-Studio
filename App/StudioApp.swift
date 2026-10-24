@@ -112,6 +112,8 @@ struct ImportSongView: View {
                     Button { picker = true } label: { Label(url?.lastPathComponent ?? "选择本地音频", systemImage: "doc.badge.plus") }
                     TextField("歌曲名", text: $title)
                     TextField("歌手", text: $artist)
+                    Text(AudioImport.formatDescription).font(.footnote).foregroundStyle(.secondary)
+                    Text("OGG 支持单声道/立体声 Vorbis，本机转换后用于播放，并保留原件。Opus、多声道和串接 OGG 暂不支持。").font(.footnote).foregroundStyle(.secondary)
                 }
                 Section("音频内容") {
                     Picker("来源", selection: $isBacking) { Text("已有伴奏").tag(true); Text("需要去原唱").tag(false) }.pickerStyle(.segmented)
@@ -119,8 +121,8 @@ struct ImportSongView: View {
                     if store.selected != nil && store.selected?.archived == false { Toggle("作为当前歌曲的新伴奏版本", isOn: $newVersion) }
                     if newVersion { Text("旧 Take 仍绑定原伴奏；新版本从独立歌词时间轴开始。").font(.footnote).foregroundStyle(.secondary) }
                 }
-                if importing { ProgressView("正在复制并校验音频…") }
-            }
+                if importing { ProgressView("正在读取、解码并校验音频…") }
+            }.disabled(importing)
             .navigationTitle("导入歌曲").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.disabled(importing) }
@@ -134,7 +136,9 @@ struct ImportSongView: View {
                     }.disabled(url == nil || importing)
                 }
             }
-            .fileImporter(isPresented: $picker, allowedContentTypes: [.audio]) { result in
+            // .data permits OGG files whose provider hasn't registered an audio UTI.
+            // The importer still validates the extension and the actual decoded content.
+            .fileImporter(isPresented: $picker, allowedContentTypes: [.audio, .data]) { result in
                 switch result {
                 case .success(let selected): url = selected; if title.isEmpty { title = selected.deletingPathExtension().lastPathComponent }
                 case .failure(let error): store.report(error)

@@ -378,6 +378,7 @@ struct SettingsView: View {
     @EnvironmentObject var store: StudioStore
     @Environment(\.dismiss) var dismiss
     @State private var startupLogs = false
+    @State private var licenses = false
     var body: some View {
         List {
             Section("录制") {
@@ -400,9 +401,20 @@ struct SettingsView: View {
                 LabeledContent("最低系统", value: "iOS / iPadOS 17")
                 LabeledContent("工程格式", value: "COVERP01 / schema 1")
                 LabeledContent("外观", value: "跟随系统")
+                Button("开源许可") { licenses = true }
             }
         }.navigationTitle("设置").navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $startupLogs) { NavigationStack { StartupLogsView(root: store.repository.root) } }
+            .sheet(isPresented: $licenses) {
+                NavigationStack {
+                    ScrollView {
+                        Text(Bundle.main.url(forResource: "ThirdPartyNotices", withExtension: "txt")
+                            .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? "许可文件未能读取。")
+                            .font(.footnote.monospaced()).textSelection(.enabled).padding()
+                    }.navigationTitle("开源许可").navigationBarTitleDisplayMode(.inline)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { licenses = false } } }
+                }
+            }
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
     }
 }

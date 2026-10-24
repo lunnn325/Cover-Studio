@@ -1,5 +1,11 @@
 # 开发记录
 
+## 2026-10-24：更多音频类型
+
+用户报告 1.0 已安装成功，随后要求 OGG 等更多格式。本轮单 Agent 执行，不使用 impeccable。移除三格式限制，接入系统 AAC/FLAC/AIFF/CAF 和本地 OGG/Vorbis 解码；原始 OGG 与派生 PCM CAF 分开登记，保持备份依赖完整。明确拒绝 Opus、串接/损坏 Ogg，不假报解码成功；无上传。固定 MIT 源码和随包许可见 ADR 018。
+
+新增五项实际短音频解码/保护/备份测试，生成十份自有 440 Hz 采样；新 IPA 版本 1.0.1/build 2，待一次集中核心测试和 Release 设备编译，不重复既有 UI/全媒体导出。
+
 ## 2026-10-24：用户要求沿用 WL 获取 IPA
 
 实际核对 William Lecture 本地及 GitHub `scripts/build-ios.sh`：macos-26 上以 Release/iphoneos 禁用签名编译，Payload 打包 unsigned IPA，再由用户本地签名。Cover Studio 仅有 Simulator 构建，缺少此设备产物路径；无签名并不阻止生成 unsigned IPA，修正此前过严的阻塞判断。

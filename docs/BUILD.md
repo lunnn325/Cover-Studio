@@ -1,6 +1,6 @@
 # 构建与安装
 
-这是原生 SwiftUI iPhone/iPad application，`MyCoverStudio.xcodeproj` 内有共享 scheme `MyCoverStudio`。领域模型和纯逻辑位于本地 Swift Package `CoverCore`；没有第三方运行依赖。最低 iOS/iPadOS 17.0，Swift 5 语言模式；使用 Xcode 26 或更新 SDK 编译有条件的 iOS 26 能力，旧系统仍需运行时检测/降级。
+这是原生 SwiftUI iPhone/iPad application，`MyCoverStudio.xcodeproj` 内有共享 scheme `MyCoverStudio`。领域模型和纯逻辑位于本地 Swift Package `CoverCore`；仅新增仓库内固定版本的 stb_vorbis C 解码器（MIT），无需联网拉取运行依赖。最低 iOS/iPadOS 17.0，Swift 5 语言模式；使用 Xcode 26 或更新 SDK 编译有条件的 iOS 26 能力，旧系统仍需运行时检测/降级。
 
 ## Windows 配置检查
 

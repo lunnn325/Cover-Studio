@@ -190,23 +190,20 @@ struct PendingRecording: Identifiable {
         busy = true; defer { busy = false }
         playback.suspendEngine(); playback.loop = nil
         let access = url.startAccessingSecurityScopedResource(); defer { if access { url.stopAccessingSecurityScopedResource() } }
-        guard ["mp3", "m4a", "wav"].contains(url.pathExtension.lowercased()) else { throw StudioError("请选择 MP3、M4A 或 WAV 文件。") }
-        let audio = try AVAudioFile(forReading: url)
-        let duration = Double(audio.length) / audio.processingFormat.sampleRate
-        guard duration.isFinite && duration > 0 else { throw StudioError("音频无法读取或时长为空。") }
+        let prepared = try await Task.detached(priority: .userInitiated) { try AudioImport.prepare(url) }.value
+        defer { prepared.removeTemporaryFiles() }
         var project: StudioProject
         let projectID = newArrangement ? (selected?.id ?? UUID()) : UUID()
-        let asset = try await repository.importAsset(source: url, projectID: projectID, role: isBacking ? .backing : .source,
-                   duration: .init(seconds: duration), sampleRate: audio.processingFormat.sampleRate, channels: Int(audio.processingFormat.channelCount))
-        var arrangement = Arrangement(sourceAssetID: asset.id, isBacking: isBacking)
+        let imported = try await repository.importPreparedAudio(prepared, projectID: projectID, isBacking: isBacking)
+        var arrangement = imported.arrangement
         if newArrangement, var existing = selected {
             arrangement.name = "伴奏 \(existing.arrangements.count + 1)"
             existing.arrangements.append(arrangement); existing.arrangementID = arrangement.id
-            existing.assets.append(asset); existing.loopStart = 0; existing.loopEnd = 0
+            existing.assets.append(contentsOf: imported.assets); existing.loopStart = 0; existing.loopEnd = 0
             existing.touch(); project = existing
         } else {
             project = StudioProject(song: Song(title: title.isEmpty ? url.deletingPathExtension().lastPathComponent : title, artist: artist),
-                         arrangement: arrangement, assets: [asset], sourceDeviceID: deviceID)
+                         arrangement: arrangement, assets: imported.assets, sourceDeviceID: deviceID)
             project.id = projectID
             if let data = UserDefaults.standard.data(forKey: "defaultExportPreset"), let preset = try? JSONDecoder().decode(ExportPreset.self, from: data) { project.exportPreset = preset }
         }

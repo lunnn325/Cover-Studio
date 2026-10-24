@@ -27,6 +27,7 @@ def main():
         privacy = plistlib.load(stream)
     assert privacy["NSPrivacyTracking"] is False
     assert privacy["NSPrivacyCollectedDataTypes"] == []
+    assert 'MIT License' in (ROOT / 'App/ThirdPartyNotices.txt').read_text(encoding='utf-8')
     ET.parse(ROOT / "MyCoverStudio.xcodeproj/xcshareddata/xcschemes/MyCoverStudio.xcscheme")
     for asset_json in (ROOT / "App/Assets.xcassets").rglob("Contents.json"):
         json.loads(asset_json.read_text(encoding="utf-8"))

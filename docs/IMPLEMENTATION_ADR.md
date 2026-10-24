@@ -181,3 +181,15 @@ XCUITest 实际点击用户控件，不绕过保留确认或直接调用恢复 h
 在现有手动工作流新增 `build_unsigned_ipa`，不另建自动构建或模拟器矩阵。仅选择该项时运行核心测试和一次 Release arm64 设备构建，复用确定性工程与 runner/Xcode 选择。使用独立临时 Payload，避免旧包残留；上传 IPA、SHA-256 和真实元数据报告。验证 Mach-O LC_BUILD_VERSION 为 iOS device（arm64 不能单独排除模拟器）、iPhone/iPad、权限、ZIP 完整性和无签名材料。
 
 不导入/创建证书，不改账号/Secrets，不将未签名包称为可直接安装。用户本地签名安装后的录制、AirPods、同步、Files 和设备迁移 gate 仍须真实执行。产品功能、工程格式和原始素材保护均不变。
+
+## ADR 018：更多音频格式及原件/播放副本分离
+
+用户在安装 1.0 后要求支持 OGG 等更多类型。现有三种扩展名白名单阻止 FLAC/AAC/AIFF/CAF，且只放开 OGG 不能保证现有 AVAudioFile 播放/混音可解码。
+
+决策：保留现有原生 MP3/M4A/WAV，扩展系统解码的 AAC、FLAC、AIFF/AIF/AIFC、CAF；新增固定源码的 stb_vorbis 1.22 C 模块（MIT，commit 1ee679ca2ef753a528db5ba6801e1067b40481b8），将 OGG/Vorbis 流式解码为 Float32 PCM CAF。未采用只改后缀名或大型 FFmpeg 二进制。新增许可文件随应用发布，设置可查看；不运行 shell、不联网下载或上传用户音频。
+
+CRC 校验完整单流 Ogg 页，拒绝截断/损坏、Opus、多流/串接，以及解码器不支持的早期 Vorbis。支持单声道/立体声、8–192 kHz；stb 的 32 位采样数是 OGG 解码器边界，不改变正常录制时长。空间按预计 PCM 大小、临时/工程双份、原件复制与保留量预检；固定小缓冲在后台解码，不加载整首 PCM。文件选择器允许 data 类型以兼容未注册 OGG UTI 的提供者，实际导入仍核对扩展名、容器和解码结果，不把任意数据当音频。
+
+sourceAssetID 始终引用未改字节的原始 OGG，backingAssetID 引用派生 CAF。依赖闭包已同时包含两者，无 schema 变更；旧读取器也可播放 CAF，完整/精简/自定义恢复均须校验两份。原曲需分离时只登记原始 source，不虚构伴奏。导入前后核对原件哈希，变化则拒绝提交；失败不覆盖已有工程和源素材。临时清理仅针对本次 UUID 目录。
+
+新增五项实际媒体/文件系统测试：Vorbis 单双声道 PCM 的音高/时长、七种系统格式解码、CRC/截断/串接/Opus 拒绝、三种包恢复后 PCM 和原件哈希、导入中源变化及无伴奏原曲。使用自生成 0.5 秒 440 Hz 音频，不用 mock 成功代替解码。集中 macOS 测试/Release 设备构建后交付 1.0.1/build 2；Files 选择器和用户真实文件仍需设备核验。

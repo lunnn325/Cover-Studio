@@ -1,7 +1,10 @@
 My Cover Studio V1
 
-The application has no third-party runtime packages, analytics SDKs, AI models,
-network services or bundled copyrighted music. It uses Apple system frameworks
+The application has no analytics SDKs, AI models, network services or bundled
+copyrighted music. It includes stb_vorbis 1.22 for local Ogg/Vorbis decoding,
+vendored at commit 1ee679ca2ef753a528db5ba6801e1067b40481b8 under the MIT
+license. Source and full license are retained in Sources/CVorbis/vendor; the
+license is also bundled as App/ThirdPartyNotices.txt and accessible in Settings. It uses Apple system frameworks
 (SwiftUI, UIKit, AVFoundation/AVFAudio, CoreMedia, PhotosUI, UniformTypeIdentifiers,
 Foundation and CryptoKit). Apple frameworks are supplied by the user's operating
 system and Xcode SDK under Apple's applicable terms.

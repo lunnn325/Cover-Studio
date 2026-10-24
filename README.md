@@ -1,6 +1,6 @@
 # My Cover Studio V1
 
-原生 iPhone/iPad 本地翻唱工作室。SwiftUI + AVFoundation，最低 iOS/iPadOS 17，使用 Xcode 26 构建；没有服务器、用户账号或第三方运行依赖。
+原生 iPhone/iPad 本地翻唱工作室。SwiftUI + AVFoundation，最低 iOS/iPadOS 17，使用 Xcode 26 构建；没有服务器或用户账号；OGG/Vorbis 解码使用仓库内固定版本的 MIT 许可 stb_vorbis。
 
 核心代码支持本地伴奏导入与半音变调、练习与正式音视频录制、多个 Take、非破坏混音/歌词标记、照片/补拍、带/无字幕导出，以及完整/精简/自定义工程包和安全恢复。AI 分离、自动歌词对齐/逐字、自动修音、智能拼接及 4K 尚未开放。
 
