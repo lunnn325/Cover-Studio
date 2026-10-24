@@ -1,0 +1,130 @@
+name: iOS milestone build
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_unsigned_ipa:
+        description: Build a Release device IPA for local signing, like William Lecture
+        type: boolean
+        default: false
+      simulator_snapshots:
+        description: Simulator screenshots and synthetic 2-second media smoke
+        type: boolean
+        default: false
+      media_smoke_only:
+        description: Offline media check on one simulator, without repeating screenshots
+        type: boolean
+        default: false
+      preview_check_only:
+        description: Check edited previews on one simulator, reusing prior export evidence
+        type: boolean
+        default: false
+      startup_ui_check:
+        description: One isolated native startup/recovery UI workflow with screenshots
+        type: boolean
+        default: false
+      startup_ui_family:
+        description: Single simulator family for the optional startup UI check
+        type: choice
+        options: [iPhone, iPad]
+        default: iPhone
+      startup_ui_flow:
+        description: Choose one native UI flow, without a test matrix
+        type: choice
+        options: [recovery, lyrics]
+        default: recovery
+  pull_request:
+    types: [opened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-milestone-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select installed stable Xcode 26
+        run: python3 scripts/select_xcode.py >> "$GITHUB_ENV"
+      - name: Record toolchain and validate generated configuration
+        run: |
+          mkdir -p build
+          xcodebuild -version | tee build/toolchain.txt
+          swift --version | tee -a build/toolchain.txt
+          xcrun simctl list runtimes | tee build/simulator-runtimes.txt
+          xcrun simctl list devices available | tee build/simulator-devices.txt
+          python3 scripts/validate_configuration.py
+          plutil -lint App/Info.plist App/PrivacyInfo.xcprivacy MyCoverStudio.xcodeproj/project.pbxproj
+      - name: Pure logic tests
+        run: |
+          set -o pipefail
+          swift test --parallel 2>&1 | tee build/swift-tests.log
+      - name: Build universal iOS simulator app without signing
+        if: github.event_name != 'workflow_dispatch' || !inputs.build_unsigned_ipa || inputs.simulator_snapshots || inputs.media_smoke_only || inputs.preview_check_only || inputs.startup_ui_check
+        run: |
+          set -o pipefail
+          xcodebuild -project MyCoverStudio.xcodeproj -scheme MyCoverStudio -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build/xcodebuild.log
+      - name: Build Release device app and package unsigned IPA
+        if: github.event_name == 'workflow_dispatch' && inputs.build_unsigned_ipa
+        run: bash scripts/build-ios.sh
+      - name: Upload unsigned device IPA
+        if: github.event_name == 'workflow_dispatch' && inputs.build_unsigned_ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyCoverStudio-V1-unsigned-IPA
+          path: |
+            dist/MyCoverStudio-V1-unsigned.ipa
+            dist/MyCoverStudio-V1-unsigned.ipa.sha256
+            dist/ipa-report.json
+          retention-days: 14
+          if-no-files-found: error
+      - name: Simulator launch evidence and synthetic media smoke
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && (inputs.simulator_snapshots || inputs.media_smoke_only || inputs.preview_check_only))
+        timeout-minutes: 15
+        env:
+          MEDIA_ONLY: ${{ (inputs.media_smoke_only || inputs.preview_check_only) && !inputs.simulator_snapshots }}
+          PREVIEW_ONLY: ${{ inputs.preview_check_only }}
+        run: |
+          args=()
+          if [ "$MEDIA_ONLY" = "true" ]; then args+=(--media-only); fi
+          if [ "$PREVIEW_ONLY" = "true" ]; then args+=(--preview-only); fi
+          python3 scripts/simulator_snapshots.py --app build/DerivedData/Build/Products/Debug-iphonesimulator/MyCoverStudio.app "${args[@]}"
+      - name: Native startup and recovery UI check
+        if: github.event_name == 'workflow_dispatch' && inputs.startup_ui_check
+        timeout-minutes: 15
+        env:
+          STARTUP_UI_FAMILY: ${{ inputs.startup_ui_family || 'iPhone' }}
+          STARTUP_UI_FLOW: ${{ inputs.startup_ui_flow || 'recovery' }}
+        run: python3 scripts/startup_ui_check.py --family "$STARTUP_UI_FAMILY" --flow "$STARTUP_UI_FLOW"
+      - name: Report scope
+        if: always()
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'REPORT'
+          This milestone checks Swift pure logic tests and an unsigned iOS Simulator build.
+          Optional screenshots show simulator empty-state layout only.
+          The synthetic 2-second media smoke, when selected, separately checks offline
+          export/archive code and writes MediaSmokeReport.json; it does not record hardware.
+          No signed IPA, AirPods/audio route, camera/microphone, audio/video synchronization,
+          cloud transfer or real-device recovery result is implied. See docs/QUALITY_GATES.md.
+          Optional startup_ui_check separately runs one native UI workflow against
+          isolated generated metadata and saves screenshots; it does not validate media.
+          Manual build_unsigned_ipa instead builds a Release iphoneos arm64 app and
+          packages Payload/MyCoverStudio.app. This IPA needs local signing before install.
+          REPORT
+      - name: Keep short-lived validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-milestone-evidence
+          path: |
+            build/*.log
+            build/*.txt
+            build/simulator-evidence/
+            build/startup-ui-evidence/
+          retention-days: 7
+          if-no-files-found: warn

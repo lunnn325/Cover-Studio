@@ -1,0 +1,11 @@
+{
+  "fixtureRoot": "/Users/runner/Library/Developer/CoreSimulator/Devices/1812E91B-A366-406E-B714-BC3D488891B9/data/Containers/Data/Application/A0C9DA73-9E76-4304-AB51-8A6E5A07DF04/tmp/StartupUIFixture-862738CF-DD6B-4E70-B447-5B08A9001480",
+  "markerHash": "423ab3a90634a3d0cbe622dacfe2477122a8e39e28b6adb242559a8ae805fd76",
+  "originalHashes": {
+    ".safety-33333333-3333-4333-8333-333333333333/media/retained-original.wav": "2a0557bb3ca23439b0bc27409edda3abae546ae504a114b6389beb26b2f0778b",
+    ".safety-33333333-3333-4333-8333-333333333333/project.json": "3b2de3622b5da5f659ec96db605a5050d0705eb4b979dc84c2d0a6aa6eee00bb",
+    "11111111-1111-4111-8111-111111111111/media/backing.wav": "c87faa7233bab0397cb4a112468ac7784f79bbeffa661de32c64fda444835307",
+    "22222222-2222-4222-8222-222222222222/project.json": "c0277c2d4be3c60f857f631cf9d0626de2438faa7df69814f65da0232c0d6469"
+  },
+  "scope": "Isolated generated metadata/raw-byte fixtures; no hardware or playable media."
+}

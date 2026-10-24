@@ -1,0 +1,17 @@
+2026-10-24T13:34:46.0176200Z Test Suite 'RecordingLyricsTests' started at 2026-10-24 13:34:45.491.
+2026-10-24T13:34:46.0177090Z Test Case '-[CoverCoreTests.RecordingLyricsTests testLyricsFilesReadTXTAndLRCWithUnicodeBOMAndConcreteFailures]' started.
+2026-10-24T13:34:46.0179240Z /Users/runner/work/Cover-Studio/Cover-Studio/Tests/CoverCoreTests/RecordingLyricsTests.swift:65: error: -[CoverCoreTests.RecordingLyricsTests testLyricsFilesReadTXTAndLRCWithUnicodeBOMAndConcreteFailures] : XCTAssertEqual failed: threw error "StudioError(message: "文件包含非文本内容，请选择纯文本 TXT 或 LRC。")"
+2026-10-24T13:34:46.0181280Z /Users/runner/work/Cover-Studio/Cover-Studio/Tests/CoverCoreTests/RecordingLyricsTests.swift:66: error: -[CoverCoreTests.RecordingLyricsTests testLyricsFilesReadTXTAndLRCWithUnicodeBOMAndConcreteFailures] : XCTAssertFalse failed: threw error "StudioError(message: "文件包含非文本内容，请选择纯文本 TXT 或 LRC。")"
+2026-10-24T13:34:46.0182700Z Test Case '-[CoverCoreTests.RecordingLyricsTests testLyricsFilesReadTXTAndLRCWithUnicodeBOMAndConcreteFailures]' failed (0.154 seconds).
+2026-10-24T13:34:46.0183400Z Test Suite 'RecordingLyricsTests' failed at 2026-10-24 13:34:45.645.
+2026-10-24T13:34:46.0184550Z 	 Executed 1 test, with 2 failures (2 unexpected) in 0.154 (0.154) seconds
+2026-10-24T13:34:46.0184990Z Test Suite 'CoverCorePackageTests.xctest' failed at 2026-10-24 13:34:45.645.
+2026-10-24T13:34:46.0185420Z 	 Executed 1 test, with 2 failures (2 unexpected) in 0.154 (0.154) seconds
+2026-10-24T13:34:46.0185800Z Test Suite 'Selected tests' failed at 2026-10-24 13:34:45.645.
+2026-10-24T13:34:46.0186140Z 	 Executed 1 test, with 2 failures (2 unexpected) in 0.154 (0.155) seconds
+2026-10-24T13:34:46.0186420Z 
+2026-10-24T13:34:46.0186570Z ◇ Test run started.
+2026-10-24T13:34:46.0186770Z ↳ Testing Library Version: 1902
+2026-10-24T13:34:46.0187190Z ↳ Target Platform: arm64e-apple-macos14.0
+2026-10-24T13:34:46.0187560Z ✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+2026-10-24T13:34:46.0197440Z ##[error]Process completed with exit code 1.

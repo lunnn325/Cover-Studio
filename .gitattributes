@@ -1,0 +1,21 @@
+* text=auto
+*.swift text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.yml text eol=lf
+*.plist text eol=lf
+*.xcprivacy text eol=lf
+*.pbxproj text eol=lf
+*.xcscheme text eol=lf
+*.png binary
+*.c text eol=lf
+*.h text eol=lf
+*.txt text eol=lf
+*.ogg binary
+*.flac binary
+*.aiff binary
+*.aac binary
+*.caf binary
+*.wav binary
+*.mp3 binary
+*.m4a binary

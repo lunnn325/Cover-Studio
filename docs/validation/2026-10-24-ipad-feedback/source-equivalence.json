@@ -1,0 +1,11 @@
+{
+  "ipaSourceCommit": "2cdf6a2792588f2d16c79ce83997464fba6beb70",
+  "uiHarnessCommit": "54b338212880bc4921d097adea8400842dcde248",
+  "identicalAppSourceTrees": {
+    "App": "4071ca1a3e03fbf307828d57e96c68e0a7be659c",
+    "Sources": "fe5b35ce3f8193f28197e0c35d4e73fa1a08b581",
+    "Package.swift": "e578a132adb82aac364e0c60c9e07d86458ab88f",
+    "MyCoverStudio.xcodeproj": "602e45f331afe40bb01577dd6f94dc71fb2195a9"
+  },
+  "scope": "UI harness changes only; app/core/project source trees are byte-identical."
+}

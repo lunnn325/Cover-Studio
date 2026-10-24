@@ -1,0 +1,94 @@
+Building for debugging...
+[0/9] /Users/runner/work/Cover-Studio/Cover-Studio/.build/arm64-apple-macosx/debug/CoverCorePackageTests.derived/runner.swift
+[1/9] Write sources
+[4/9] Copying AudioFixtures
+[5/9] Write swift-version-7974D3F7F03D5E95.txt
+In file included from /Users/runner/work/Cover-Studio/Cover-Studio/Sources/CVorbis/VorbisDecoder.c:6:
+/Users/runner/work/Cover-Studio/Cover-Studio/Sources/CVorbis/vendor/stb_vorbis.c:1404:75: warning: pointer comparison always evaluates to false [-Wtautological-compare]
+ 1404 |       if (f->stream_start + loc >= f->stream_end || f->stream_start + loc < f->stream_start) {
+      |                                                                           ^
+1 warning generated.
+[6/9] Compiling CVorbis VorbisDecoder.c
+[8/17] Compiling CoverCore Models.swift
+[9/17] Compiling CoverCore ProjectFiles.swift
+[10/17] Compiling CoverCore ProjectRepository.swift
+[11/20] Compiling CoverCore Archive.swift
+[12/20] Compiling CoverCore AudioImport.swift
+[13/20] Compiling CoverCore ExportCatalog.swift
+[14/20] Compiling CoverCore LibraryRecovery.swift
+[15/20] Emitting module CoverCore
+[16/20] Compiling CoverCore RepositoryStartup.swift
+[17/20] Compiling CoverCore Rules.swift
+[18/20] Compiling CoverCore Timeline.swift
+[19/26] Compiling CoverCoreTests LibraryRecoveryTests.swift
+[20/26] Compiling CoverCoreTests RecoveryFilesTests.swift
+[21/26] Emitting module CoverCoreTests
+[22/26] Compiling CoverCoreTests AudioImportTests.swift
+[23/26] Compiling CoverCoreTests CoverCoreTests.swift
+[24/26] Compiling CoverCoreTests ExportCatalogTests.swift
+[25/28] Compiling CoverCoreTests RepositoryStartupTests.swift
+[26/28] Compiling CoverCoreTests resource_bundle_accessor.swift
+[27/30] Compiling CoverCorePackageTests runner.swift
+[28/30] Emitting module CoverCorePackageTests
+[28/30] Write Objects.LinkFileList
+[29/30] Linking CoverCorePackageTests
+Build complete! (27.42s)
+[1/55] Testing CoverCoreTests.AudioImportTests/testChangedSourceRefusesCommitAndOriginalOnlyDoesNotInventBacking
+[2/55] Testing CoverCoreTests.AudioImportTests/testMalformedTruncatedChainedAndOpusAreRejectedWithoutPartialSuccess
+[3/55] Testing CoverCoreTests.AudioImportTests/testExpandedNativeAndLegacyFormatsActuallyDecode
+[4/55] Testing CoverCoreTests.AudioImportTests/testVorbisDecodesRealMonoAndStereoPCMAndPreservesOriginal
+[5/55] Testing CoverCoreTests.AudioImportTests/testOriginalAndDecodedDependencySurviveEveryBackupMode
+[6/55] Testing CoverCoreTests.CoverCoreTests/testArchiveRejectsIncompatibleVersionFeaturesBadPathsAndMissingDependency
+[7/55] Testing CoverCoreTests.CoverCoreTests/testArchiveRoundTripVerifiesEveryOriginalByte
+[8/55] Testing CoverCoreTests.CoverCoreTests/testArchiveRejectsManifestTamperMediaTamperTruncationAndTrailingBytes
+[9/55] Testing CoverCoreTests.CoverCoreTests/testCaptureOrderSurvivesHostClockResetAndOldPackages
+[10/55] Testing CoverCoreTests.CoverCoreTests/testCompleteBackupIncludesPracticeButExportsAreExplicit
+[11/55] Testing CoverCoreTests.CoverCoreTests/testExportPresetsGuardRealLyricsAndVisuals
+[12/55] Testing CoverCoreTests.CoverCoreTests/testInterruptedReplacementRecoversOldProjectBeforeLoadingLibrary
+[13/55] Testing CoverCoreTests.CoverCoreTests/testLRCRoundingCrossesMinuteBoundary
+[14/55] Testing CoverCoreTests.CoverCoreTests/testLRCUnicodeMultipleTagsOffsetAndMetadata
+[15/55] Testing CoverCoreTests.CoverCoreTests/testMalformedLRCDoesNotInventSynchronizedLyrics
+[16/55] Testing CoverCoreTests.CoverCoreTests/testMetadataCollisionCaseCollisionAndDirectoryCollisionRejected
+[17/55] Testing CoverCoreTests.CoverCoreTests/testPendingRecordingPreventsReleaseEvenWithVerifiedBackup
+[18/55] Testing CoverCoreTests.CoverCoreTests/testRecordingTransitionsAndDynamicDiskBudget
+[19/55] Testing CoverCoreTests.CoverCoreTests/testRestoreKeepBothPreservesExistingRevisionAndOriginalMedia
+[20/55] Testing CoverCoreTests.CoverCoreTests/testReplacementRetainsSafetyCopyAndDuplicateResetsRevision
+[21/55] Testing CoverCoreTests.CoverCoreTests/testSafePathsRejectTraversalAndUnsafeComponents
+[22/55] Testing CoverCoreTests.CoverCoreTests/testSubtitleIntervalsRespectTrimOffsetAndExplicitDisplayRange
+[23/55] Testing CoverCoreTests.CoverCoreTests/testSlimAndCustomKeepReferencedOldTakesAndArrangementDependencies
+[24/55] Testing CoverCoreTests.CoverCoreTests/testSubtitleOutlineKeepsLegacyAppearanceAndSurvivesArchive
+[25/55] Testing CoverCoreTests.CoverCoreTests/testSymbolicLinkCannotEscapeOrAliasMetadata
+[26/55] Testing CoverCoreTests.CoverCoreTests/testTamperedRestoreCannotModifyAnExistingProject
+[27/55] Testing CoverCoreTests.CoverCoreTests/testTimelineResumedOverlapAndTrimPreserveSourceOffset
+[28/55] Testing CoverCoreTests.CoverCoreTests/testUnrepresentableMediaTimeAndAudioPresetRoundTrip
+[29/55] Testing CoverCoreTests.CoverCoreTests/testUnexportedArchiveCannotAuthorizeRelease
+[30/55] Testing CoverCoreTests.ExportCatalogTests/testBackupCanIncludeEveryCompletedVersionAndRestoreWithoutCatalogSidecars
+[31/55] Testing CoverCoreTests.ExportCatalogTests/testCustomBackupSelectsOutputsButCannotDropAnOutputUsedAsBacking
+[32/55] Testing CoverCoreTests.ExportCatalogTests/testCompletedHistorySurvivesQueueReplacementAndDoesNotTrustUntrackedFiles
+[33/55] Testing CoverCoreTests.ExportCatalogTests/testRemovingOneHistoricalOutputPreservesSourcesOtherVersionsAndMetadataBoundaries
+[34/55] Testing CoverCoreTests.ExportCatalogTests/testRestoredOutputsAreKnownButCorruptOrAliasedCatalogCannotBeOverwritten
+[35/55] Testing CoverCoreTests.LibraryRecoveryTests/testBadAndMissingIndicesAreVisibleWithoutBlockingHealthyProjects
+[36/55] Testing CoverCoreTests.LibraryRecoveryTests/testChangedCandidateAndMissingOrTamperedMediaCannotPublishRecovery
+[37/55] Testing CoverCoreTests.LibraryRecoveryTests/testExternalArchiveRestoreStillWorksBesideDamagedDirectory
+[38/55] Testing CoverCoreTests.LibraryRecoveryTests/testMissingCurrentIndexCanRecoverButHealthyCurrentIsNeverRolledBack
+[39/55] Testing CoverCoreTests.LibraryRecoveryTests/testPreviousIndexRecoveryCopiesAllOriginalsWithoutInventingMissingTakes
+[40/55] Testing CoverCoreTests.LibraryRecoveryTests/testWrongIdentityAndSymlinkCannotBeReadAsRecoverySources
+[41/55] Testing CoverCoreTests.RecoveryFilesTests/testCopyHashFailureRetainsInspectableStagingAndNeverChangesOriginalIndex
+[42/55] Testing CoverCoreTests.RecoveryFilesTests/testDuplicatePreservesUnindexedFilesAndHistoryButOmitsRebuildableCache
+[43/55] Testing CoverCoreTests.RecoveryFilesTests/testFailedTakeIndexCommitRetainsLogAndPreviousSourceIndex
+[44/55] Testing CoverCoreTests.RecoveryFilesTests/testEndingPendingProtectsTailAndJournalInFullArchiveWithoutInventingTakeTiming
+[45/55] Testing CoverCoreTests.RecoveryFilesTests/testNewTakeJournalPersistsUntilOwnedNonemptyTakeIsCommitted
+[46/55] Testing CoverCoreTests.RecoveryFilesTests/testPendingJournalBlocksNewTakeAndRequiresItsOriginalOwner
+[47/55] Testing CoverCoreTests.RecoveryFilesTests/testRawManagementRejectsReferencesPendingDeletionAndSymlinkEscapes
+[48/55] Testing CoverCoreTests.RecoveryFilesTests/testUnidentifiedJournalCanBePreservedButCannotCloseADifferentKnownTake
+[49/55] Testing CoverCoreTests.RecoveryFilesTests/testTakeCreationRejectsStaleSnapshotAndJournalSymlinkWithoutChangingBytes
+[50/55] Testing CoverCoreTests.RepositoryStartupTests/testChangedLogAndSymlinkCannotBePreservedAsConfirmedMarker
+[51/55] Testing CoverCoreTests.RepositoryStartupTests/testCorruptMarkerCanBeExplicitlyPreservedWithoutTouchingProjects
+[52/55] Testing CoverCoreTests.RepositoryStartupTests/testCommittedTargetKeepsSafetyAndDamagedSafetyOriginalsCanBeExported
+[53/55] Testing CoverCoreTests.RepositoryStartupTests/testOccupiedOrIncompleteTargetRetainsTransactionAndSafetyDirectory
+[54/55] Testing CoverCoreTests.RepositoryStartupTests/testUnsafeTransactionCannotMoveExternalDirectory
+[55/55] Testing CoverCoreTests.RepositoryStartupTests/testRootFileAndOversizedLogFailWithoutReplacingExistingBytes
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.002 seconds.

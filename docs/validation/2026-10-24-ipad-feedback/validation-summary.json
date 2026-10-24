@@ -1,0 +1,15 @@
+{
+  "ipaRun": 40098813576,
+  "ipaJob": 120886567801,
+  "ipaSourceCommit": "2cdf6a2792588f2d16c79ce83997464fba6beb70",
+  "ipaArtifact": 12562002636,
+  "uiRun": 40100160436,
+  "uiJob": 120890488113,
+  "uiSourceCommit": "54b338212880bc4921d097adea8400842dcde248",
+  "uiArtifact": 12563056260,
+  "coreXCTestCount": 60,
+  "uiTestsPassed": 1,
+  "physicalDeviceValidated": false,
+  "filesProviderValidated": false,
+  "rawMediaChanged": false
+}

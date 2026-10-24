@@ -1,0 +1,13 @@
+{
+  "scope": "One native iPhone simulator UI workflow using isolated generated metadata/raw bytes. No playable media, hardware capture, AirPods, real-device recovery or cloud/provider validation.",
+  "passed": true,
+  "errors": [],
+  "device": "iPhone 17 Pro",
+  "testArchitecture": "arm64",
+  "passedTests": 1,
+  "failedTests": 0,
+  "originalHashesUnchanged": true,
+  "retainedLogMatches": true,
+  "pendingMarkerCleared": true,
+  "recoveredProjectCount": 1
+}

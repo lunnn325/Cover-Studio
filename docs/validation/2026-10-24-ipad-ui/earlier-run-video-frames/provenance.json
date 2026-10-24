@@ -1,0 +1,25 @@
+{
+  "sourceRun": 40076883156,
+  "sourceCommit": "ce291f33ba6f793cee4bf3862669eeb898d9b7a6",
+  "runResult": "failure at settings lazy-row lookup; frames are partial UI evidence only",
+  "artifactID": 12553537811,
+  "artifactZipSHA256": "f0495efbd81cf7ddbc8e887ec81a602d8d85751c418680484a44147dbc13b7c4",
+  "attachment": "9DE8328B-54E3-408D-9A01-057F879A25D7.mp4",
+  "videoSHA256": "86b841aa70d6f98e04676020a0ef1ac7f425ef23743dfbafcfe87b0ab75c1f3a",
+  "videoDimensions": [
+    2064,
+    2752
+  ],
+  "durationSeconds": 115.44,
+  "extraction": "ffmpeg 7.1 -ss SECONDS -i SOURCE -frames:v 1 -vf transpose=2 OUTPUT.png",
+  "transform": "Rotate full decoded frame 90 degrees counterclockwise only; no crop, resize or content edits.",
+  "offsetSeconds": [
+    32,
+    57,
+    68,
+    88,
+    95,
+    110
+  ],
+  "scope": "XCTest screen recording, not camera/microphone recording. Same recovery UI; no playable fixture media."
+}
