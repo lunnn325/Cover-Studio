@@ -208,6 +208,7 @@ struct EditorPanel: View {
                 gainSlider("距底部比例", value: store.binding(\.edit.subtitleStyle.verticalPosition, fallback: 0.14), range: 0.05...0.8)
                 Toggle("白色文字（关闭为黄色）", isOn: store.binding(\.edit.subtitleStyle.whiteText, fallback: true))
                 Toggle("阴影", isOn: store.binding(\.edit.subtitleStyle.shadow, fallback: true))
+                gainSlider("黑色描边（输出像素）", value: store.binding(\.edit.subtitleStyle.outlineWidth, fallback: 0), range: 0...6)
                 numberField("字幕开始显示（歌曲秒数）", store.binding(\.edit.subtitleStart, fallback: 0))
                 HStack {
                     Text("字幕结束显示（留空至结尾）")

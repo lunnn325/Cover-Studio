@@ -152,7 +152,19 @@ public struct SubtitleStyle: Codable, Equatable, Sendable {
     public var verticalPosition: Double = 0.14
     public var whiteText = true
     public var shadow = true
+    /// Black outline width in output pixels; zero preserves early schema-1 rendering.
+    public var outlineWidth: Double = 0
     public init() {}
+    private enum CodingKeys: String, CodingKey { case fontName, size, verticalPosition, whiteText, shadow, outlineWidth }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        fontName = try values.decode(String.self, forKey: .fontName)
+        size = try values.decode(Double.self, forKey: .size)
+        verticalPosition = try values.decode(Double.self, forKey: .verticalPosition)
+        whiteText = try values.decode(Bool.self, forKey: .whiteText)
+        shadow = try values.decode(Bool.self, forKey: .shadow)
+        outlineWidth = try values.decodeIfPresent(Double.self, forKey: .outlineWidth) ?? 0
+    }
 }
 
 public struct EditGraph: Codable, Equatable, Sendable {

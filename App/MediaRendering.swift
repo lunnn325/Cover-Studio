@@ -230,7 +230,10 @@ final class SubtitleFrameRenderer: @unchecked Sendable {
         guard lo > 0, seconds < cues[lo - 1].end else { return nil }
         let index = lo - 1
         if cachedIndex == index { return cachedImage }
-        let width = Int(ceil(size.width * 0.88)), height = Int(ceil(style.size * 3 + 12))
+        // Grow the raster without moving or rewrapping the original text layout.
+        let padding = ceil(style.outlineWidth)
+        let textWidth = ceil(size.width * 0.88), textHeight = ceil(style.size * 3 + 12)
+        let width = Int(textWidth + padding * 2), height = Int(textHeight + padding * 2)
         guard let bitmap = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
                                     space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
             throw StudioError("字幕缓冲区不可用，未导出假字幕。")
@@ -244,16 +247,19 @@ final class SubtitleFrameRenderer: @unchecked Sendable {
         let attributes: [NSAttributedString.Key: Any] = [
             NSAttributedString.Key(kCTFontAttributeName as String): CTFontCreateWithName(style.fontName as CFString, style.size, nil),
             NSAttributedString.Key(kCTForegroundColorAttributeName as String): color,
-            NSAttributedString.Key(kCTParagraphStyleAttributeName as String): paragraph
+            NSAttributedString.Key(kCTParagraphStyleAttributeName as String): paragraph,
+            NSAttributedString.Key(kCTStrokeColorAttributeName as String): CGColor(gray: 0, alpha: 1),
+            // Core Text uses percent of font size; negative means both fill and outline.
+            NSAttributedString.Key(kCTStrokeWidthAttributeName as String): -100 * style.outlineWidth / style.size
         ]
         let text = NSAttributedString(string: cues[index].text, attributes: attributes)
         let setter = CTFramesetterCreateWithAttributedString(text)
-        let path = CGPath(rect: CGRect(x: 6, y: 6, width: CGFloat(width - 12), height: CGFloat(height - 12)), transform: nil)
+        let path = CGPath(rect: CGRect(x: 6 + padding, y: 6 + padding, width: textWidth - 12, height: textHeight - 12), transform: nil)
         if style.shadow { bitmap.setShadow(offset: CGSize(width: 0, height: -2), blur: 3, color: CGColor(gray: 0, alpha: 1)) }
         CTFrameDraw(CTFramesetterCreateFrame(setter, CFRange(location: 0, length: text.length), path, nil), bitmap)
         guard let raster = bitmap.makeImage() else { throw StudioError("字幕图像生成失败。") }
         cachedIndex = index
-        cachedImage = CIImage(cgImage: raster).transformed(by: CGAffineTransform(translationX: size.width * 0.06, y: size.height * style.verticalPosition))
+        cachedImage = CIImage(cgImage: raster).transformed(by: CGAffineTransform(translationX: size.width * 0.06 - padding, y: size.height * style.verticalPosition - padding))
         return cachedImage
     }
 }

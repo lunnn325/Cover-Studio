@@ -60,6 +60,7 @@ public struct ArchiveManifest: Codable, Sendable {
     public init(project: StudioProject, mode: BackupMode) {
         self.project = project; self.mode = mode; originalProjectID = project.id
         archivedRevision = project.revision; sourceDeviceID = project.sourceDeviceID
+        if project.edit.subtitleStyle.outlineWidth > 0 { featureFlags.append("subtitle-outline") }
     }
 }
 
@@ -127,7 +128,7 @@ public enum ProjectArchive {
         let manifest = try JSONDecoder().decode(ArchiveManifest.self, from: json)
         guard manifest.schemaVersion == 1, manifest.minReaderVersion >= 1, manifest.minReaderVersion <= 1,
               manifest.hashAlgorithm == "SHA-256",
-              Set(manifest.featureFlags).isSubset(of: ["rational-time", "immutable-assets", "segment-overlap"]),
+              Set(manifest.featureFlags).isSubset(of: ["rational-time", "immutable-assets", "segment-overlap", "subtitle-outline"]),
               manifest.originalProjectID == manifest.project.id,
               manifest.archivedRevision == manifest.project.revision,
               manifest.sourceDeviceID == manifest.project.sourceDeviceID else {

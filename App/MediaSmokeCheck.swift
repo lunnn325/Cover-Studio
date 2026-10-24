@@ -37,6 +37,7 @@ import Combine
         var renderWidth: Int
         var renderHeight: Int
         var subtitleChangedPixels: [Int]
+        var outlineDarkenedPixels: [Int]
         var exportQueueUnchanged: Bool
         var sourceHashesUnchanged: Bool
         var cacheReleased: Bool
@@ -270,6 +271,7 @@ import Combine
         var candidate = project
         candidate.edit.trimStart = 0.25; candidate.edit.trimEnd = 1.75
         candidate.edit.aspect = 1; candidate.edit.mirrorExport = true
+        candidate.edit.subtitleStyle.shadow = false
         let clean = try await service.prepareVideoPreview(project: candidate, root: root, subtitles: false)
         defer { clean.close() }
         guard let cleanItem = clean.player.currentItem, let cleanVideo = cleanItem.videoComposition,
@@ -287,6 +289,7 @@ import Combine
         guard let item = subtitled.player.currentItem, let composition = item.videoComposition,
               composition.renderSize == cleanVideo.renderSize else { throw StudioError("Subtitle preview changed the render size") }
         var changedPixels: [Int] = []
+        var plainFrames: [[UInt8]] = []
         for (index, seconds) in [0.1, 1.1].enumerated() {
             let pixels = try await snapshot(item.asset, video: composition, seconds: seconds,
                                            to: frames.appendingPathComponent("preview-subtitle-\(index + 1).png"), size: size)
@@ -296,6 +299,25 @@ import Combine
             }
             guard changed > 40 else { throw StudioError("Edited preview subtitle frame is missing at \(seconds)s") }
             changedPixels.append(changed)
+            plainFrames.append(pixels)
+        }
+        // Reuse the already rendered clean picture; only the new glyph outline changes.
+        var outlined = candidate
+        outlined.edit.subtitleStyle.outlineWidth = 4
+        let renderer = try SubtitleFrameRenderer(project: outlined, size: composition.renderSize, duration: duration)
+        let outlineComposition = renderer.composition(asset: item.asset)
+        var darkenedPixels: [Int] = []
+        for (index, seconds) in [0.1, 1.1].enumerated() {
+            let pixels = try await snapshot(item.asset, video: outlineComposition, seconds: seconds,
+                                           to: frames.appendingPathComponent("preview-outline-\(index + 1).png"), size: size)
+            var darkened = 0, visibleFill = 0
+            for pixel in stride(from: 0, to: pixels.count, by: 4) {
+                if (0..<3).allSatisfy({ Int(pixels[pixel + $0]) + 16 < Int(plainFrames[index][pixel + $0]) }) { darkened += 1 }
+                if (0..<3).allSatisfy({ pixels[pixel + $0] > 220 }),
+                   (0..<3).contains(where: { abs(Int(pixels[pixel + $0]) - Int(baseline[pixel + $0])) > 48 }) { visibleFill += 1 }
+            }
+            guard darkened > 20, visibleFill > 20 else { throw StudioError("Outline lacks a dark edge or retained fill at \(seconds)s") }
+            darkenedPixels.append(darkened)
         }
         let cacheDirectories = [clean.cacheDirectory, subtitled.cacheDirectory]
         clean.close(); subtitled.close()
@@ -307,6 +329,7 @@ import Combine
             guard try FileIntegrity.sha256(root.appendingPathComponent(asset.path)) == asset.sha256 else { throw StudioError("Preview modified a source asset") }
         }
         return PreviewEvidence(duration: duration, renderWidth: 1080, renderHeight: 1080, subtitleChangedPixels: changedPixels,
+                               outlineDarkenedPixels: darkenedPixels,
                                exportQueueUnchanged: true, sourceHashesUnchanged: true, cacheReleased: true)
     }
     private static func snapshot(_ url: URL, seconds: Double, to output: URL) async throws -> [UInt8] {

@@ -65,6 +65,34 @@ final class CoverCoreTests: XCTestCase {
         XCTAssertEqual(result.lyrics.lines.first?.text, "保留文字")
     }
 
+    func testSubtitleOutlineKeepsLegacyAppearanceAndSurvivesArchive() throws {
+        let legacy = Data(#"{"fontName":"PingFangSC-Semibold","size":42,"verticalPosition":0.14,"whiteText":true,"shadow":true}"#.utf8)
+        let oldStyle = try JSONDecoder().decode(SubtitleStyle.self, from: legacy)
+        XCTAssertEqual(oldStyle, SubtitleStyle())
+        let root = try temporaryDirectory()
+        var project = try makeProject(root: root)
+        project.edit.subtitleStyle = oldStyle
+        project.edit.subtitleStyle.outlineWidth = 3.5
+        project.edit.subtitleStyle.shadow = false
+        let archive = root.appendingPathComponent("outlined.coverproject")
+        try ProjectArchive.create(project: project, root: root, destination: archive, mode: .full)
+        let restored = try ProjectArchive.inspect(archive)
+        XCTAssertEqual(restored.project.edit.subtitleStyle, project.edit.subtitleStyle)
+        XCTAssertTrue(restored.featureFlags.contains("subtitle-outline"))
+        project.edit.subtitleStyle.outlineWidth = 0
+        XCTAssertFalse(ArchiveManifest(project: project, mode: .full).featureFlags.contains("subtitle-outline"))
+        for invalid in [-1.0, 6.01, Double.infinity, Double.nan] {
+            project.edit.subtitleStyle.outlineWidth = invalid
+            XCTAssertThrowsError(try ProjectRules.validate(project))
+        }
+        project.edit.subtitleStyle.outlineWidth = 0
+        project.edit.subtitleStyle.size = 0
+        XCTAssertThrowsError(try ProjectRules.validate(project))
+        project.edit.subtitleStyle.size = 42
+        project.edit.subtitleStyle.verticalPosition = 2
+        XCTAssertThrowsError(try ProjectRules.validate(project))
+    }
+
     func testLRCRoundingCrossesMinuteBoundary() {
         var lyrics = Lyrics(); lyrics.lines = [.init(text: "边界", time: 59.999)]
         XCTAssertEqual(lyrics.lrc(), "[01:00.00]边界")

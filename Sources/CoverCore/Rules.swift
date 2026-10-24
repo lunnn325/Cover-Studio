@@ -117,7 +117,9 @@ public enum ProjectRules {
         }
         let edit = project.edit
         guard [edit.subtitleStart, edit.visualSongStart, edit.visualOffset, edit.vocalGain, edit.backingGain, edit.bassDB, edit.presenceDB, edit.reverb, edit.highPassHz,
-               edit.syncOffset, edit.trimStart, edit.aspect, edit.subtitleStyle.size, edit.subtitleStyle.verticalPosition].allSatisfy(\.isFinite),
+               edit.syncOffset, edit.trimStart, edit.aspect, edit.subtitleStyle.size, edit.subtitleStyle.verticalPosition, edit.subtitleStyle.outlineWidth].allSatisfy(\.isFinite),
+              (8...160).contains(edit.subtitleStyle.size), (0...1).contains(edit.subtitleStyle.verticalPosition),
+              (0...6).contains(edit.subtitleStyle.outlineWidth),
               (0...2).contains(edit.vocalGain), (0...2).contains(edit.backingGain),
               (0...100).contains(edit.reverb), (20...1000).contains(edit.highPassHz),
               edit.aspect >= 0.4, edit.aspect <= 2.5, edit.trimStart >= 0, edit.subtitleStart >= 0,
