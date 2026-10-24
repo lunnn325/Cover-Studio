@@ -41,7 +41,9 @@ import UIKit
         tap(app.navigationBars["工程索引恢复"].buttons["完成"], in: app)
         tap(app.navigationBars["存储管理"].buttons["完成"], in: app)
         tap(app.buttons["设置"], in: app)
-        tap(app.buttons["保留的启动恢复日志"], in: app)
+        XCTAssertTrue(app.navigationBars["设置"].waitForExistence(timeout: 15))
+        let settingsList = try XCTUnwrap(app.collectionViews.allElementsBoundByIndex.last)
+        tap(app.buttons["保留的启动恢复日志"], in: app, scrolling: settingsList)
         XCTAssertTrue(app.navigationBars["启动恢复日志"].waitForExistence(timeout: 15))
         XCTAssertTrue(app.buttons["保存副本到 Files"].waitForExistence(timeout: 15))
         capture(app, "06-retained-startup-log")
@@ -51,12 +53,15 @@ import UIKit
         XCTAssertTrue(notice.waitForExistence(timeout: 20))
         notice.buttons["知道了"].tap()
     }
-    private func tap(_ element: XCUIElement, in app: XCUIApplication) {
-        XCTAssertTrue(element.waitForExistence(timeout: 15), "Missing: \(element)")
+    private func tap(_ element: XCUIElement, in app: XCUIApplication, scrolling container: XCUIElement? = nil) {
+        // Lazy List rows may not exist until scrolled into a short iPad sheet.
+        _ = element.waitForExistence(timeout: container == nil ? 15 : 2)
         for _ in 0..<4 {
-            if element.isHittable { break }
-            app.swipeUp()
+            if element.exists && element.isHittable { break }
+            (container ?? app).swipeUp()
+            _ = element.waitForExistence(timeout: 2)
         }
+        XCTAssertTrue(element.exists, "Missing: \(element)")
         XCTAssertTrue(element.isHittable, "Not hittable: \(element)")
         element.tap()
     }
