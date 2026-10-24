@@ -20,6 +20,8 @@
 
 `37e6ba4` 隔离单工程坏索引，提供校验上一版后创建独立恢复副本、逐文件另存及外部包恢复；44 项核心测试和双架构编译通过。原坏目录保留，未知尾段不伪造 Take；见[坏索引恢复验证](docs/validation/2026-10-24-library-recovery/README.md)。
 
+`1a05390` 增加启动失败页/重试、显式保留根事务日志和坏安全索引下的逐原件另存；50 项核心测试和双架构编译通过。页面/Files 交互尚待验证，见[启动保护证据](docs/validation/2026-10-24-startup-recovery/README.md)。
+
 ## 构建
 
 在 macOS 打开 `MyCoverStudio.xcodeproj`，选择共享 scheme `MyCoverStudio`。命令行：
